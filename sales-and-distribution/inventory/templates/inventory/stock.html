@@ -1,0 +1,74 @@
+{% extends "transaction/base.html" %}
+{% load crispy_forms_tags %}
+{% block body %}
+<div class="card" style="width: 100%;">
+<div class="card-header">
+  <h4>Item Stock</h4>
+</div>
+<ul class="list-group list-group-flush">
+  <li class="list-group-item">
+    <br>
+    <ul style="list-style-type:none;" class="messages">
+      {% if messages %}
+        {% for msg in messages %}
+          <li>
+            <div class="alert {{msg.level_tag}}">
+              {{msg.message}}
+            </div>
+          </li>
+        {% endfor %}
+      {% endif %}
+    </ul>
+    <br>
+    <div class="table table-responsive">
+
+    </div>
+    <table class="table table-bordered sort" id="dataTable">
+        <thead>
+            <tr>
+                <th >Item Code</th>
+                <th>Item Name</th>
+                <th width="160px">Item Description</th>
+                <th width="160px">Inventory Stock</th>
+                <th width="160px">Unit</th>
+                <td>Action</td>
+            </tr>
+        </thead>
+        <tbody>
+          {% for value in stock %}
+          <tr>
+              <td>{{ value.2 }}</td>
+              <td>{{ value.3 }}</td>
+              <td><pre>{{ value.4 }}</pre></td>
+              <td>{{ value.6|floatformat:2 }}</td>
+              <td>{{ value.5 }}</td>
+  			      <td><a class="edit_list" href="{% url 'edit-item' pk=value.0 %}" title="Edit" data-toggle="tooltip"><i class="material-icons">&#xE254;</i></a><a class="delete_item_row" href="#" data-toggle="modal" data-target="#deleteStockModal" id="{{value.0}}"><i class="material-icons">&#xE872;</i></a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+    </table>
+  </li>
+</ul>
+</div>
+
+<!-- Delete Modal-->
+<div class="modal fade" id="deleteStockModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Delete Item</h5>
+        <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+      <div class="modal-body">Are you sure you want to delete?</div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
+        <a class="btn btn-danger" href="" id="modal_delete_button">Delete</a>
+      </div>
+    </div>
+  </div>
+</div>
+  <!-- Modal -->
+
+{% endblock body %}

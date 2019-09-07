@@ -1,0 +1,105 @@
+{% load mathfilters %}
+<html>
+<head>
+  <title>{{header.dc_no}}</title>
+<style>
+    @page {
+        size: a4 portrait;
+        @frame header_frame {           /* Static Frame */
+            -pdf-frame-content: header_content;
+            left: 30pt; width: 512pt; top: 20pt; height: 390pt;
+        }
+        @frame content_frame {          /* Content Frame */
+            left: 30pt; width: 535pt; top: 10pt; height: 780pt;
+        }
+        @frame footer_frame {           /* Another static Frame */
+            -pdf-frame-content: footer_content;
+            left: 30pt; width: 535pt; top: 755pt; height: 120pt;
+        }
+    }
+    table > thead > tr > th {
+      text-align: center;
+      font-family: "Times New Roman", Times, serif;
+        }
+        table > thead > tr > td {
+          text-align: center;
+          font-family: "Times New Roman", Times, serif;
+        }
+        .no-bottom-border{
+            border-bottom:none;
+        }
+        .heading_row{
+          border:1px solid black;
+        }
+</style>
+</head>
+
+<body>
+    <!-- Content for Static Frame 'header_frame' -->
+    <div id="header_content">
+      <div>
+         {% for value in company_info %}
+         <h1 style="text-align:center; font-size:400%; font-family: "Times New Roman", Times, serif; " color="#0a012c" ><b>{{value.company_name}}</b></h1>
+         {% endfor %}
+         <p style="text-align:center; padding-top:-60px ;font-size:200%; font-family: "Times New Roman", Times, serif; " color="#0a012c"  >Receivable Ledger</p>
+     </div>
+    </div>
+
+<!-- Content for Static Frame 'footer_frame' -->
+<div id="footer_content">
+  <div class="footer">
+     </div>
+  page <pdf:pagenumber> of <pdf:pagecount>
+  <p style="text-align:center;">Software Developed By TechFurq, 92 322 2832789, info@techfurq.com, www.techfurq.com</p>
+</div>
+
+    <!-- HTML Content -->
+
+  <br>
+  <br>
+  <div class="body">
+     <br>
+     <br>
+     <br>
+     <header>
+       <table style="border-radius: 55px; border-bottom:1px solid black; border-spacing: 40px 10px;" cellpadding="3" bgcolor="#f7f7f7">
+       </table>
+     </header>
+     <br>
+          <br>
+               <br>
+    <table cellpadding="3" id="item_table" repeat="1">
+      <thead>
+        <tr class="heading_row">
+          <th align="center" style="width: 150px;"><font size="14px">ID</font></th>
+          <th style="width:500px;"><font size="14px">Customer</font></th>
+          <th style="width:200px;"><font size="14px">InvAmount</font></th>
+          <th style="width:200px;"><font size="14px">RcvAmount</font></th>
+          <th style="width:200px;"><font size="14px">Balance</font></th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for value in row %}
+      <tr class="">
+          <td style="width: 150px; height:30px;"><font size="13px">123</font></td>
+          <td style="width: 300px;"><font size="13px">{{value.2}}</font></td>
+          <td style="width: 500px; text-align:center;"><font size="13px">{{value.3}}</font></td>
+          <td style="width: 200px; text-align:center;"><font size="13px">{{value.4}}</font></td>
+          <td style="width: 200px; text-align:center;"><font size="13px">{{value.5}}</font></td>
+          <td style="width: 200px; text-align:center;"><font size="13px">{{value.4|sub:value.5}}</font></td>
+      </tr>
+      {% endfor %}
+      <tr class="" style="border-bottom:1px solid black; border-top:1px solid black;">
+        <td style="width: 150px; height:30px;"></td>
+        <td style="width:700px; text-align:center;" colspan="2"><font size="14px"> <b>Grand Total</b> </font></td>
+        <td style="text-align:center;"><p style="border-bottom:1px solid black; font-size:80px;"><b>{{inv_amount|abs|floatformat:2}}</b></p></td>
+        <td style="text-align:center;"><p style="border-bottom:1px solid black; font-size:80px;"><b>{{rcv_amount|abs|floatformat:2}}</b></p></td>
+        <td style="text-align:center;"><p style="border-bottom:1px solid black; font-size:80px;"><b>{{total_balance}}</b></p></td>
+      </tr>
+    </tbody>
+  </table>
+  <br>
+</div>
+
+</body>
+</html>
