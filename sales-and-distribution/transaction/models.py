@@ -7,7 +7,7 @@ import datetime
 class ChartOfAccount(models.Model):
     account_title = models.CharField(max_length = 100, unique = True)
     parent_id = models.IntegerField()
-    opening_balance = models.DecimalField(max_digits = 8, decimal_places = 2)
+    opening_balance = models.FloatField()
     phone_no = models.CharField(max_length = 100)
     email_address = models.CharField(max_length = 100)
     ntn = models.CharField(max_length = 100)

@@ -36,7 +36,9 @@ def new_purchase(request):
     serial = "1"
     last_purchase_no = PurchaseHeader.objects.last()
     all_item_code = Add_item.objects.all()
-    all_accounts = ChartOfAccount.objects.filter(parent_id=7).all()
+    customer = Q(parent_id = 7)
+    vendor = Q(parent_id = 16)
+    all_accounts = ChartOfAccount.objects.filter(customer|vendor).all()
     all_pcs = Add_item.objects.filter(unit='pcs').all()
     date = datetime.date.today()
     date = date.strftime('%Y%m')
@@ -88,7 +90,7 @@ def new_purchase(request):
                 amount = float(value["sqft"]) * float(value["rate"])
                 total_amount = total_amount + amount
                 total_square_fit = value["sqft"]
-                purchase_detail = PurchaseDetail(item_id = item_id, item_description = "", width = value["width"], height = value["height"], quantity = value["quantity"], meas = value["measurment"], rate = value["rate"], purchase_id = header_id, total_amount = amount,total_square_fit=0 ,total_pcs=0)
+                purchase_detail = PurchaseDetail(item_id = item_id, item_description = "", width = value["width"], height = value["height"], quantity = value["quantity"], meas = value["measurment"], rate = value["rate"], purchase_id = header_id, total_amount = amount,total_square_fit=total_square_fit ,total_pcs=0)
             purchase_detail.save()
             net += total_amount
         header_id = header_id.id
@@ -254,7 +256,9 @@ def new_sale(request):
     last_sale_no = SaleHeader.objects.last()
     all_job_order = JobOrderHeader.objects.all()
     all_pcs = Add_item.objects.filter(unit = "pcs").all()
-    all_accounts = ChartOfAccount.objects.filter(parent_id = 7).all()
+    customer = Q(parent_id = 7)
+    vendor = Q(parent_id = 16)
+    all_accounts = ChartOfAccount.objects.filter(customer|vendor).all()
     date = datetime.date.today()
     date = date.strftime('%Y%m')
     if last_sale_no:
