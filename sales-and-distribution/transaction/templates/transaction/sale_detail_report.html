@@ -1,0 +1,172 @@
+{% load mathfilters %}
+<html>
+<head>
+<style>
+    @page {
+        size: a4 portrait;
+        @frame header_frame {           /* Static Frame */
+            -pdf-frame-content: header_content;
+            left: 30pt; width: 512pt; top: 20pt; height: 390pt;
+        }
+        @frame content_frame {          /* Content Frame */
+            left: 30pt; width: 535pt; top: 10pt; height: 780pt;
+        }
+        @frame footer_frame {           /* Another static Frame */
+            -pdf-frame-content: footer_content;
+            left: 30pt; width: 535pt; top: 755pt; height: 120pt;
+        }
+    }
+    table > thead > tr > th {
+      text-align: center;
+      font-family: "Times New Roman", Times, serif;
+        }
+        table > thead > tr > td {
+          text-align: center;
+          font-family: "Times New Roman", Times, serif;
+        }
+        .no-bottom-border{
+            border-bottom:none;
+        }
+        .heading_row{
+          border:1px solid black;
+        }
+</style>
+</head>
+<body>
+    <div id="header_content">
+    </div>
+<!-- Content for Static Frame 'footer_frame' -->
+<div id="footer_content">
+  <div class="footer">
+     </div>
+  page <pdf:pagenumber> of <pdf:pagecount>
+</div>
+    <!-- HTML Content -->
+  <div class="body">
+     <header>
+       <table style="border-radius: 55px; border-bottom:1px solid black; border-spacing: 40px 10px;" cellpadding="3" bgcolor="#f7f7f7">
+       </table>
+     </header>
+     <div>
+        {% for value in company_info %}
+        <h1 style="text-align:center; font-size:400%; font-family: "Times New Roman", Times, serif; " color="#0a012c" ><b>{{value.company_name}}</b></h1>
+        {% endfor %}
+        <p style="text-align:center; padding-top:-60px ; font-family: "Times New Roman", Times, serif; " color="#0a012c"  ><font size="14px">Sale Detail Summary</font></p>
+        <br/>
+        <p style="text-align:center; font-size:150%; padding-top:-20px ; font-family: "Times New Roman", Times, serif; " color="#0a012c">From: <b>{{from_date}}</b>    To: <b>{{to_date}}</b></p>
+    </div>
+     <br>
+          <br>
+               <br>
+     <table cellpadding="3" id="item_table" repeat="1">
+        <thead>
+          <tr class="heading_row">
+            <th width="50px"><font size="14px">S no: </font></th>
+            <th width="280px"><font size="14px">Item Description</font></th>
+            <th width="90px"><font size="14px">Width</font></th>
+            <th width="90px"><font size="14px">Height</font></th>
+            <th width="90px"><font size="14px">Unit</font></th>
+            <th width="90px"><font size="14px">Quantity</font></th>
+            <th width="90px"><font size="14px">Sq.ft</font></th>
+            <th width="90px"><font size="14px">Rate</font></th>
+            <th width="110px"><font size="14px">Amount</font></th>
+          </tr>
+        </thead>
+      </table>
+      <br>
+     {% for value in sale_detail_list %}
+      <table cellpadding="2" id="item_table">
+         <thead>
+           <tr class="">
+             <th align="left" width="50px" ><font size="14px">Date: </font></th>
+             <td style=""><font size="14px">{{value.date}}</font></td>
+           </tr>
+           <tr class="">
+             <th align="left" width="190px" style=""><font size="14px">Sale Invoice No: </font></th>
+             <td style=""><font size="14px">{{value.invoice_no}}</font></td>
+           </tr>
+           <tr class="">
+             <th align="left" width="230px" style=""><font size="14px">Customer Name: </font></th>
+             <td style=""><font size="14px">{{value.customer_name}} ({{value.account_holder}})</font></td>
+           </tr>
+         </thead>
+       </table>
+       <table cellpadding="2">
+         <tbody>
+           <tr>
+             <td width="50px" align="center" style="border-bottom:1px solid black;"><font size="14px"></font></td>
+             <td width="280px"style="border-bottom:1px solid black;" ><font size="14px"></font></td>
+             <td width="90px" align="center" style="border-bottom:1px solid black;"><font size="14px"></font></td>
+             <td width="90px" align="right" style="border-bottom:1px solid black;"><font size="14px"></font></td>
+             <td width="90px" align="right" style="border-bottom:1px solid black;"><font size="14px"></font></td>
+             <td width="90px" align="right" style="border-bottom:1px solid black;"><font size="14px"></font></td>
+             <td width="90px" align="right" style="border-bottom:1px solid black;"><font size="14px"></font></td>
+             <td width="90px" align="right" style="border-bottom:1px solid black;"><font size="14px"></font></td>
+             <td width="110px" align="right" style="border-bottom:1px solid black;"><font size="14px"></font></td>
+           </tr>
+           {% for i in sale_detail %}
+           {% if i.sale_id.id == value.id %}
+           <tr>
+             <td width="50px" align="center" style="border-right:1px solid black; border-left:1px solid black;"><font size="14px">{{forloop.counter}}</font></td>
+             <td width="280px"style="border-right:1px solid black; border-left:1px solid black;" ><font size="14px">{{i.item_id.item_name}}</font></td>
+             <td width="90px" align="center" style="border-right:1px solid black; border-left:1px solid black;"><font size="14px">{{i.width}}</font></td>
+             <td width="90px" align="right" style="border-right:1px solid black; border-left:1px solid black;"><font size="14px">{{i.height}}</font></td>
+             <td width="90px" align="right" style="border-right:1px solid black; border-left:1px solid black;"><font size="14px">{{i.item_id.unit}}</font></td>
+             <td width="90px" align="right" style="border-right:1px solid black; border-left:1px solid black;"><font size="14px">{{i.quantity}}</font></td>
+             <td width="90px" align="right" style="border-right:1px solid black; border-left:1px solid black;"><font size="14px">{{i.meas}}</font></td>
+             <td width="90px" align="right" style="border-right:1px solid black; border-left:1px solid black;"><font size="14px">{{i.rate}}</font></td>
+             <td width="110px" align="right" style="border-right:1px solid black; border-left:1px solid black;"><font size="14px">{{i.total_amount}}</font></td>
+           </tr>
+           {% endif %}
+           {% endfor %}
+           <tr>
+             <td width="50px" align="center" style="border-top:1px solid black;"><font size="14px"></font></td>
+             <td width="280px"style="border-top:1px solid black;" ><font size="14px"></font></td>
+             <td width="90px" align="center" style="border-top:1px solid black;"><font size="14px"></font></td>
+             <td width="90px" align="right" style="border-top:1px solid black;"><font size="14px"></font></td>
+             <td width="90px" align="right" style="border-top:1px solid black;"><font size="14px"></font></td>
+             <td width="90px" align="right" style="border-top:1px solid black;"><font size="14px"></font></td>
+             <td width="90px" align="right" style="border-top:1px solid black;"><font size="14px"></font></td>
+             <td width="90px" align="right" style="border-top:1px solid black;"><font size="14px"></font></td>
+             <td width="110px" align="right" style="border-top:1px solid black;"><font size="14px"></font></td>
+           </tr>
+           <tr>
+             <td width="50px"></td>
+             <td width="280px"></td>
+             <td width="90px"></td>
+             <td width="90px"></td>
+             <td width="90px"></td>
+             <td width="90px"></td>
+             <td width="90px"></td>
+             <td width="90px" align="right" colspan="1"><font size="14px"><b>GST/SRB:</b></td>
+             <td width="90px" align="right"><font size="14px">{{value.gst_srb|floatformat:2}}</td>
+           </tr>
+           <tr>
+             <td width="50px"></td>
+             <td width="280px"></td>
+             <td width="90px"></td>
+             <td width="90px"></td>
+             <td width="90px"></td>
+             <td width="90px"></td>
+             <td width="90px"></td>
+             <td width="90px" align="right" colspan="1"><font size="14px"><b>Discount:</b></td>
+             <td width="90px" align="right"><font size="14px">{{value.discount|floatformat:2}}</td>
+           </tr>
+           <tr>
+             <td width="50px"></td>
+             <td width="280px"></td>
+             <td width="90px"></td>
+             <td width="90px"></td>
+             <td width="90px"></td>
+             <td width="90px"></td>
+             <td width="90px" align="right" colspan="2"><font size="14px"><b>Gross Amount:</b></td>
+             <td width="90px" align="right"><font size="14px">{{value.gross_amount|floatformat:2}}</td>
+           </tr>
+         </tbody>
+       </table>
+       <hr>
+      {% endfor %}
+  <br>
+</div>
+</body>
+</html>

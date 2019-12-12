@@ -17,7 +17,7 @@
         </div>
         <div class="form-group col-md-2">
           <label>Account Name</label>
-          <input list="account" id="customer" class="form-control form-control-sm" required >
+          <input list="account" id="customer" name="customer_name" class="form-control form-control-sm" required >
           <datalist id="account">
             {% for value in all_accounts %}
             <option value="{{value.account_title}}">{{value.account_title}}</option>
@@ -43,8 +43,16 @@
             <option value="90">90</option>
           </select>
         </div>
+        <div class="form-group col-md-2">
+          <label for="">PO No</label>
+          <input type="text"  class="form-control form-control-sm"  value="" id="po_no">
+        </div>
+        <div class="form-group col-md-2">
+          <label for="">GRN #</label>
+          <input type="text"  class="form-control form-control-sm"  value="" id="grn_no">
+        </div>
         <div class="form-group">
-          <label for="exampleFormControlTextarea2">Footer Description</label>
+          <label for="exampleFormControlTextarea2">Description</label>
           <textarea class="form-control form-control-sm" rows="3" id="footer_desc"></textarea>
         </div>
       </div>
@@ -76,7 +84,7 @@
             {% endfor %}
           </datalist>
             <div style="margin-left:20px;">
-                <button type="button" class="btn btn-warning add-item-x"><i class="fa fa-plus"></i>Insert X-Stand</button>
+                <button type="button" class="btn btn-warning add-item-x"><i class="fa fa-plus"></i>Insert General Item</button>
             </div>
         </div>
     </div>
@@ -108,11 +116,42 @@
       <div class="float-right">
         <div class="form-inline">
           <div class="form-group">
-            <label for="text" style="font-size:14px;"><b>Grand Total:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></label>
-            <input type="text"  class="form-control form-control-sm" style="border-top: 0px; border-right:0px; border-left:0px;" id="grand_total" readonly value="0">
+            <label for="text" style="font-size:14px;"><b>SRB in % :&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></label>
+            <input type="text" required  class="form-control form-control-sm" style="border-top: 0px; border-right:0px; border-left:0px;" id="srb" name="srb"  value="0">
+          </div>
+        </div>
+        <div class="form-inline">
+          <div class="form-group">
+            <label for="text" style="font-size:14px;"><b>GST in % :&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></label>
+            <input type="text" required placeholder="in percent"  class="form-control form-control-sm" style="border-top: 0px; border-right:0px; border-left:0px;" id="gst" name="gst" value="0">
+          </div>
+        </div>
+        <div class="form-inline">
+          <div class="form-group">
+            <label for="text" style="font-size:14px;"><b>Discount:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></label>
+            <input type="text" required  class="form-control form-control-sm" style="border-top: 0px; border-right:0px; border-left:0px;" id="discount" name="discount" value="0">
+          </div>
+        </div>
+        <div class="form-inline">
+          <div class="form-group">
+            <label for="text" style="font-size:14px;"><b>Grand Total:&nbsp;&nbsp;</b></label>
+            <input type="text"  class="form-control form-control-sm" style="border-top: 0px; border-right:0px; border-left:0px;" readonly id="grand_total"  value="0">
+          </div>
+        </div>
+        <div class="form-inline">
+          <div class="form-group">
+            <label for="text" style="font-size:14px;"><b>Credit Bal :&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></label>
+            <input type="text"  class="form-control form-control-sm" style="border-top: 0px; border-right:0px; border-left:0px;" readonly id="credit_balance"  value="0">
+            <input type="hidden"  class="form-control form-control-sm" style="border-top: 0px; border-right:0px; border-left:0px;" readonly id="credit_balance_hidden"  value="0">
           </div>
         </div>
       </div>
+      <br>
+      <br>
+      <br>
+      <br>
+
+      <br>
       <br>
       <br>
       </li>

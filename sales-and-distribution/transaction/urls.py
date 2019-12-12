@@ -22,7 +22,8 @@ urlpatterns = [
     path('sale/new/', views.new_sale, name='new-sale'),
     path('sale_return/', views.sale_return_summary, name='sale-return'),
     path('sale_return/new', views.new_sale_return, name='new-sale-return'),
-    path('sale/print/<int:pk>', views.print_sale, name='sale-print'),
+    path('sale/commercial-print/<int:pk>', views.print_sale, name='sale-print-commercial'),
+    path('sale/sales-tax-print/<int:pk>', views.print_sale_tax, name='sale-tax-print'),
     path('sale/edit/<pk>', views.edit_sale, name='edit-sale'),
     path('sale/delete/<pk>', views.delete_sale, name='delete-sale'),
 
@@ -44,6 +45,8 @@ urlpatterns = [
     path('receivable_ledger/pdf/', views.receivable_ledger, name='receivable-ledger'),
     path('all_receivable_ledger/pdf/', views.all_receivable_ledger, name='all-receivable-ledger'),
     path('payable_ledger/pdf/', views.payable_ledger, name='payable-ledger'),
+    path('sale_detail_report/pdf/', views.sale_detail_report, name='sale-detail'),
+    path('daily_report/pdf/', views.daily_report, name='daily-report'),
 
     path('cash_receiving_voucher', views.cash_receiving_voucher, name='cash-receiving-voucher'),
     path('cash_receiving_voucher/new/', views.new_cash_receiving_voucher, name='new-cash-receiving-voucher'),

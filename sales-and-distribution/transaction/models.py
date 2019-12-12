@@ -64,7 +64,6 @@ class PurchaseDetail(models.Model):
     purchase_id = models.ForeignKey(PurchaseHeader, on_delete = models.CASCADE)
 
 
-
 class SaleHeader(models.Model):
     sale_no = models.CharField(max_length = 100, unique = True)
     date = models.DateField(default = datetime.date.today)
@@ -73,6 +72,11 @@ class SaleHeader(models.Model):
     follow_up = models.DateField(default = datetime.date.today)
     payment_method = models.CharField(max_length = 100)
     account_holder = models.CharField(max_length = 100)
+    srb = models.DecimalField(max_digits = 8, decimal_places = 2)
+    gst = models.DecimalField(max_digits = 8, decimal_places = 2)
+    po_no = models.CharField(max_length = 100)
+    grn_no = models.CharField(max_length = 100)
+    discount = models.DecimalField(max_digits = 8, decimal_places = 2)
     account_id = models.ForeignKey(ChartOfAccount, models.SET_NULL,blank=True,null=True)
     user = models.ForeignKey(User, models.SET_NULL, blank=True, null=True)
 
@@ -121,6 +125,9 @@ class Company_info(models.Model):
     mobile_no = models.CharField(max_length = 100)
     email = models.CharField(max_length = 100)
     website = models.CharField(max_length = 100)
+    ntn = models.CharField(max_length = 100)
+    stn = models.CharField(max_length = 100)
+    cnic = models.CharField(max_length = 100)
 
 
 class VoucherHeader(models.Model):

@@ -1,0 +1,252 @@
+{% load mathfilters %}
+<html>
+<head>
+<style>
+    @page {
+        size: a4 portrait;
+        @frame header_frame {           /* Static Frame */
+            -pdf-frame-content: header_content;
+            left: 30pt; width: 512pt; top: 20pt; height: 390pt;
+        }
+        @frame content_frame {          /* Content Frame */
+            left: 30pt; width: 535pt; top: 10pt; height: 780pt;
+        }
+        @frame footer_frame {           /* Another static Frame */
+            -pdf-frame-content: footer_content;
+            left: 30pt; width: 535pt; top: 755pt; height: 120pt;
+        }
+    }
+    table > thead > tr > th {
+      text-align: center;
+      font-family: "Times New Roman", Times, serif;
+        }
+        table > thead > tr > td {
+          text-align: center;
+          font-family: "Times New Roman", Times, serif;
+        }
+        .no-bottom-border{
+            border-bottom:none;
+        }
+        .heading_row{
+          border:1px solid black;
+        }
+</style>
+</head>
+<body>
+    <div id="header_content">
+    </div>
+<!-- Content for Static Frame 'footer_frame' -->
+<div id="footer_content">
+</div>
+    <!-- HTML Content -->
+
+  <div class="body">
+     <header>
+       <table style="border-radius: 55px; border-bottom:1px solid black; border-spacing: 40px 10px;" cellpadding="3" bgcolor="#f7f7f7">
+       </table>
+     </header>
+     <div>
+        {% for value in company_info %}
+        <h1 style="text-align:center; font-size:400%; font-family: "Times New Roman", Times, serif; " color="#0a012c" ><b>{{value.company_name}}</b></h1>
+        {% endfor %}
+        <p style="text-align:center; padding-top:-60px ; font-family: "Times New Roman", Times, serif; " color="#0a012c"  ><font size="14px">Daily Report</font></p>
+        <br/>
+    </div>
+      <h1>Sale Detail <small>(on cash)</small> </h1>
+     <table cellpadding="3" id="item_table">
+        <thead>
+          <tr class="heading_row">
+            <th width="50px"><font size="14px">S no: </font></th>
+            <th width="90px"><font size="14px">Invoice No</font></th>
+            <th width="250px"><font size="14px">Customer</font></th>
+            <th width="90px"><font size="14px">GST/SRB</font></th>
+            <th width="90px"><font size="14px">Discount</font></th>
+            <th width="110px"><font size="14px">Amount</font></th>
+          </tr>
+        </thead>
+      </table>
+      <br>
+     {% for value in sale_detail_list_on_cash %}
+       <table cellpadding="2">
+         <tbody>
+           <tr>
+             <td width="50px" align="center" style="border-bottom:1px solid black;"><font size="14px">{{forloop.counter}}</font></td>
+             <td width="90px"style="border-bottom:1px solid black;" align="left" ><font size="14px">{{value.invoice_no}}</font></td>
+             <td width="250px" align="center" style="border-bottom:1px solid black;" align="left"><font size="14px">{{value.customer_name}}</font></td>
+             <td width="90px" align="right" style="border-bottom:1px solid black;"><font size="14px">{{value.gst_srb|floatformat:2}}</font></td>
+             <td width="90px" align="right" style="border-bottom:1px solid black;"><font size="14px">{{value.discount|floatformat:2}}</font></td>
+             <td width="110px" align="right" style="border-bottom:1px solid black;"><font size="14px">{{value.total_amount|floatformat:2}}</font></td>
+           </tr>
+         </tbody>
+       </table>
+      {% endfor %}
+      <table cellpadding="2">
+        <tbody>
+          <tr>
+            <td width="50px" align="center" style="border-top:1px solid black;"><font size="14px"></font></td>
+            <td width="280px"style="border-top:1px solid black;" ><font size="14px"></font></td>
+            <td width="90px" align="center" style="border-top:1px solid black;"><font size="14px"></font></td>
+            <td width="90px" align="right" style="border-top:1px solid black;"><font size="14px"></font></td>
+            <td width="90px" align="right" style="border-top:1px solid black;"><font size="14px"><b>Grand Total</b></font></td>
+            <td width="110px" align="right" style="border-top:1px solid black;"><font size="14px"><b>{{grand_total_on_cash|floatformat:2}}</b></font></td>
+          </tr>
+        </tbody>
+      </table>
+      <h1>Sale Detail <small>(on credit)</small> </h1>
+     <table cellpadding="3" id="item_table">
+        <thead>
+          <tr class="heading_row">
+            <th width="50px"><font size="14px">S no: </font></th>
+            <th width="90px"><font size="14px">Invoice No</font></th>
+            <th width="250px"><font size="14px">Customer</font></th>
+            <th width="90px"><font size="14px">GST/SRB</font></th>
+            <th width="90px"><font size="14px">Discount</font></th>
+            <th width="110px"><font size="14px">Amount</font></th>
+          </tr>
+        </thead>
+      </table>
+      <br>
+     {% for value in sale_detail_list %}
+       <table cellpadding="2">
+         <tbody>
+           <tr>
+             <td width="50px" align="center" style="border-bottom:1px solid black;"><font size="14px">{{forloop.counter}}</font></td>
+             <td width="90px"style="border-bottom:1px solid black;" align="left" ><font size="14px">{{value.invoice_no}}</font></td>
+             <td width="250px" align="center" style="border-bottom:1px solid black;" align="left"><font size="14px">{{value.customer_name}}</font></td>
+             <td width="90px" align="right" style="border-bottom:1px solid black;"><font size="14px">{{value.gst_srb|floatformat:2}}</font></td>
+             <td width="90px" align="right" style="border-bottom:1px solid black;"><font size="14px">{{value.discount|floatformat:2}}</font></td>
+             <td width="110px" align="right" style="border-bottom:1px solid black;"><font size="14px">{{value.total_amount|floatformat:2}}</font></td>
+           </tr>
+         </tbody>
+       </table>
+      {% endfor %}
+      <table cellpadding="2">
+        <tbody>
+          <tr>
+            <td width="50px" align="center" style="border-top:1px solid black;"><font size="14px"></font></td>
+            <td width="280px"style="border-top:1px solid black;" ><font size="14px"></font></td>
+            <td width="90px" align="center" style="border-top:1px solid black;"><font size="14px"></font></td>
+            <td width="90px" align="right" style="border-top:1px solid black;"><font size="14px"></font></td>
+            <td width="90px" align="right" style="border-top:1px solid black;"><font size="14px"><b>Grand Total</b></font></td>
+            <td width="110px" align="right" style="border-top:1px solid black;"><font size="14px"><b>{{grand_total_on_credit|floatformat:2}}</b></font></td>
+          </tr>
+        </tbody>
+      </table>
+      <br>
+      <h1>Expense</h1>
+     <table cellpadding="3" id="item_table">
+        <thead>
+          <tr class="heading_row">
+            <th width="50px"><font size="14px">S no: </font></th>
+            <th width="100px"><font size="14px">Voucher No</font></th>
+            <th width="200px"><font size="14px">Expense Account</font></th>
+            <th width="250px"><font size="14px">Description</font></th>
+            <th width="110px"><font size="14px">Amount</font></th>
+          </tr>
+        </thead>
+      </table>
+      <br>
+     {% for value in expenses %}
+       <table cellpadding="2">
+         <tbody>
+           <tr>
+             <td width="50px" align="center" style="border-bottom:1px solid black;"><font size="14px">{{forloop.counter}}</font></td>
+             <td width="100px"style="border-bottom:1px solid black;" align="left" ><font size="14px">{{value.voucher_no}}</font></td>
+             <td width="200px" align="center" style="border-bottom:1px solid black;" align="left"><font size="14px">{{value.expense_account}}</font></td>
+             <td width="250px" align="left" style="border-bottom:1px solid black;"><font size="14px">{{value.description}}</font></td>
+             <td width="110px" align="right" style="border-bottom:1px solid black;"><font size="14px">{{value.amount|floatformat:2}}</font></td>
+           </tr>
+         </tbody>
+       </table>
+      {% endfor %}
+      <table cellpadding="2">
+        <tbody>
+          <tr>
+            <td width="50px" align="center" style="border-top:1px solid black;"><font size="14px"></font></td>
+            <td width="100px"style="border-top:1px solid black;" ><font size="14px"></font></td>
+            <td width="200px" align="center" style="border-top:1px solid black;"><font size="14px"></font></td>
+            <td width="250px" align="right" style="border-top:1px solid black;"><font size="14px">Grand Total</font></td>
+            <td width="110px" align="right" style="border-top:1px solid black;"><font size="14px"><b>{{grand_total_expense}}</b></font></td>
+          </tr>
+        </tbody>
+      </table>
+  <br>
+  <h1>Cash Receiving Voucher</h1>
+ <table cellpadding="3" id="item_table">
+    <thead>
+      <tr class="heading_row">
+        <th width="50px"><font size="14px">S no: </font></th>
+        <th width="100px"><font size="14px">Voucher No</font></th>
+        <th width="200px"><font size="14px">Customer</font></th>
+        <th width="250px"><font size="14px">Description</font></th>
+        <th width="110px"><font size="14px">Amount</font></th>
+      </tr>
+    </thead>
+  </table>
+  <br>
+ {% for value in crvs %}
+   <table cellpadding="2">
+     <tbody>
+       <tr>
+         <td width="50px" align="center" style="border-bottom:1px solid black;"><font size="14px">{{forloop.counter}}</font></td>
+         <td width="100px"style="border-bottom:1px solid black;" align="left" ><font size="14px">{{value.voucher_no}}</font></td>
+         <td width="200px" align="center" style="border-bottom:1px solid black;" align="left"><font size="14px">{{value.customer}}</font></td>
+         <td width="250px" align="left" style="border-bottom:1px solid black;"><font size="14px">{{value.description}}</font></td>
+         <td width="110px" align="right" style="border-bottom:1px solid black;"><font size="14px">{{value.amount|floatformat:2}}</font></td>
+       </tr>
+     </tbody>
+   </table>
+  {% endfor %}
+  <table cellpadding="2">
+    <tbody>
+      <tr>
+        <td width="50px" align="center" style="border-top:1px solid black;"><font size="14px"></font></td>
+        <td width="100px"style="border-top:1px solid black;" ><font size="14px"></font></td>
+        <td width="200px" align="center" style="border-top:1px solid black;"><font size="14px"></font></td>
+        <td width="250px" align="right" style="border-top:1px solid black;"><font size="14px">Grand Total</font></td>
+        <td width="110px" align="right" style="border-top:1px solid black;"><font size="14px"><b>{{total_crv}}</b></font></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h1>Cash Payment Voucher</h1>
+ <table cellpadding="3" id="item_table">
+    <thead>
+      <tr class="heading_row">
+        <th width="50px"><font size="14px">S no: </font></th>
+        <th width="100px"><font size="14px">Voucher No</font></th>
+        <th width="200px"><font size="14px">Vendor</font></th>
+        <th width="250px"><font size="14px">Description</font></th>
+        <th width="110px"><font size="14px">Amount</font></th>
+      </tr>
+    </thead>
+  </table>
+  <br>
+ {% for value in cpvs %}
+   <table cellpadding="2">
+     <tbody>
+       <tr>
+         <td width="50px" align="center" style="border-bottom:1px solid black;"><font size="14px">{{forloop.counter}}</font></td>
+         <td width="100px"style="border-bottom:1px solid black;" align="left" ><font size="14px">{{value.voucher_no}}</font></td>
+         <td width="200px" align="center" style="border-bottom:1px solid black;" align="left"><font size="14px">{{value.customer}}</font></td>
+         <td width="250px" align="left" style="border-bottom:1px solid black;"><font size="14px">{{value.description}}</font></td>
+         <td width="110px" align="right" style="border-bottom:1px solid black;"><font size="14px">{{value.amount|floatformat:2}}</font></td>
+       </tr>
+     </tbody>
+   </table>
+  {% endfor %}
+  <table cellpadding="2">
+    <tbody>
+      <tr>
+        <td width="50px" align="center" style="border-top:1px solid black;"><font size="14px"></font></td>
+        <td width="100px"style="border-top:1px solid black;" ><font size="14px"></font></td>
+        <td width="200px" align="center" style="border-top:1px solid black;"><font size="14px"></font></td>
+        <td width="250px" align="right" style="border-top:1px solid black;"><font size="14px">Grand Total</font></td>
+        <td width="110px" align="right" style="border-top:1px solid black;"><font size="14px"><b>{{total_cpv}}</b></font></td>
+      </tr>
+    </tbody>
+  </table>
+
+</div>
+</body>
+</html>

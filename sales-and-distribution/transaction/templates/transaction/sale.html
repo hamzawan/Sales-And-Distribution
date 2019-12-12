@@ -46,7 +46,11 @@
                 <td>{{ value.account_id.account_title }}</td>
                 <td>{{ value.account_holder }}</td>
                 <td>{{value.user.username}}</td>
-                <td><a class="edit_list" href="{% url 'edit-sale' pk=value.id %}" data-toggle=""><i class="material-icons">&#xE254;</i></a><a href="{% url 'sale-print' pk=value.id %}" target="_blank" data-toggle=""><i class="fa fa-print" id="print_icon" aria-hidden="true"></i></a><a class="delete_sale" href="#" data-toggle="modal" data-target="#deleteSaleInvoiceModal" id="{{value.id}}"><i class="material-icons">&#xE872;</i></a></td>
+                <td>
+                  <a class="edit_list" href="{% url 'edit-sale' pk=value.id %}" data-toggle=""><i class="material-icons">&#xE254;</i></a>
+                  <a href="#" target="_blank" data-toggle="modal" class="has_id" id="{{value.id}}" data-target="#invoiceType"><i class="fa fa-print" id="print_icon" aria-hidden="true"></i></a>
+                  <a class="delete_sale" href="#" data-toggle="modal" data-target="#deleteSaleInvoiceModal" id="{{value.id}}"><i class="material-icons">&#xE872;</i></a>
+                </td>
             </tr>
             {% endfor %}
           </tbody>
@@ -55,6 +59,35 @@
   </li>
 </ul>
 </div>
+
+
+<!-- Invoices Modal -->
+<div class="modal fade" id="invoiceType" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLongTitle">Invoice Type</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-md-6 col-sm-12">
+            <a type="button" id="sales_tax_invoice" href="" class="btn btn-info">Sales Tax Invoice</a>
+          </div>
+          <div class="col-md-6 col-sm-12">
+              <a type="button" id="commercial_invoice" href="" class="btn btn-info">Commercial Invoice</a>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Delete Modal-->
 <div class="modal fade" id="deleteSaleInvoiceModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
   <div class="modal-dialog" role="document">

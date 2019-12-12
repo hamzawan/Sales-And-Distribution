@@ -897,7 +897,7 @@ $('#edit-purchase-return-submit').on('submit',function(e){
 										'<td>'+count+'</td>' +
 										'<td>'+type[0].fields["item_code"]+'</td>'+
 										'<td>'+type[0].fields["item_name"]+'</td>'+
-										'<td><pre>'+type[0].fields["item_description"]+'</pre></td>'+
+										'<td><input type="text" style="width:80px;" class="form-control"></td>'+
 										'<td>'+type[0].fields["unit"]+'</td>'+
 										'<td id="width">0</td>'+
 										'<td id="height">0</td>'+
@@ -920,7 +920,6 @@ $('#edit-purchase-return-submit').on('submit',function(e){
 				// Add row on add button click
 				$(document).on("click", ".add-transaction-sale", function(){
 				sum = 0;
-
 					var empty = false;
 					var input = $(this).parents("tr").find('input[type="text"]');
 							input.each(function(){
@@ -990,13 +989,73 @@ $('#edit-purchase-return-submit').on('submit',function(e){
 					$('#new-sale-table tbody tr').each(function() {
 							var tdObject = $(this).find('td:eq(10)');
 							var total = tdObject.text()
-							console.log(total);
 							if (!isNaN(total) && total.length !== 0) {
 									sum += parseFloat(total);
 							}
-							console.log(sum);
-							$('#grand_total').val(sum.toFixed(2));
+							var srb = $("#srb").val();
+							var srb_amount = (sum / 100) * srb;
+							var gst = $("#gst").val();
+							var gst_amount = (sum / 100) * gst;
+							var discount = $("#discount").val();
+							var amount_before_discount = parseFloat(sum + srb_amount + gst_amount);
+							var discount_amount = (amount_before_discount / 100) * discount;
+							var credit_balance_amount = $("#credit_balance").val()
+							$('#grand_total').val(sum + srb_amount + gst_amount - discount_amount);
+							credit_balance_hidden = parseFloat($("#credit_balance_hidden").val());
+							grand_total_for_balance = parseFloat($("#grand_total").val());
+							$("#credit_balance").val(credit_balance_hidden + grand_total_for_balance);
 					});
+
+					$("#srb").on('keyup', function(){
+						var v = this.value;
+						var srb_amount = (sum / 100) * v;
+						var gst = $("#gst").val();
+						var gst_amount = (sum / 100) * gst;
+						var discount = $("#discount").val();
+						var amount_before_discount = parseFloat(sum + srb_amount + gst_amount);
+						var discount_amount = (amount_before_discount / 100) * discount;
+						if (!isNaN(v) && v.length != 0){
+						$("#grand_total").val(parseFloat(sum) + srb_amount + gst_amount - discount_amount);
+						credit_balance_hidden = parseFloat($("#credit_balance_hidden").val());
+						grand_total_for_balance = parseFloat($("#grand_total").val());
+						$("#credit_balance").val(credit_balance_hidden + grand_total_for_balance);
+						}
+					})
+
+
+					$("#gst").on('keyup', function(){
+
+						var v = this.value;
+						var srb = $("#srb").val();
+						var srb_amount = (sum / 100) * srb;
+						var gst_amount = (sum / 100) * v;
+						var discount = $("#discount").val();
+						var amount_before_discount = parseFloat(sum + srb_amount + gst_amount);
+						var discount_amount = (amount_before_discount / 100) * discount;
+						if (!isNaN(v) && v.length != 0){
+						$("#grand_total").val(parseFloat(sum) + srb_amount + gst_amount - discount_amount);
+						credit_balance_hidden = parseFloat($("#credit_balance_hidden").val());
+						grand_total_for_balance = parseFloat($("#grand_total").val());
+						$("#credit_balance").val(credit_balance_hidden + grand_total_for_balance);
+						}
+					})
+
+					$("#discount").on('keyup', function(){
+
+						var v = this.value;
+						var srb = $("#srb").val();
+						var srb_amount = (sum / 100) * srb;
+						var gst = $("#gst").val();
+						var gst_amount = (sum / 100) * gst;
+						var amount_before_discount = parseFloat(sum + srb_amount + gst_amount);
+						var discount_amount = (amount_before_discount / 100) * v;
+						if (!isNaN(v) && v.length != 0){
+						$("#grand_total").val(parseFloat(sum) + srb_amount + gst_amount - discount_amount);
+						credit_balance_hidden = parseFloat($("#credit_balance_hidden").val());
+						grand_total_for_balance = parseFloat($("#grand_total").val());
+						$("#credit_balance").val(credit_balance_hidden + grand_total_for_balance);
+						}
+					})
 
 				});
 
@@ -1025,7 +1084,33 @@ $('#edit-purchase-return-submit').on('submit',function(e){
 				});
 				$(this).parents("tr").remove();
 				$(".add-item-sale").removeAttr("disabled");
+
+				after_delete();
+
 				});
+
+
+				function after_delete(){
+					var delete_sum = 0;
+					$('#new-sale-table tbody tr').each(function() {
+							var tdObject = $(this).find('td:eq(10)');
+							var total = tdObject.text()
+							if (!isNaN(total) && total.length !== 0) {
+									delete_sum += parseFloat(total);
+							}
+							var srb = $("#srb").val();
+							var srb_amount = (delete_sum / 100) * srb;
+							var gst = $("#gst").val();
+							var gst_amount = (delete_sum / 100) * gst;
+							var discount = $("#discount").val();
+							var amount_before_discount = parseFloat(delete_sum + srb_amount + gst_amount);
+							var discount_amount = (amount_before_discount / 100) * discount;
+							$('#grand_total').val(delete_sum + srb_amount + gst_amount - discount_amount);
+							credit_balance_hidden = parseFloat($("#credit_balance_hidden").val());
+							grand_total_for_balance = parseFloat($("#grand_total").val());
+							$("#credit_balance").val(credit_balance_hidden + grand_total_for_balance);
+					});
+				}
 
 
 
@@ -1040,7 +1125,11 @@ $('#edit-purchase-return-submit').on('submit',function(e){
 				var account_holder = $('#account_holder').val();
 				var payment_method = $('#payment_method').val();
 				var footer_desc = $('#footer_desc').val();
-
+				var srb = $('#srb').val();
+				var gst = $('#gst').val();
+				var discount = $('#discount').val();
+				var po_no = $('#po_no').val();
+				var grn_no = $('#grn_no').val();
 
 				table.find('tr').each(function (i, el){
 				if(i != 0)
@@ -1106,6 +1195,11 @@ $('#edit-purchase-return-submit').on('submit',function(e){
 						'account_holder': account_holder,
 						'payment_method': payment_method,
 						'footer_desc': footer_desc,
+						'srb':srb,
+						'gst':gst,
+						"discount":discount,
+						'po_no':po_no,
+						'grn_no':grn_no,
 						'items': JSON.stringify(data),
 					},
 					dataType: 'json'
@@ -3719,5 +3813,43 @@ $('#tree1').treed();
 									$('.sort').DataTable();
 							} );
 
+			$('#sales_tax_invoice').on('click', function(){
+				var win = window.open(`sales-tax-print/${edit_id}`, '_blank');
+					if (win) {
+					    //Browser has allowed it to be opened
+					    win.focus();
+					} else {
+					    //Browser has blocked it
+					    alert('Please allow popups for this website');
+					}
+			})
+
+			$('#commercial_invoice').on('click', function(){
+				var win = window.open(`commercial-print/${edit_id}`, '_blank');
+					if (win) {
+							//Browser has allowed it to be opened
+							win.focus();
+					} else {
+							//Browser has blocked it
+							alert('Please allow popups for this website');
+					}
+			})
+
+
+			$("#customer").focusout(function(){
+				account_name = $(this).val()
+				req =	$.ajax({
+					 headers: { "X-CSRFToken": getCookie("csrftoken") },
+					 type: 'POST',
+					 data:{
+						 'account_name': account_name,
+					 },
+					 dataType: 'json'
+				 })
+				 .done(function done(data){
+					 $("#credit_balance").val(Math.round(data.debit_amount + data.credit_amount).toFixed(2));
+					 $("#credit_balance_hidden").val(Math.round(data.debit_amount + data.credit_amount).toFixed(2));
+				 })
+			});
 
 		});

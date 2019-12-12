@@ -48,7 +48,6 @@ def new_purchase(request):
         last_purchase_no = date[2:]+'PI'+serial
     else:
         last_purchase_no =  date[2:]+'PI1'
-
     item_code = request.POST.get('item_code_purchase')
     x_stand = request.POST.get('x_stand')
     if x_stand:
@@ -284,8 +283,75 @@ def new_sale(request):
         items = items.fetchall()
         return JsonResponse({"items":items})
     current_user = request.user
+    account_name = request.POST.get('account_name',False)
+    print("account name",account_name)
+    from_date = '2019-01-01'
+    to_date = datetime.date.today()
+    if account_name:
+        if account_name == "Walk in Customers":
+            return JsonResponse({"debit_amount":0,"credit_amount":0})
+        account_name = ChartOfAccount.objects.get(account_title = account_name)
+        pk = account_name.id
+        debit_amount = 0
+        credit_amount = 0
+        cursor = connection.cursor()
+        cursor.execute('''Select tran_type,refrence_id,refrence_date,remarks,ref_inv_tran_id,ref_inv_tran_type,Sum(Debit) Debit,Sum(Credit) Credit From (
+                        Select Distinct account_id_id,'Opening' As tran_type,'' As refrence_id,'' As refrence_date,'Opening Balance' As remarks,
+                        '' AS ref_inv_tran_id,'' AS ref_inv_tran_type,
+                        Case When Sum(amount) > -1 Then  sum(amount) Else 0 End As Debit,
+                        Case When Sum(amount) < -1 Then  sum(amount) Else 0 End As Credit from (
+                        Select id As Account_id_id, Sum(Opening_Balance) As amount
+                        From transaction_chartofaccount Where ID = (
+                        Select id from transaction_chartofaccount Where Parent_ID = %s)
+                        Union All
+                        Select id As account_id_id, Sum(Opening_Balance) As amount
+                        From transaction_chartofaccount Where ID = (%s)
+                        Union All
+                        Select account_id_id,Sum(amount) As amount From transaction_transactions
+                        where account_id_id in (
+                        Case When (Select id from transaction_chartofaccount Where Parent_ID = %s)
+                        <> '' Then (Select id from transaction_chartofaccount Where Parent_ID = %s)
+                        Else (%s) END) AND refrence_date < %s
+                        Union all
+                        Select account_id_id,Sum(amount) As amount From transaction_transactions
+                        where account_id_id in (%s) AND refrence_date < %s
+                        ) tblData
+                        Group By account_id_id
+                        Union all
+                        Select Distinct account_id_id,tran_type,refrence_id,refrence_date,remarks,ref_inv_tran_id,ref_inv_tran_type,
+                        Case When amount > -1 Then  amount Else 0 End As Debit,
+                        Case When amount < -1 Then  amount Else 0 End As Credit from (
+                        Select * From transaction_transactions
+                        where account_id_id in (
+                        Case When (Select id from transaction_chartofaccount Where Parent_ID = %s)
+                        <> '' Then (Select id from transaction_chartofaccount Where Parent_ID = %s)
+                        Else (%s) END)
+                        Union all
+                        Select * From transaction_transactions
+                        where account_id_id in (%s)
+                        ) tblData
+                        Where refrence_date Between %s And %s
+                        Order By account_id_id,refrence_date Asc
+                        ) As tblLedger
+                        Group By tran_type,refrence_id,refrence_date,remarks,ref_inv_tran_id,ref_inv_tran_type
+                        Order By refrence_date Asc''',[pk,pk,pk,pk,pk,from_date,pk,from_date,pk,pk,pk,pk,from_date,to_date])
+
+        row = cursor.fetchall()
+        print(row)
+        if row:
+            for v in row:
+                if v[6] >= 0:
+                    debit_amount = debit_amount + v[6]
+                if v[7] <= 0:
+                    credit_amount = credit_amount + v[7]
+        return JsonResponse({"debit_amount":debit_amount, "credit_amount":credit_amount})
     if request.method == "POST":
         sale_id = request.POST.get('sale_id',False)
+        srb = request.POST.get('srb',False)
+        gst = request.POST.get('gst',False)
+        discount = request.POST.get('discount',False)
+        po_no = request.POST.get('po_no',False)
+        grn_no = request.POST.get('grn_no',False)
         customer = request.POST.get('customer',False)
         account_holder = request.POST.get('account_holder',False)
         credit_days = request.POST.get('credit_days',False)
@@ -298,7 +364,7 @@ def new_sale(request):
         follow_up = get_date + datetime.timedelta(days=int(credit_days))
         follow_up = datetime.datetime.strftime(follow_up, "%Y-%m-%d")
 
-        sale_header = SaleHeader(sale_no = last_sale_no, date = date, footer_description = footer_desc, payment_method = payment_method, account_id = account_id, account_holder = account_holder, credit_days = credit_days ,follow_up = follow_up, user = current_user)
+        sale_header = SaleHeader(sale_no = last_sale_no, date = date, footer_description = footer_desc, payment_method = payment_method, account_id = account_id, account_holder = account_holder, credit_days = credit_days ,follow_up = follow_up, user = current_user, srb=srb,gst=gst,discount=discount, po_no=po_no, grn_no=grn_no)
         sale_header.save()
         items = json.loads(request.POST.get('items'))
         header_id = SaleHeader.objects.get(sale_no = sale_id)
@@ -315,18 +381,23 @@ def new_sale(request):
                 sale_detail = SaleDetail(item_id = item_id, item_description = value["description"], width = value["width"], height = value["height"], quantity = value["quantity"], meas = value["measurment"], rate = value["rate"], sale_id = header_id, total_amount = amount, total_square_fit = total_square_fit, total_pcs = 0)
             sale_detail.save()
             net = net + total_amount
+        net_srb = (float(total_amount) / 100) * float(srb)
+        net_gst = (float(total_amount) / 100) * float(gst)
+        amount_before_discount = net_gst + net_srb + total_amount
+        discount_amount = (amount_before_discount / 100) * float(discount)
+        net_amount = (float(net_srb) + float(net_gst) + float(total_amount) - float(discount_amount))
         header_id = header_id.id
         cash_in_hand = ChartOfAccount.objects.get(account_title = 'Cash')
         if payment_method == 'Cash':
-            tran1 = Transactions(refrence_id = header_id, refrence_date = date, account_id = cash_in_hand, tran_type = "Sale Invoice", amount = total_amount, date = date, remarks = last_sale_no, ref_inv_tran_id = 0, ref_inv_tran_type = "")
+            tran1 = Transactions(refrence_id = header_id, refrence_date = date, account_id = cash_in_hand, tran_type = "Sale Invoice", amount = net_amount, date = date, remarks = last_sale_no, ref_inv_tran_id = 0, ref_inv_tran_type = "")
             tran1.save()
-            tran2 = Transactions(refrence_id = header_id, refrence_date = date, account_id = account_id, tran_type = "Sale Invoice", amount = -abs(total_amount), date = date, remarks = last_sale_no, ref_inv_tran_id = 0, ref_inv_tran_type = "")
+            tran2 = Transactions(refrence_id = header_id, refrence_date = date, account_id = account_id, tran_type = "Sale Invoice", amount = -abs(net_amount), date = date, remarks = last_sale_no, ref_inv_tran_id = 0, ref_inv_tran_type = "")
             tran2.save()
         else:
             sale_account = ChartOfAccount.objects.get(account_title = 'Sales')
-            tran1 = Transactions(refrence_id = header_id, refrence_date = date, account_id = account_id, tran_type = "Sale Invoice", amount = total_amount, date = date, remarks = last_sale_no, ref_inv_tran_id = 0, ref_inv_tran_type = "")
+            tran1 = Transactions(refrence_id = header_id, refrence_date = date, account_id = account_id, tran_type = "Sale Invoice", amount = net_amount, date = date, remarks = last_sale_no, ref_inv_tran_id = 0, ref_inv_tran_type = "")
             tran1.save()
-            tran2 = Transactions(refrence_id = header_id, refrence_date = date, account_id = sale_account, tran_type = "Sale Invoice", amount = -abs(total_amount), date = date, remarks = last_sale_no, ref_inv_tran_id = 0, ref_inv_tran_type = "")
+            tran2 = Transactions(refrence_id = header_id, refrence_date = date, account_id = sale_account, tran_type = "Sale Invoice", amount = -abs(net_amount), date = date, remarks = last_sale_no, ref_inv_tran_id = 0, ref_inv_tran_type = "")
             tran2.save()
         return JsonResponse({'result':'success'})
     return render(request, 'transaction/new_sale.html',{"all_accounts":all_accounts,"last_sale_no":last_sale_no, 'all_job_order':all_job_order,'all_pcs':all_pcs})
@@ -364,18 +435,7 @@ def delete_sale(request, pk):
     else:
         messages.add_message(request, messages.ERROR, "You cannot delete this item, kindly delet it's voucher first.")
         return redirect('sale')
-#
-# def delete_sale(request,pk):
-#     refrence_id = Q(refrence_id = pk)
-#     tran_type = Q(tran_type = "Sale Invoice")
-#     ref_inv_tran_id = Q(ref_inv_tran_id = pk)
-#     ref_inv_tran_type = Q(ref_inv_tran_type = "Sale CRV")
-#     Transactions.objects.filter(refrence_id , tran_type).all().delete()
-#     Transactions.objects.filter(ref_inv_tran_id , ref_inv_tran_type).all().delete()
-#     SaleDetail.objects.filter(sale_id = pk).all().delete()
-#     SaleHeader.objects.filter(id = pk).delete()
-#     messages.add_message(request, messages.SUCCESS, "Sale Invoice Deleted")
-#     return redirect('sale')
+
 
 @login_required()
 def edit_sale(request, pk):
@@ -660,8 +720,110 @@ def print_sale(request, pk):
         elif value.meas == "pieces":
             amount = float(value.rate) * float(value.total_pcs)
             total_amount = total_amount + amount
+        from_date = "2019-01-01"
+        to_date = datetime.date.today()
+        debit_amount = 0
+        credit_amount = 0
+        pk = header.account_id.id
+        cursor = connection.cursor()
+        cursor.execute('''Select tran_type,refrence_id,refrence_date,remarks,ref_inv_tran_id,ref_inv_tran_type,Sum(Debit) Debit,Sum(Credit) Credit From (
+                        Select Distinct account_id_id,'Opening' As tran_type,'' As refrence_id,'' As refrence_date,'Opening Balance' As remarks,
+                        '' AS ref_inv_tran_id,'' AS ref_inv_tran_type,
+                        Case When Sum(amount) > -1 Then  sum(amount) Else 0 End As Debit,
+                        Case When Sum(amount) < -1 Then  sum(amount) Else 0 End As Credit from (
+                        Select id As Account_id_id, Sum(Opening_Balance) As amount
+                        From transaction_chartofaccount Where ID = (
+                        Select id from transaction_chartofaccount Where Parent_ID = %s)
+                        Union All
+                        Select id As account_id_id, Sum(Opening_Balance) As amount
+                        From transaction_chartofaccount Where ID = (%s)
+                        Union All
+                        Select account_id_id,Sum(amount) As amount From transaction_transactions
+                        where account_id_id in (
+                        Case When (Select id from transaction_chartofaccount Where Parent_ID = %s)
+                        <> '' Then (Select id from transaction_chartofaccount Where Parent_ID = %s)
+                        Else (%s) END) AND refrence_date < %s
+                        Union all
+                        Select account_id_id,Sum(amount) As amount From transaction_transactions
+                        where account_id_id in (%s) AND refrence_date < %s
+                        ) tblData
+                        Group By account_id_id
+                        Union all
+                        Select Distinct account_id_id,tran_type,refrence_id,refrence_date,remarks,ref_inv_tran_id,ref_inv_tran_type,
+                        Case When amount > -1 Then  amount Else 0 End As Debit,
+                        Case When amount < -1 Then  amount Else 0 End As Credit from (
+                        Select * From transaction_transactions
+                        where account_id_id in (
+                        Case When (Select id from transaction_chartofaccount Where Parent_ID = %s)
+                        <> '' Then (Select id from transaction_chartofaccount Where Parent_ID = %s)
+                        Else (%s) END)
+                        Union all
+                        Select * From transaction_transactions
+                        where account_id_id in (%s)
+                        ) tblData
+                        Where refrence_date Between %s And %s
+                        Order By account_id_id,refrence_date Asc
+                        ) As tblLedger
+                        Group By tran_type,refrence_id,refrence_date,remarks,ref_inv_tran_id,ref_inv_tran_type
+                        Order By refrence_date Asc''',[pk,pk,pk,pk,pk,from_date,pk,from_date,pk,pk,pk,pk,from_date,to_date])
+        row = cursor.fetchall()
+        if row:
+            for v in row:
+                if v[6] >= 0:
+                    debit_amount = debit_amount + v[6]
+                if v[7] <= 0:
+                    credit_amount = credit_amount + v[7]
+            print("here is debit", debit_amount)
+            print("here is credit", credit_amount)
+        credit_balance = debit_amount + credit_amount
+    pdf = render_to_pdf('transaction/sale_pdf.html', {'header':header, 'detail':detail,'image':image, 'total_lines':12, 'total_amount':total_amount, 'total_quantity':total_quantity,'total_square_fit':total_square_fit,"credit_balance":credit_balance})
+    if pdf:
+        response = HttpResponse(pdf, content_type='application/pdf')
+        filename = "Sale_%s.pdf" % (header.sale_no)
+        content = "inline; filename='%s'" % (filename)
+        response['Content-Disposition'] = content
+        return response
+    return HttpResponse("Not found")
 
-    pdf = render_to_pdf('transaction/sale_pdf.html', {'header':header, 'detail':detail,'image':image, 'total_lines':12, 'total_amount':total_amount, 'total_quantity':total_quantity,'total_square_fit':total_square_fit})
+
+@login_required()
+def print_sale_tax(request, pk):
+    lines = 0
+    total_amount = 0
+    total_quantity = 0
+    total_square_fit = 0
+    square_fit = 0
+    header = SaleHeader.objects.filter(id = pk).first()
+    detail = SaleDetail.objects.filter(sale_id = pk).all()
+    image = Company_info.objects.first()
+    for value in detail:
+        if value.meas == "sq.ft":
+            square_fit = float(value.width * value.height)
+            gross = square_fit * float(value.rate)
+            amount = gross * float(value.quantity)
+            total_amount = total_amount + amount
+            total_quantity = (total_quantity + value.quantity)
+            square_fit = value.height * value.width * value.quantity
+            total_square_fit = total_square_fit + square_fit
+        elif value.meas == "sq.inches":
+            square_fit = float(value.width * value.height) / 144
+            gross = square_fit * float(value.rate)
+            amount = gross * float(value.quantity)
+            total_amount = total_amount + amount
+            total_quantity = (total_quantity + value.quantity)
+            square_fit = value.height * value.width * value.quantity / 144
+            total_square_fit = total_square_fit + square_fit
+        elif value.meas == "pieces":
+            amount = float(value.rate) * float(value.total_pcs)
+            total_amount = total_amount + amount
+    srb_amount = float(total_amount / 100) * float(header.srb)
+    gst_amount = float(total_amount / 100) * float(header.gst)
+    gst_srb = gst_amount + srb_amount
+    amount_before_discount = gst_srb + total_amount
+    discount = header.discount
+    discount_amount = float(amount_before_discount / 100) * float(discount)
+    gross_amount = amount_before_discount-discount_amount
+    pdf = render_to_pdf('transaction/sales_tax_invoice.html', {'header':header, 'detail':detail,'image':image, 'total_lines':12, 'total_amount':total_amount, 'total_quantity':total_quantity,'total_square_fit':total_square_fit,"gst_srb":gst_srb,"discount":discount,"gross_amount":gross_amount})
     if pdf:
         response = HttpResponse(pdf, content_type='application/pdf')
         filename = "Sale_%s.pdf" % (header.sale_no)
@@ -676,7 +838,7 @@ def journal_voucher(request):
     serial = "1"
     cursor = connection.cursor()
     get_last_tran_id = cursor.execute('''select * from transaction_voucherheader where voucher_no LIKE '%JV%'
-                                        order by voucher_no DESC LIMIT 1''')
+                                        order by id DESC LIMIT 1''')
     get_last_tran_id = get_last_tran_id.fetchall()
 
     date = datetime.date.today()
@@ -688,6 +850,7 @@ def journal_voucher(request):
         get_last_tran_id = date[2:]+'JV'+serial
     else:
         get_last_tran_id =  date[2:]+'JV1'
+    print("after", get_last_tran_id)
     account_id = request.POST.get('account_title', False)
     all_accounts = ChartOfAccount.objects.all()
     if account_id:
@@ -1233,10 +1396,10 @@ def new_cash_receiving_voucher(request):
             amount = float(value["debit"]) - float(value['balance'])
 
             tran1 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = amount,
-                                date = date, remarks = get_last_tran_id, account_id = cash_account,ref_inv_tran_id = invoice_no.id,ref_inv_tran_type = "Sale CRV", voucher_id = voucher_id )
+                                date = date, remarks = description, account_id = cash_account,ref_inv_tran_id = invoice_no.id,ref_inv_tran_type = "Sale CRV", voucher_id = voucher_id )
             tran1.save()
             tran2 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = -abs(amount),
-                                date = date, remarks = get_last_tran_id, account_id = account_id,ref_inv_tran_id = invoice_no.id,ref_inv_tran_type = "Sale CRV", voucher_id = voucher_id )
+                                date = date, remarks = description, account_id = account_id,ref_inv_tran_id = invoice_no.id,ref_inv_tran_type = "Sale CRV", voucher_id = voucher_id )
             tran2.save()
             header_id = VoucherHeader.objects.get(voucher_no = get_last_tran_id)
             jv_detail1 = VoucherDetail(account_id = cash_account, debit = amount, credit = 0.00, header_id = header_id, invoice_id = invoice_no.id)
@@ -1886,6 +2049,194 @@ def jv_pdf(request, pk):
     debit = VoucherDetail.objects.filter(header_id = header.id).aggregate(Sum('debit'))
     credit = VoucherDetail.objects.filter(header_id = header.id).aggregate(Sum('credit'))
     pdf = render_to_pdf('transaction/jv_pdf.html', {'company_info':company_info, 'header':header, 'detail':detail, "debit":debit, "credit":credit})
+    if pdf:
+        response = HttpResponse(pdf, content_type='application/pdf')
+        filename = "CashReceivingVoucher.pdf"
+        content = "inline; filename='%s'" %(filename)
+        response['Content-Disposition'] = content
+        return response
+    return HttpResponse("Not found")
+
+
+def sale_detail_report(request):
+    company_info = Company_info.objects.all()
+    from_date = request.POST.get('from_date')
+    to_date = request.POST.get('to_date')
+    sale_detail_list = SaleHeader.objects.filter(date__range=[from_date,to_date]).all()
+    sale_detail = SaleDetail.objects.all()
+    sale_header = []
+    balance = 0
+    for i,value in enumerate(sale_detail_list):
+        total_amount = 0
+        for sd in sale_detail:
+            if value.id == sd.sale_id.id:
+                total_amount = total_amount + sd.total_amount
+        srb_amount = (float(total_amount) / float(100)) * float(value.srb)
+        gst_amount = (float(total_amount) / float(100)) * float(value.gst)
+        gst_srb = float(srb_amount) + float(gst_amount)
+        amount_before_discount = float(gst_srb) + float(total_amount)
+        discount_amount = (amount_before_discount / float(100) * float(value.discount) )
+        gross_amount = float(amount_before_discount) - float(discount_amount)
+
+        info = {
+        "id":value.id,
+        "date": value.date,
+        "invoice_no": value.sale_no,
+        "customer_name": value.account_id.account_title,
+        "gst_srb":gst_srb,
+        "discount":value.discount,
+        "gross_amount": gross_amount,
+        }
+        sale_header.append(info)
+
+    context = {
+    "sale_detail_list":sale_header,
+    "sale_detail":sale_detail,
+    "company_info":company_info,
+    "from_date":from_date,
+    "to_date":to_date
+    }
+    pdf = render_to_pdf('transaction/sale_detail_report.html', context)
+    if pdf:
+        response = HttpResponse(pdf, content_type='application/pdf')
+        filename = "CashReceivingVoucher.pdf"
+        content = "inline; filename='%s'" %(filename)
+        response['Content-Disposition'] = content
+        return response
+    return HttpResponse("Not found")
+
+
+def daily_report(request):
+    sale_detail_list = []
+    sale_detail_list_on_cash = []
+    expenses = []
+    crvs = []
+    cpvs = []
+    sales = {}
+    sales_on_cash = {}
+    daily_expenses = {}
+    daily_crv = {}
+    daily_cpv = {}
+    total_amount = 0
+    grand_total_on_credit = 0
+    grand_total_on_cash = 0
+    grand_total_expense = 0
+    total_crv = 0
+    company_info = Company_info.objects.all()
+    date = Q(date = "2019-08-02")
+    on_credit = Q(payment_method = "Credit")
+    daily_sales_on_credit = SaleHeader.objects.filter(date,on_credit).all()
+    sale_detail = SaleDetail.objects.all()
+    for sale in daily_sales_on_credit:
+        total_amount = 0
+        for detail in sale_detail:
+            if detail.sale_id.id == sale.id:
+                print(detail.total_amount)
+                total_amount = total_amount + detail.total_amount
+                print(total_amount)
+        gst = sale.gst / 100 * total_amount
+        srb = sale.srb / 100 * total_amount
+        gst_srb = gst + srb
+        total_before_discount = total_amount + gst_srb
+        discount_amount =  total_before_discount / 100 * sale.discount
+        final_total_amount = total_before_discount - discount_amount
+        grand_total_on_credit = grand_total_on_credit + final_total_amount
+        sales = {
+        "invoice_no": sale.sale_no,
+        "customer_name": sale.account_id.account_title,
+        "gst_srb":gst_srb,
+        "discount":sale.discount,
+        "total_amount":final_total_amount,
+        }
+        sale_detail_list.append(sales)
+    on_cash = Q(payment_method = "Cash")
+    daily_sales_on_cash = SaleHeader.objects.filter(date,on_cash).all()
+    sale_detail = SaleDetail.objects.all()
+    for sale in daily_sales_on_cash:
+        total_amount = 0
+        for detail in sale_detail:
+            if detail.sale_id.id == sale.id:
+                print(detail.total_amount)
+                total_amount = total_amount + detail.total_amount
+                print(total_amount)
+        gst = sale.gst / 100 * total_amount
+        srb = sale.srb / 100 * total_amount
+        gst_srb = gst + srb
+        total_before_discount = total_amount + gst_srb
+        discount_amount =  total_before_discount / 100 * sale.discount
+        final_total_amount = total_before_discount - discount_amount
+        grand_total_on_cash = grand_total_on_cash + final_total_amount
+        sales_on_cash = {
+        "invoice_no": sale.sale_no,
+        "customer_name": sale.account_id.account_title,
+        "gst_srb":gst_srb,
+        "discount":sale.discount,
+        "total_amount":final_total_amount,
+        }
+        sale_detail_list_on_cash.append(sales_on_cash)
+    cursor = connection.cursor()
+    expense_account = cursor.execute('''select VH.id, VH.voucher_no, COA.account_title as "Expense Account", VH.description as "Discription" , VD.debit as "Amount"
+                                    from transaction_voucherdetail VD
+                                    inner join transaction_voucherheader VH on VH.id = VD.header_id_id
+                                    inner join transaction_chartofaccount COA on COA.id = VD.account_id_id
+                                    where VH.voucher_no like '%JV%' and VH.doc_date = "2019-12-12" and VD.account_id_id != "6"
+                                    group by VD.id, VH.id''')
+    expense_account = expense_account.fetchall()
+    for expens in expense_account:
+        grand_total_expense = grand_total_expense + expens[4]
+        daily_expenses = {
+        "voucher_no": expens[1],
+        "expense_account": expens[2],
+        "description":expens[3],
+        "amount":expens[4],
+        }
+        expenses.append(daily_expenses)
+    crv_details = cursor.execute('''select VH.id, VH.voucher_no, COA.account_title as "Customer", VH.description as "Discription" , VD.credit as "Amount"
+                        from transaction_voucherdetail VD
+                        inner join transaction_voucherheader VH on VH.id = VD.header_id_id
+                        inner join transaction_chartofaccount COA on COA.id = VD.account_id_id
+                        where VH.voucher_no like '%CRV%' and VH.doc_date = "2019-09-13" and VD.account_id_id != "6"
+                        group by VD.id, VH.id''')
+    crv_details = crv_details.fetchall()
+    for crv in crv_details:
+        total_crv = total_crv + abs(crv[4])
+        daily_crv = {
+        "voucher_no": crv[1],
+        "customer": crv[2],
+        "description":crv[3],
+        "amount":abs(crv[4]),
+        }
+        crvs.append(daily_crv)
+
+    cpv_details = cursor.execute('''select VH.id, VH.voucher_no, COA.account_title as "Customer", VH.description as "Discription" , VD.credit as "Amount"
+                        from transaction_voucherdetail VD
+                        inner join transaction_voucherheader VH on VH.id = VD.header_id_id
+                        inner join transaction_chartofaccount COA on COA.id = VD.account_id_id
+                        where VH.voucher_no like '%CPV%' and VH.doc_date = "2019-09-13" and VD.account_id_id != "6"
+                        group by VD.id, VH.id''')
+    cpv_details = cpv_details.fetchall()
+    for cpv in cpv_details:
+        total_cpv = total_cpv + abs(cpv[4])
+        daily_cpv = {
+        "voucher_no": cpv[1],
+        "customer": cpv[2],
+        "description":cpv[3],
+        "amount":abs(cpv[4]),
+        }
+        cpvs.append(daily_cpv)
+
+    context = {
+    "sale_detail_list":sale_detail_list,
+    "sale_detail_list_on_cash":sale_detail_list_on_cash,
+    "grand_total_on_credit":grand_total_on_credit,
+    "grand_total_on_cash":grand_total_on_cash,
+    "crvs":crvs,
+    "expenses":expenses,
+    "grand_total_expense": grand_total_expense,
+    "total_crv":total_crv,
+    "company_info":company_info
+    }
+    pdf = render_to_pdf('transaction/daily_report_pdf.html', context)
     if pdf:
         response = HttpResponse(pdf, content_type='application/pdf')
         filename = "CashReceivingVoucher.pdf"
