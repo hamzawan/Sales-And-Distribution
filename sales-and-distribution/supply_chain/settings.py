@@ -69,6 +69,11 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'users.context_processors.side_bar_objects',
+                'users.context_processors.add_allow',
+                'users.context_processors.edit_allow',
+                'users.context_processors.delete_allow',
+                'users.context_processors.print_allow',
             ],
         },
     },
@@ -130,6 +135,9 @@ LOGIN_URL = 'login'
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
 STATIC_URL = '/static/'
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
 
 MESSAGE_TAGS = {
     messages.DEBUG: 'alert-info',

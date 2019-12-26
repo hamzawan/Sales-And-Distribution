@@ -39,6 +39,7 @@ def add_item(request):
 
 @login_required
 def stock(request):
+    request.session['objectID'] = 8
     cursor = connection.cursor()
     stock = cursor.execute('''Select itemID,Size,item_code, item_name,Item_description,Unit,SUM(Quantity) As qty From (
                             Select 'Opening Stock' As TranType,ID As ItemID, Size, Item_Code, Item_name, Item_description, unit,Opening_Stock as Quantity

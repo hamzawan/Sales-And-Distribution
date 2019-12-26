@@ -1,0 +1,25 @@
+ObjectID,ObjectTitle,ObjectName,ParentID,IsActive,ObjectCategory,SerialNo,Icons
+2,Inventory,-,0,1,Inventory,1,fa fa-archive
+3,Job Orders,-,0,1,Job Orders,2,fa fa-tasks
+4,Transaction,-,0,1,Transaction,3,fas fa-exchange-alt
+5,Reports,-,0,1,Reports,4,fa fa-chart-bar
+6,Settings,-,0,1,Settings,5,fas fa-cog
+7,Add Item,add-item,2,1,Inventory,-,-
+8,Stock,stock,2,1,Inventory,-,-
+9,Job Orders,job-order,3,1,Job Orders,-,-
+10,Chart Of Accounts,chart-of-account,4,1,Transaction,-,-
+11,Purchase,purchase,4,1,Transaction,-,-
+12,Sale,sale,4,1,Transaction,-,-
+13,Journal Voucher,journal-voucher-summary,4,1,Transaction,-,-
+14,Cash Receiving Vou,cash-receiving-voucher,4,1,Transaction,-,-
+15,Cash Payment Vou,cash-payment-voucher,4,1,Transaction,-,-
+16,Trial Balance,trial-balance,25,1,Reports,-,-
+17,User,user-roles,6,1,Settings,-,-
+18,User Roles,user-roles,6,1,Settings,-,-
+19,Account Ledger,account-ledger,25,1,Reports,-,-
+20,Receivable Ledger,receivable-ledger,25,1,Reports,-,-
+21,Payable Ledger,payable-ledger,25,1,Reports,-,-
+22,Account Ledger (Credit Days),account-ledger-credit-days,25,1,Reports,-,-
+23,Sale Detail,sale-detail,25,1,Reports,-,-
+24,Daily Report,daily-report,25,1,Reports,-,-
+25,Reports,reports,5,1,Reports,-,-

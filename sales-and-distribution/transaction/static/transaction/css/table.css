@@ -4,6 +4,11 @@ body {
 font-family: 'Open Sans', sans-serif;
 }
 
+.disableClick{
+    pointer-events: none;
+     opacity: 0.5;
+}
+
 #dataTable.table tbody tr td{
     font-size: 14px;
 }

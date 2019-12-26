@@ -1453,8 +1453,10 @@ $('#edit-purchase-return-submit').on('submit',function(e){
 				var account_holder = $('#account_holder').val();
 				var credit_days = $('#credit_days').val();
 				var customer = $('#customer_name_sale').val();
-				console.log(customer);
 				var payment_method = $('#payment_method').val();
+				var gst = $('#gst').val();
+				var srb = $('#srb').val();
+				var discount = $('#discount').val();
 				var footer_desc = $('#footer_desc').val();
 
 
@@ -1526,6 +1528,9 @@ $('#edit-purchase-return-submit').on('submit',function(e){
 						'credit_days': credit_days,
 						'payment_method': payment_method,
 						'footer_desc': footer_desc,
+						'gst':gst,
+						'srb':srb,
+						'discount':discount,
 						'items': JSON.stringify(data),
 					},
 					dataType: 'json'
@@ -3804,8 +3809,8 @@ $('#tree1').treed();
 					$(".delete-crv-summary").on('click',function(){
 							$("#modal_delete_button").attr("href", `/transaction/cash_receiving_voucher/delete/${this.id}`);
 						})
-					$(".delete-cpv-summary").on('click',function(){
-							$("#modal_delete_button").attr("href", `/transaction/cash_payment_voucher/delete/${this.id}`);
+					$(".delete-ur-summary").on('click',function(){
+							$("#modal_delete_button").attr("href", `/roles/delete/${this.id}`);
 						})
 
 

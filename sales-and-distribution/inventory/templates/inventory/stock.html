@@ -42,7 +42,18 @@
               <td><pre>{{ value.4 }}</pre></td>
               <td>{{ value.6|floatformat:2 }}</td>
               <td>{{ value.5 }}</td>
-  			      <td><a class="edit_list" href="{% url 'edit-item' pk=value.0 %}" title="Edit" data-toggle="tooltip"><i class="material-icons">&#xE254;</i></a><a class="delete_item_row" href="#" data-toggle="modal" data-target="#deleteStockModal" id="{{value.0}}"><i class="material-icons">&#xE872;</i></a></td>
+  			      <td>
+              {% if allow_edit.0.0 == 1 %}
+              <a class="edit_list" href="{% url 'edit-item' pk=value.0 %}" title="Edit" data-toggle="tooltip"><i class="material-icons">&#xE254;</i></a>
+              {% else %}
+              <a class="edit_list disableClick" href="" title="Edit" data-toggle="tooltip"><i class="material-icons">&#xE254;</i></a>
+              {% endif %}
+              {% if allow_delete.0.0 == 1 %}
+              <a class="delete_item_row" href="#" data-toggle="modal" data-target="#deleteStockModal" id="{{value.0}}"><i class="material-icons">&#xE872;</i></a>
+              {% else %}
+              <a class="delete_item_row disableClick" ><i class="material-icons">&#xE872;</i></a>
+              {% endif %}
+              </td>
           </tr>
           {% endfor %}
         </tbody>

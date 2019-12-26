@@ -11,7 +11,11 @@
 
     <div class="input-group">
       <div class="col-md-12">
-        <a role="button" href="{% url 'journal-voucher' %}" style="float:right;" class="btn btn-outline-secondary" name="button"><i class="fas fa-plus"></i> Add New</a>
+        {% if allow_add.0.0 == 1 %}
+          <a role="button" href="{% url 'journal-voucher' %}" style="float:right;" class="btn btn-outline-secondary" name="button"><i class="fas fa-plus"></i> Add New</a>
+        {% else %}
+          <a role="button disableClick" style="float:right;" class="btn btn-outline-secondary disableClick" name="button"><i class="fas fa-plus"></i> Add New</a>
+        {% endif %}
       </div>
     </div>
     <br>
@@ -47,7 +51,23 @@
                     <td>{{value.2}}</td>
                     <td>{{value.3}}</td>
                     <td>{{value.6}}</td>
-                    <td><a class="edit_list" href="{% url 'edit-journal-voucher' pk=value.0%}" data-toggle=""><i class="material-icons">&#xE254;</i></a><a href="{% url 'jv-pdf' pk=value.0 %}" target="_blank" data-toggle=""><i class="fa fa-print" id="print_icon" aria-hidden="true"></i></a><a class="delete-journal-voucher" href="#" data-toggle="modal" data-target="#deleteJournalVoucherModal" id="{{value.0}}"><i class="material-icons">&#xE872;</i></a></td>
+                    <td>
+                      {% if allow_edit.0.0 == 1 %}
+                        <a class="edit_list" href="{% url 'edit-journal-voucher' pk=value.0%}" data-toggle=""><i class="material-icons">&#xE254;</i></a>
+                      {% else %}
+                        <a class="edit_list disableClick"  data-toggle=""><i class="material-icons">&#xE254;</i></a>
+                      {% endif %}
+                      {% if allow_print.0.0 == 1 %}
+                        <a href="{% url 'jv-pdf' pk=value.0 %}" target="_blank" data-toggle=""><i class="fa fa-print" id="print_icon" aria-hidden="true"></i></a>
+                      {% else %}
+                        <a href="" target="_blank" class="disableClick" data-toggle=""><i class="fa fa-print" id="print_icon" aria-hidden="true"></i></a>
+                      {% endif %}
+                      {% if allow_delete.0.0 == 1 %}
+                        <a class="delete-journal-voucher" href="#" data-toggle="modal" data-target="#deleteJournalVoucherModal" id="{{value.0}}"><i class="material-icons">&#xE872;</i></a>
+                      {% else %}
+                        <a class="delete-journal-voucher disableClick" ><i class="material-icons">&#xE872;</i></a>
+                      {% endif %}
+                    </td>
                 </tr>
             {% endfor %}
           </tbody>

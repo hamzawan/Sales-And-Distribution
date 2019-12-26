@@ -138,8 +138,19 @@
              <td width="90px"></td>
              <td width="90px"></td>
              <td width="90px"></td>
-             <td width="90px" align="right" colspan="1"><font size="14px"><b>GST/SRB:</b></td>
-             <td width="90px" align="right"><font size="14px">{{value.gst_srb|floatformat:2}}</td>
+             <td width="90px" align="right" colspan="1"><font size="14px"><b>GST:</b></td>
+             <td width="90px" align="right"><font size="14px"><small>({{value.gst_percent}}%)</small> {{value.gst_amount|floatformat:2}}</td>
+           </tr>
+           <tr>
+             <td width="50px"></td>
+             <td width="280px"></td>
+             <td width="90px"></td>
+             <td width="90px"></td>
+             <td width="90px"></td>
+             <td width="90px"></td>
+             <td width="90px"></td>
+             <td width="90px" align="right" colspan="1"><font size="14px"><b>SRB:</b></td>
+             <td width="90px" align="right"><font size="14px"><small>({{value.srb_percent}}%)</small> {{value.srb_amount|floatformat:2}}</td>
            </tr>
            <tr>
              <td width="50px"></td>

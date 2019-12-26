@@ -28,57 +28,6 @@
               <div class="card-body">
                 <div class="row">
                     <div class="col-md-12">
-                        <!-- <ul id="tree1">
-                            <li><a href="#">Chart Of Account</a>
-                                <ul>
-                                {% for v in all_accounts_null %}
-                                    <li><a href="#">{{v.account_title}}</a>
-                                      {% for a in all_accounts  %}
-                                        {% if v.id == a.parent_id %}
-                                        <ul>
-                                            <li><a href="#">{{a.account_title}}</a>
-                                                <ul>
-                                                  {% for b in all_accounts %}
-                                                  {% if a.id == b.parent_id %}
-                                                  <li><a href="#">{{b.account_title}}</a>
-                                                    <ul>
-                                                      {% for c in all_accounts %}
-                                                      {% if b.id == c.parent_id %}
-                                                      <li><a href="#">{{c.account_title}}</a>
-                                                        <ul>
-                                                          {% for d in all_accounts %}
-                                                          {% if c.id == d.parent_id %}
-                                                          <li><a href="#">{{d.account_title}}</a>
-                                                            <ul>
-                                                              {% for e in all_accounts %}
-                                                              {% if d.id == e.parent_id %}
-                                                              <li><a href="#">{{e.account_title}}</a>
-                                                              </li>
-                                                              {% endif %}
-                                                              {% endfor %}
-                                                            </ul>
-                                                          </li>
-                                                          {% endif %}
-                                                          {% endfor %}
-                                                        </ul>
-                                                      </li>
-                                                      {% endif %}
-                                                      {% endfor %}
-                                                    </ul>
-                                                  </li>
-                                                  {% endif %}
-                                                  {% endfor %}
-                                                </ul>
-                                            </li>
-                                        </ul>
-                                        {% endif %}
-                                      {% endfor %}
-                                    </li>
-                                  {% endfor %}
-                                </ul>
-                            </li>
-                        </ul> -->
-
                         <div class="table table-responsive content-loader">
                           <table class="table table-bordered" id="dataTable">
                               <thead>
@@ -105,8 +54,16 @@
                                     <td style="display:none;" >{{ value.remarks }}</td>
                                     <td style="display:none;" >{{ value.credit_limit }}</td>
                                     <td>
-                                      <a class="edit_list has_id" href="#" data-toggle="modal" data-target="#editCoaModal" id="{{value.id}}"><i class="material-icons">&#xE254;</i></a>
-                                      <a class="delete-chart-of-account" href="#" data-toggle="modal" data-target="#deleteCoaModal" id="{{value.id}}"><i class="material-icons">&#xE872;</i></a>
+                                      {% if allow_edit.0.0 == 1 %}
+                                        <a class="edit_list has_id" href="#" data-toggle="modal" data-target="#editCoaModal" id="{{value.id}}"><i class="material-icons">&#xE254;</i></a>
+                                      {% else %}
+                                        <a class="edit_list disableClick" ><i class="material-icons">&#xE254;</i></a>
+                                      {% endif %}
+                                      {% if allow_delete.0.0 == 1 %}
+                                        <a class="delete-chart-of-account" href="#" data-toggle="modal" data-target="#deleteCoaModal" id="{{value.id}}"><i class="material-icons">&#xE872;</i></a>
+                                      {% else %}
+                                        <a class="delete-chart-of-account disableClick" ><i class="material-icons">&#xE872;</i></a>
+                                      {% endif %}
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -123,6 +80,7 @@
             <div class="card">
               <div class="card-body">
           <div class="float-right">
+            {% if allow_add.0.0 == 1 %}
         <form id="assign" class="" action="{% url 'chart-of-account' %}" method="post" autocomplete="off">
           {% csrf_token %}
               <div class="form-group row">
@@ -207,6 +165,8 @@
                 </div>
               </div>
             </form>
+            {% else %}
+            {% endif %}
               </div>
               </div>
               </div>
@@ -317,11 +277,6 @@
           <label for="" class="col-sm-12 form-control-sm col-form-label"></label>
           <div class="col-sm-12">
             <input type="submit" class="btn btn-outline-primary form-control" placeholder="" value="Update">
-            <!-- {% if permission.add == 1 %}
-            <input type="submit" class="btn btn-outline-primary form-control" placeholder="" value="Create">
-            {% else %}
-            <input disabled class="btn btn-outline-primary form-control" placeholder="" value="Create">
-            {% endif %} -->
           </div>
         </div>
       </div>

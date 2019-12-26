@@ -128,6 +128,7 @@ class Company_info(models.Model):
     ntn = models.CharField(max_length = 100)
     stn = models.CharField(max_length = 100)
     cnic = models.CharField(max_length = 100)
+    account_iban = models.CharField(max_length = 100)
 
 
 class VoucherHeader(models.Model):

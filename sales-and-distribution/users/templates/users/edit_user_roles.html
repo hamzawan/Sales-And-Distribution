@@ -1,0 +1,58 @@
+{% extends "transaction/base.html" %}
+{% load crispy_forms_tags %}
+{% block body %}
+
+<div class="card" style="width: 100%;">
+<div class="card-header">
+  <h4>Edit User Roles</h4>
+</div>
+<ul class="list-group list-group-flush">
+<form  action="" id="edit-roles-submit" method="post" autocomplete="off">
+  {% csrf_token %}
+  <li class="list-group-item">
+      <div class="form-row">
+        <div class="form-group col-md-2">
+          <label for="">User</label>
+          <select class="form-control form-control-sm" disabled name="select_user" id="select_user_edit">
+            <option value="{{user.id}}">{{user.username}}</option>
+          </select>
+        </div>
+        <div class="form-group col-md-2">
+          <label for="">Main Menu</label>
+          <select class="form-control form-control-sm"  name="" id="main_menu_edit">
+            <option value="">Select:</option>
+            {% for main in main_menu %}
+            <option value="{{main.ObjectID}}">{{main.ObjectTitle}}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group col-md-2">
+          <label for="">Sub Menu</label>
+          <select class="form-control form-control-sm" name="" id="sub_menu_edit">
+            <option value="">Select:</option>
+          </select>
+        </div>
+      </div>
+    </li>
+    <li class="list-group-item">
+    <div class="table table-responsive">
+      <table class="table table-bordered" id="edit_rights_table">
+          <thead>
+            <tr>
+                <th width="200px">Menu Name: </th>
+                <td id="menu_name"></td>
+            </tr>
+          </thead>
+          <tbody>
+          </tbody>
+      </table>
+    </div>
+    <div class="text-center">
+      <button type="submit" class="btn btn-outline-primary has_id" name="">Submit</button>
+    </div>
+  </li>
+</form>
+</ul>
+</div>
+
+{% endblock %}

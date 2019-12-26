@@ -1,11 +1,12 @@
 from django.shortcuts import render, redirect
 from inventory.models import Add_item
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import JsonResponse, HttpResponse
 from django.core import serializers
 from .models import (ChartOfAccount, PurchaseHeader, PurchaseReturnHeader, PurchaseDetail, SaleHeader, SaleDetail,
                     Company_info, SaleReturnDetail, SaleReturnHeader, VoucherHeader, VoucherDetail, Transactions,
                     JobOrderHeader, JobOrderDetail)
+from users.models import (tblUserRights)
 import datetime, json
 from .utils import render_to_pdf
 from django.template.loader import get_template
@@ -16,20 +17,61 @@ from num2words import num2words
 from decimal import Decimal
 
 
-
-
 @login_required()
 def home(request):
-    return render(request, 'transaction/index.html')
+    user_id = Q(UserID = request.user.id)
+    purchase_object_id = Q(ObjectID = 11)
+    sale_object_id = Q(ObjectID = 12)
+    jo_object_id = Q(ObjectID = 9)
+    report_object_id = Q(ObjectID = 25)
+    is_allow = Q(IsAllow = 1)
+    action_id = Q(ActionID = 1)
+    sale = tblUserRights.objects.filter(sale_object_id, user_id, is_allow, action_id)
+    purchase = tblUserRights.objects.filter(purchase_object_id, user_id, is_allow, action_id)
+    jo = tblUserRights.objects.filter(jo_object_id, user_id, is_allow, action_id)
+    report = tblUserRights.objects.filter(report_object_id, user_id, is_allow, action_id)
+    context = {
+    'sale':sale,
+    'purchase':purchase,
+    'jo':jo,
+    'report':report
+    }
+    return render(request, 'transaction/index.html', context)
+
+
+def allow_purchase(user):
+    user_id = Q(UserID = user.id)
+    object_id = Q(ObjectID = 11)
+    is_allow = Q(IsAllow = 1)
+    action_id = Q(ActionID = 1)
+    allow_role = tblUserRights.objects.filter(user_id, object_id, is_allow, action_id)
+    if allow_role:
+        return True
+    else:
+        return False
 
 
 @login_required()
+@user_passes_test(allow_purchase)
 def purchase(request):
+    request.session['objectID'] = 11
     all_purchases = PurchaseHeader.objects.all()
     return render(request, 'transaction/purchase.html', {'all_purchases': all_purchases})
 
 
+def allow_new_purchase(user):
+    user_id = Q(UserID = user.id)
+    object_id = Q(ObjectID = 11)
+    action_id = Q(ActionID = 2)
+    is_allow = Q(IsAllow = 1)
+    allow_role = tblUserRights.objects.filter(user_id, object_id, is_allow, action_id)
+    if allow_role:
+        return True
+    else:
+        return False
+
 @login_required()
+@user_passes_test(allow_new_purchase)
 def new_purchase(request):
     total_amount = 0
     net = 0
@@ -131,7 +173,20 @@ def voucher_avaliable_purchase(pk):
     else:
         return False
 
+def allow_delete_purchase(user):
+    user_id = Q(UserID = user.id)
+    object_id = Q(ObjectID = 11)
+    action_id = Q(ActionID = 4)
+    is_allow = Q(IsAllow = 1)
+    allow_role = tblUserRights.objects.filter(user_id, object_id, is_allow, action_id)
+    if allow_role:
+        return True
+    else:
+        return False
+
+
 @login_required
+@user_passes_test(allow_delete_purchase)
 def delete_purchase(request, pk):
     item = voucher_avaliable_purchase(pk)
     if item == True:
@@ -141,8 +196,20 @@ def delete_purchase(request, pk):
         messages.add_message(request, messages.ERROR, "You cannot delete this item, kindly delet it's voucher first.")
         return redirect('purchase')
 
+def allow_edit_purchase(user):
+    user_id = Q(UserID = user.id)
+    object_id = Q(ObjectID = 11)
+    action_id = Q(ActionID = 3)
+    is_allow = Q(IsAllow = 1)
+    allow_role = tblUserRights.objects.filter(user_id, object_id, is_allow, action_id)
+    if allow_role:
+        return True
+    else:
+        return False
+
 
 @login_required()
+@user_passes_test(allow_edit_purchase)
 def edit_purchase(request, pk):
     total_amount = 0
     net = 0
@@ -190,14 +257,12 @@ def edit_purchase(request, pk):
                 pcs_amount = float(value["rate"]) * float(value["quantity"])
                 total_amount = total_amount + pcs_amount
                 purchase_detail = PurchaseDetail(item_id = item_id, item_description = "", width = 0, height = 0, quantity = 0, meas = "pieces", rate = value["rate"], purchase_id = header_id, total_amount = pcs_amount, total_square_fit = 0, total_pcs = value["quantity"])
-                print(total_amount)
             else:
                 amount = float(value["sqft"]) * float(value["rate"])
                 total_amount = total_amount + amount
                 total_square_fit = value["sqft"]
                 purchase_detail = PurchaseDetail(item_id = item_id, item_description = "", width = value["width"], height = value["height"], quantity = value["quantity"], meas = value["measurment"], rate = value["rate"], purchase_id = header_id, total_amount = amount, total_square_fit = total_square_fit, total_pcs = 0)
                 net = net + total_amount
-            print(total_amount)
             purchase_detail.save()
 
         cash_in_hand = ChartOfAccount.objects.get(account_title = 'Cash')
@@ -241,13 +306,40 @@ def new_purchase_return(request):
     return render(request, 'transaction/purchase_return.html')
 
 
+def allow_sale(user):
+    user_id = Q(UserID = user.id)
+    object_id = Q(ObjectID = 12)
+    action_id = Q(ActionID = 4)
+    is_allow = Q(IsAllow = 1)
+    allow_role = tblUserRights.objects.filter(user_id, object_id, is_allow, action_id)
+    if allow_role:
+        return True
+    else:
+        return False
+
+
 @login_required()
+@user_passes_test(allow_sale)
 def sale(request):
+    request.session['objectID'] = 12
     all_sales = SaleHeader.objects.all()
     return render(request, 'transaction/sale.html',{"all_sales": all_sales})
 
 
+def allow_sale_new(user):
+    user_id = Q(UserID = user.id)
+    object_id = Q(ObjectID = 12)
+    action_id = Q(ActionID = 2)
+    is_allow = Q(IsAllow = 1)
+    allow_role = tblUserRights.objects.filter(user_id, object_id, is_allow, action_id)
+    if allow_role:
+        return True
+    else:
+        return False
+
+
 @login_required()
+@user_passes_test(allow_sale_new)
 def new_sale(request):
     total_amount = 0
     net = 0
@@ -426,7 +518,20 @@ def voucher_avaliable_sale(pk):
     else:
         return False
 
+def allow_sale_delete(user):
+    user_id = Q(UserID = user.id)
+    object_id = Q(ObjectID = 12)
+    action_id = Q(ActionID = 4)
+    is_allow = Q(IsAllow = 1)
+    allow_role = tblUserRights.objects.filter(user_id, object_id, is_allow, action_id)
+    if allow_role:
+        return True
+    else:
+        return False
+
+
 @login_required
+@user_passes_test(allow_sale_delete)
 def delete_sale(request, pk):
     item = voucher_avaliable_sale(pk)
     if item == True:
@@ -436,8 +541,20 @@ def delete_sale(request, pk):
         messages.add_message(request, messages.ERROR, "You cannot delete this item, kindly delet it's voucher first.")
         return redirect('sale')
 
+def allow_sale_edit(user):
+    user_id = Q(UserID = user.id)
+    object_id = Q(ObjectID = 12)
+    action_id = Q(ActionID = 3)
+    is_allow = Q(IsAllow = 1)
+    allow_role = tblUserRights.objects.filter(user_id, object_id, is_allow, action_id)
+    if allow_role:
+        return True
+    else:
+        return False
+
 
 @login_required()
+@user_passes_test(allow_sale_edit)
 def edit_sale(request, pk):
     total_amount = 0
     net = 0
@@ -471,6 +588,9 @@ def edit_sale(request, pk):
         credit_days = request.POST.get('credit_days', False)
         payment_method = request.POST.get('payment_method', False)
         footer_desc = request.POST.get('footer_desc', False)
+        gst = request.POST.get('gst', False)
+        srb = request.POST.get('srb', False)
+        discount = request.POST.get('discount', False)
         account_id = ChartOfAccount.objects.get(account_title=customer)
         date = datetime.date.today()
         start_date = str(date)
@@ -485,7 +605,9 @@ def edit_sale(request, pk):
         sale_header.payment_method = payment_method
         sale_header.footer_description = footer_desc
         sale_header.account_id = account_id
-
+        sale_header.gst = gst
+        sale_header.srb = srb
+        sale_header.discount = discount
         sale_header.save()
 
         items = json.loads(request.POST.get('items'))
@@ -546,9 +668,23 @@ def sale_return_summary(request):
 def new_sale_return(request):
     return render(request, 'transaction/sale_return.html')
 
+def allow_coa(user):
+    user_id = Q(UserID = user.id)
+    object_id = Q(ObjectID = 10)
+    action_id = Q(ActionID = 1)
+    is_allow = Q(IsAllow = 1)
+    allow_role = tblUserRights.objects.filter(user_id, object_id, is_allow, action_id)
+    if allow_role:
+        return True
+    else:
+        return False
+
+
 
 @login_required()
+@user_passes_test(allow_coa)
 def chart_of_account(request):
+    request.session['objectID'] = 10
     all_accounts_null = ChartOfAccount.objects.filter(parent_id = 0).all()
     vendor = Q(parent_id = 7)
     customer = Q(parent_id = 16)
@@ -583,7 +719,20 @@ def chart_of_account(request):
     return render(request, 'transaction/chart_of_account.html',{'all_accounts_null':all_accounts_null,'all_accounts':all_accounts})
 
 
+def allow_coa_edit(user):
+    user_id = Q(UserID = user.id)
+    object_id = Q(ObjectID = 10)
+    action_id = Q(ActionID = 3)
+    is_allow = Q(IsAllow = 1)
+    allow_role = tblUserRights.objects.filter(user_id, object_id, is_allow, action_id)
+    if allow_role:
+        return True
+    else:
+        return False
+
+
 @login_required()
+@user_passes_test(allow_coa_edit)
 def edit_chart_of_account(request):
     if request.method == 'POST':
         id = request.POST.get('id')
@@ -646,7 +795,21 @@ def account_avaliable(pk):
         return False
 
 
+def allow_coa_delete(user):
+    user_id = Q(UserID = user.id)
+    object_id = Q(ObjectID = 10)
+    action_id = Q(ActionID = 4)
+    is_allow = Q(IsAllow = 1)
+    allow_role = tblUserRights.objects.filter(user_id, object_id, is_allow, action_id)
+    if allow_role:
+        return True
+    else:
+        return False
+
+
+
 @login_required()
+@user_passes_test(allow_coa_delete)
 def delete_account(request, pk):
     item = account_avaliable(pk)
     if item == True:
@@ -657,7 +820,19 @@ def delete_account(request, pk):
         return redirect('chart-of-account')
 
 
+def allow_purchase_print(user):
+    user_id = Q(UserID = user.id)
+    object_id = Q(ObjectID = 11)
+    action_id = Q(ActionID = 5)
+    is_allow = Q(IsAllow = 1)
+    allow_role = tblUserRights.objects.filter(user_id, object_id, is_allow, action_id)
+    if allow_role:
+        return True
+    else:
+        return False
+
 @login_required()
+@user_passes_test(allow_purchase_print)
 def print_purchase(request,pk):
     lines = 0
     total_amount = 0
@@ -690,7 +865,20 @@ def print_purchase(request,pk):
     return HttpResponse("Not found")
 
 
+def allow_sale_print(user):
+    user_id = Q(UserID = user.id)
+    object_id = Q(ObjectID = 12)
+    action_id = Q(ActionID = 5)
+    is_allow = Q(IsAllow = 1)
+    allow_role = tblUserRights.objects.filter(user_id, object_id, is_allow, action_id)
+    if allow_role:
+        return True
+    else:
+        return False
+
+
 @login_required()
+@user_passes_test(allow_sale_print)
 def print_sale(request, pk):
     lines = 0
     total_amount = 0
@@ -787,6 +975,7 @@ def print_sale(request, pk):
 
 
 @login_required()
+@user_passes_test(allow_sale_print)
 def print_sale_tax(request, pk):
     lines = 0
     total_amount = 0
@@ -818,12 +1007,14 @@ def print_sale_tax(request, pk):
             total_amount = total_amount + amount
     srb_amount = float(total_amount / 100) * float(header.srb)
     gst_amount = float(total_amount / 100) * float(header.gst)
+    srb_percent = header.srb
+    gst_percent = header.gst
     gst_srb = gst_amount + srb_amount
     amount_before_discount = gst_srb + total_amount
     discount = header.discount
     discount_amount = float(amount_before_discount / 100) * float(discount)
     gross_amount = amount_before_discount-discount_amount
-    pdf = render_to_pdf('transaction/sales_tax_invoice.html', {'header':header, 'detail':detail,'image':image, 'total_lines':12, 'total_amount':total_amount, 'total_quantity':total_quantity,'total_square_fit':total_square_fit,"gst_srb":gst_srb,"discount":discount,"gross_amount":gross_amount})
+    pdf = render_to_pdf('transaction/sales_tax_invoice.html', {'header':header, 'detail':detail,'image':image, 'total_lines':12, 'total_amount':total_amount, 'total_quantity':total_quantity,'total_square_fit':total_square_fit,"srb_amount":srb_amount,"gst_amount":gst_amount,"discount":discount,"gross_amount":gross_amount,"srb_percent":srb_percent,"gst_percent":gst_percent})
     if pdf:
         response = HttpResponse(pdf, content_type='application/pdf')
         filename = "Sale_%s.pdf" % (header.sale_no)
@@ -833,7 +1024,19 @@ def print_sale_tax(request, pk):
     return HttpResponse("Not found")
 
 
+def allow_journal_voucher_new(user):
+    user_id = Q(UserID = user.id)
+    object_id = Q(ObjectID = 12)
+    action_id = Q(ActionID = 1)
+    is_allow = Q(IsAllow = 1)
+    allow_role = tblUserRights.objects.filter(user_id, object_id, is_allow, action_id)
+    if allow_role:
+        return True
+    else:
+        return False
+
 @login_required()
+@user_passes_test(allow_journal_voucher_new)
 def journal_voucher(request):
     serial = "1"
     cursor = connection.cursor()
@@ -850,7 +1053,6 @@ def journal_voucher(request):
         get_last_tran_id = date[2:]+'JV'+serial
     else:
         get_last_tran_id =  date[2:]+'JV1'
-    print("after", get_last_tran_id)
     account_id = request.POST.get('account_title', False)
     all_accounts = ChartOfAccount.objects.all()
     if account_id:
@@ -891,7 +1093,20 @@ def journal_voucher(request):
     return render(request, 'transaction/journal_voucher.html',{"all_accounts": all_accounts, 'get_last_tran_id': get_last_tran_id})
 
 
+def allow_journal_voucher_delete(user):
+    user_id = Q(UserID = user.id)
+    object_id = Q(ObjectID = 13)
+    action_id = Q(ActionID = 4)
+    is_allow = Q(IsAllow = 1)
+    allow_role = tblUserRights.objects.filter(user_id, object_id, is_allow, action_id)
+    if allow_role:
+        return True
+    else:
+        return False
+
+
 @login_required()
+@user_passes_test(allow_journal_voucher_delete)
 def delete_journal_voucher(request, pk):
     ref = VoucherHeader.objects.get(id = pk)
     refrence_id = Q(refrence_id = ref.doc_no)
@@ -1048,12 +1263,26 @@ def bank_payment_voucher(request):
     all_vouchers = all_vouchers.fetchall()
     return render(request, 'transaction/bank_payment_voucher.html', {'all_vouchers': all_vouchers})
 
+def allow_reports(user):
+    user_id = Q(UserID = user.id)
+    object_id = Q(ObjectID = 25)
+    action_id = Q(ActionID = 1)
+    is_allow = Q(IsAllow = 1)
+    allow_role = tblUserRights.objects.filter(user_id, object_id, is_allow, action_id)
+    if allow_role:
+        return True
+    else:
+        return False
+
+
 @login_required()
+@user_passes_test(allow_reports)
 def reports(request):
     all_accounts = ChartOfAccount.objects.all()
     return render(request, 'transaction/reports.html', {'all_accounts': all_accounts})
 
 @login_required()
+@user_passes_test(allow_reports)
 def trial_balance(request):
     if request.method == 'POST':
         debit_amount = 0
@@ -1087,6 +1316,7 @@ def trial_balance(request):
 
 
 @login_required()
+@user_passes_test(allow_reports)
 def account_ledger(request):
     if request.method == "POST":
         debit_amount = 0
@@ -1178,6 +1408,7 @@ def account_ledger(request):
 
 
 @login_required()
+@user_passes_test(allow_reports)
 def account_ledger_with_credit_days(request):
     if request.method == "POST":
         debit_amount = 0
@@ -1277,8 +1508,22 @@ def account_ledger_with_credit_days(request):
     return redirect('reports')
 
 
+def allow_crv(user):
+    user_id = Q(UserID = user.id)
+    object_id = Q(ObjectID = 14)
+    action_id = Q(ActionID = 1)
+    is_allow = Q(IsAllow = 1)
+    allow_role = tblUserRights.objects.filter(user_id, object_id, is_allow, action_id)
+    if allow_role:
+        return True
+    else:
+        return False
+
+
 @login_required()
+@user_passes_test(allow_crv)
 def cash_receiving_voucher(request):
+    request.session['objectID'] = 14
     cursor = connection.cursor()
     all_vouchers = cursor.execute('''select * from transaction_voucherheader where voucher_no LIKE '%CRV%'
                                         order by voucher_no''')
@@ -1286,7 +1531,19 @@ def cash_receiving_voucher(request):
     return render(request, 'transaction/cash_receiving_voucher.html', {'all_vouchers': all_vouchers})
 
 
+def allow_crv_view(user):
+    user_id = Q(UserID = user.id)
+    object_id = Q(ObjectID = 14)
+    action_id = Q(ActionID = 3)
+    is_allow = Q(IsAllow = 1)
+    allow_role = tblUserRights.objects.filter(user_id, object_id, is_allow, action_id)
+    if allow_role:
+        return True
+    else:
+        return False
+
 @login_required()
+@user_passes_test(allow_crv_view)
 def view_cash_receiving(request, pk):
     header_id = VoucherHeader.objects.get(id=pk)
     voucher_header = VoucherHeader.objects.filter(id=pk).first()
@@ -1294,7 +1551,20 @@ def view_cash_receiving(request, pk):
     return render(request, 'transaction/view_cash_receiving_voucher.html', {'voucher_header': voucher_header,'voucher_detail': voucher_detail})
 
 
+def allow_crv_delete(user):
+    user_id = Q(UserID = user.id)
+    object_id = Q(ObjectID = 14)
+    action_id = Q(ActionID = 4)
+    is_allow = Q(IsAllow = 1)
+    allow_role = tblUserRights.objects.filter(user_id, object_id, is_allow, action_id)
+    if allow_role:
+        return True
+    else:
+        return False
+
+
 @login_required()
+@user_passes_test(allow_crv_delete)
 def delete_cash_receiving(request,pk):
     ref_inv_tran_type = Q(ref_inv_tran_type = "Sale CRV")
     voucher_id = Q(voucher_id = pk)
@@ -1305,7 +1575,20 @@ def delete_cash_receiving(request,pk):
     return redirect('cash-receiving-voucher')
 
 
+def allow_crv_new(user):
+    user_id = Q(UserID = user.id)
+    object_id = Q(ObjectID = 14)
+    action_id = Q(ActionID = 2)
+    is_allow = Q(IsAllow = 1)
+    allow_role = tblUserRights.objects.filter(user_id, object_id, is_allow, action_id)
+    if allow_role:
+        return True
+    else:
+        return False
+
+
 @login_required()
+@user_passes_test(allow_crv_new)
 def new_cash_receiving_voucher(request):
     cursor = connection.cursor()
     get_last_tran_id = cursor.execute('''select * from transaction_voucherheader where voucher_no LIKE '%CRV%'
@@ -1324,7 +1607,6 @@ def new_cash_receiving_voucher(request):
     account_name = request.POST.get('account_title', False)
     check = request.POST.get('check', False)
     invoice_no = request.POST.get('invoice_no', False)
-    print(invoice_no)
     all_accounts = ChartOfAccount.objects.all()
     all_invoices = SaleHeader.objects.all()
     user = request.user
@@ -1409,24 +1691,23 @@ def new_cash_receiving_voucher(request):
         return JsonResponse({"result":"success"})
     return render(request, 'transaction/new_cash_receiving_voucher.html', {"all_accounts": all_accounts, 'get_last_tran_id': get_last_tran_id, 'all_invoices':all_invoices})
 
-# def view_cash_receiving(request, pk):
-#     header_id = VoucherHeader.objects.get(id=pk)
-#     voucher_header = VoucherHeader.objects.filter(id=pk).first()
-#     voucher_detail = VoucherDetail.objects.filter(header_id=header_id.id).all()
-#     return render(request, 'transaction/view_cash_receiving_voucher.html', {'voucher_header': voucher_header,'voucher_detail': voucher_detail})
-#
-# def delete_cash_receiving(request,pk):
-#     ref_inv_tran_type = Q(ref_inv_tran_type = "Sale CRV")
-#     voucher_id = Q(voucher_id = pk)
-#     Transactions.objects.filter(ref_inv_tran_type, voucher_id).all().delete()
-#     VoucherDetail.objects.filter(header_id = pk).all().delete()
-#     VoucherHeader.objects.filter(id = pk).delete()
-#     messages.add_message(request, messages.SUCCESS, "Cash Receiving Voucher Deleted")
-#     return redirect('cash-receiving-voucher')
+
+def allow_cpv(user):
+    user_id = Q(UserID = user.id)
+    object_id = Q(ObjectID = 15)
+    action_id = Q(ActionID = 1)
+    is_allow = Q(IsAllow = 1)
+    allow_role = tblUserRights.objects.filter(user_id, object_id, is_allow, action_id)
+    if allow_role:
+        return True
+    else:
+        return False
 
 
 @login_required()
+@user_passes_test(allow_cpv)
 def cash_payment_voucher(request):
+    request.session['objectID'] = 15
     cursor = connection.cursor()
     all_vouchers = cursor.execute('''select * from transaction_voucherheader where voucher_no LIKE '%CPV%'
                                         order by voucher_no''')
@@ -1434,7 +1715,19 @@ def cash_payment_voucher(request):
     return render(request, 'transaction/cash_payment_voucher.html', {'all_vouchers': all_vouchers})
 
 
+def allow_cpv_new(user):
+    user_id = Q(UserID = user.id)
+    object_id = Q(ObjectID = 15)
+    action_id = Q(ActionID = 2)
+    is_allow = Q(IsAllow = 1)
+    allow_role = tblUserRights.objects.filter(user_id, object_id, is_allow, action_id)
+    if allow_role:
+        return True
+    else:
+        return False
+
 @login_required()
+@user_passes_test(allow_cpv_new)
 def new_cash_payment_voucher(request):
     cursor = connection.cursor()
     get_last_tran_id = cursor.execute('''select * from transaction_voucherheader where voucher_no LIKE '%CPV%'
@@ -1453,7 +1746,6 @@ def new_cash_payment_voucher(request):
     account_name = request.POST.get('account_title', False)
     check = request.POST.get('check', False)
     invoice_no = request.POST.get('invoice_no', False)
-    print(invoice_no)
     all_accounts = ChartOfAccount.objects.all()
     all_invoices = PurchaseHeader.objects.all()
     user = request.user
@@ -1538,7 +1830,19 @@ def new_cash_payment_voucher(request):
     return render(request, 'transaction/new_cash_payment_voucher.html', {"all_accounts": all_accounts, 'get_last_tran_id': get_last_tran_id, 'all_invoices':all_invoices})
 
 
+def allow_cpv_view(user):
+    user_id = Q(UserID = user.id)
+    object_id = Q(ObjectID = 15)
+    action_id = Q(ActionID = 3)
+    is_allow = Q(IsAllow = 1)
+    allow_role = tblUserRights.objects.filter(user_id, object_id, is_allow, action_id)
+    if allow_role:
+        return True
+    else:
+        return False
+
 @login_required()
+@user_passes_test(allow_cpv_view)
 def view_cash_payment(request, pk):
     header_id = VoucherHeader.objects.get(id=pk)
     voucher_header = VoucherHeader.objects.filter(id=pk).first()
@@ -1546,7 +1850,19 @@ def view_cash_payment(request, pk):
     return render(request, 'transaction/view_cash_payment_voucher.html', {'voucher_header': voucher_header,
                                                                           'voucher_detail': voucher_detail})
 
+def allow_cpv_delete(user):
+    user_id = Q(UserID = user.id)
+    object_id = Q(ObjectID = 15)
+    action_id = Q(ActionID = 4)
+    is_allow = Q(IsAllow = 1)
+    allow_role = tblUserRights.objects.filter(user_id, object_id, is_allow, action_id)
+    if allow_role:
+        return True
+    else:
+        return False
+
 @login_required()
+@user_passes_test(allow_cpv_delete)
 def delete_cash_payment(request, pk):
     ref_inv_tran_type = Q(ref_inv_tran_type = "Purchase CPV")
     voucher_id = Q(voucher_id = pk)
@@ -1557,13 +1873,39 @@ def delete_cash_payment(request, pk):
     return redirect('cash-payment-voucher')
 
 
+def allow_jo(user):
+    user_id = Q(UserID = user.id)
+    object_id = Q(ObjectID = 9)
+    action_id = Q(ActionID = 1)
+    is_allow = Q(IsAllow = 1)
+    allow_role = tblUserRights.objects.filter(user_id, object_id, is_allow, action_id)
+    if allow_role:
+        return True
+    else:
+        return False
+
 @login_required()
+@user_passes_test(allow_jo)
 def job_order(request):
+    request.session['objectID'] = 9
     all_job_order = JobOrderHeader.objects.all()
     return render(request, 'transaction/job_order.html',{'all_job_order':all_job_order})
 
 
+def allow_jo_new(user):
+    user_id = Q(UserID = user.id)
+    object_id = Q(ObjectID = 9)
+    action_id = Q(ActionID = 2)
+    is_allow = Q(IsAllow = 1)
+    allow_role = tblUserRights.objects.filter(user_id, object_id, is_allow, action_id)
+    if allow_role:
+        return True
+    else:
+        return False
+
+
 @login_required()
+@user_passes_test(allow_jo_new)
 def new_job_order(request):
     serial = "1"
     last_job_no = JobOrderHeader.objects.last()
@@ -1604,7 +1946,20 @@ def new_job_order(request):
     return render(request, 'transaction/new_job_order.html',{"get_job_no":get_job_no,"all_item_code":all_item_code,"all_accounts":all_accounts})
 
 
+def allow_jo_edit(user):
+    user_id = Q(UserID = user.id)
+    object_id = Q(ObjectID = 9)
+    action_id = Q(ActionID = 3)
+    is_allow = Q(IsAllow = 1)
+    allow_role = tblUserRights.objects.filter(user_id, object_id, is_allow, action_id)
+    if allow_role:
+        return True
+    else:
+        return False
+
+
 @login_required()
+@user_passes_test(allow_jo_edit)
 def edit_job_order(request,pk):
     all_item_code = Add_item.objects.all()
     all_accounts = ChartOfAccount.objects.all()
@@ -1645,7 +2000,20 @@ def edit_job_order(request,pk):
     return render(request, 'transaction/edit_job_order.html',{"pk":pk,"all_item_code":all_item_code,"all_accounts":all_accounts, 'job_header':job_header, 'job_detail':job_detail})
 
 
+def allow_jo_delete(user):
+    user_id = Q(UserID = user.id)
+    object_id = Q(ObjectID = 9)
+    action_id = Q(ActionID = 4)
+    is_allow = Q(IsAllow = 1)
+    allow_role = tblUserRights.objects.filter(user_id, object_id, is_allow, action_id)
+    if allow_role:
+        return True
+    else:
+        return False
+
+
 @login_required()
+@user_passes_test(allow_jo_delete)
 def delete_job_order(request,pk):
     delete_job_order_detail = JobOrderDetail.objects.filter(header_id = pk).all().delete()
     delete_job_order_header = JobOrderHeader.objects.filter(id = pk).delete()
@@ -1688,8 +2056,22 @@ def edit_bank_receiving_voucher(request, pk):
                                                                             'voucher_detail': voucher_detail, 'pk': pk,
                                                                             'all_accounts': all_accounts})
 
+
+def allow_jo(user):
+    user_id = Q(UserID = user.id)
+    object_id = Q(ObjectID = 13)
+    action_id = Q(ActionID = 1)
+    is_allow = Q(IsAllow = 1)
+    allow_role = tblUserRights.objects.filter(user_id, object_id, is_allow, action_id)
+    if allow_role:
+        return True
+    else:
+        return False
+
 @login_required()
+@user_passes_test(allow_jo)
 def journal_voucher_summary(request):
+    request.session['objectID'] = 13
     cursor = connection.cursor()
     all_vouchers = cursor.execute('''select VH.id, VH.voucher_no, VH.doc_no, VH.doc_date, VH.cheque_no, VH.description,
                                             AU.username from transaction_voucherheader VH
@@ -1733,7 +2115,21 @@ def edit_bank_payment_voucher(request, pk):
                                                                           'voucher_detail': voucher_detail,
                                                                           'all_accounts': all_accounts, 'pk': pk,
                                                                           'account_id': account_id})
+
+
+def allow_cpv_edit(user):
+    user_id = Q(UserID = user.id)
+    object_id = Q(ObjectID = 15)
+    action_id = Q(ActionID = 3)
+    is_allow = Q(IsAllow = 1)
+    allow_role = tblUserRights.objects.filter(user_id, object_id, is_allow, action_id)
+    if allow_role:
+        return True
+    else:
+        return False
+
 @login_required()
+@user_passes_test(allow_cpv_edit)
 def edit_cash_payment(request, pk):
     voucher_header = VoucherHeader.objects.filter(id=pk).first()
     voucher_detail = VoucherDetail.objects.filter(header_id=pk).all()
@@ -1765,8 +2161,20 @@ def edit_cash_payment(request, pk):
                                                                             'all_accounts': all_accounts, 'pk': pk,
                                                                             'account_id': account_id})
 
+def allow_jv_edit(user):
+    user_id = Q(UserID = user.id)
+    object_id = Q(ObjectID = 13)
+    action_id = Q(ActionID = 3)
+    is_allow = Q(IsAllow = 1)
+    allow_role = tblUserRights.objects.filter(user_id, object_id, is_allow, action_id)
+    if allow_role:
+        return True
+    else:
+        return False
+
 
 @login_required()
+@user_passes_test(allow_jv_edit)
 def edit_journal_voucher(request, pk):
     voucher_header = VoucherHeader.objects.filter(id=pk).first()
     voucher_detail = VoucherDetail.objects.filter(header_id=pk).all()
@@ -1824,6 +2232,7 @@ def edit_journal_voucher(request, pk):
 
 
 @login_required()
+@user_passes_test(allow_reports)
 def receivable_ledger(request):
     if request.method == "POST":
         inv_amount = 0
@@ -1911,6 +2320,7 @@ def all_receivable_ledger(request):
 
 
 @login_required()
+@user_passes_test(allow_reports)
 def payable_ledger(request):
     if request.method == "POST":
         inv_amount = 0
@@ -1993,7 +2403,19 @@ def payable_ledger(request):
     return redirect('reports')
 
 
+def allow_crv_print(user):
+    user_id = Q(UserID = user.id)
+    object_id = Q(ObjectID = 14)
+    action_id = Q(ActionID = 5)
+    is_allow = Q(IsAllow = 1)
+    allow_role = tblUserRights.objects.filter(user_id, object_id, is_allow, action_id)
+    if allow_role:
+        return True
+    else:
+        return False
+
 @login_required()
+@user_passes_test(allow_crv_print)
 def crv_pdf(request, pk):
     company_info = Company_info.objects.all()
     header = VoucherHeader.objects.filter(id = pk).first()
@@ -2006,7 +2428,6 @@ def crv_pdf(request, pk):
                             where VD.header_id_id = %s AND VD.account_id_id = %s
                             ''',[header.id,details.account_id.id])
     detail = detail.fetchall()
-    print(detail)
     amount_in_words =  num2words(abs(detail[0][0]))
     pdf = render_to_pdf('transaction/crv_pdf.html', {'company_info':company_info, 'header':header, 'detail':detail, 'amount_in_words':amount_in_words})
     if pdf:
@@ -2018,7 +2439,20 @@ def crv_pdf(request, pk):
     return HttpResponse("Not found")
 
 
+def allow_cpv_print(user):
+    user_id = Q(UserID = user.id)
+    object_id = Q(ObjectID = 15)
+    action_id = Q(ActionID = 5)
+    is_allow = Q(IsAllow = 1)
+    allow_role = tblUserRights.objects.filter(user_id, object_id, is_allow, action_id)
+    if allow_role:
+        return True
+    else:
+        return False
+
+
 @login_required()
+@user_passes_test(allow_cpv_print)
 def cpv_pdf(request, pk):
     company_info = Company_info.objects.all()
     header = VoucherHeader.objects.filter(id = pk).first()
@@ -2042,6 +2476,20 @@ def cpv_pdf(request, pk):
     return HttpResponse("Not found")
 
 
+def allow_jv_print(user):
+    user_id = Q(UserID = user.id)
+    object_id = Q(ObjectID = 13)
+    action_id = Q(ActionID = 5)
+    is_allow = Q(IsAllow = 1)
+    allow_role = tblUserRights.objects.filter(user_id, object_id, is_allow, action_id)
+    if allow_role:
+        return True
+    else:
+        return False
+
+
+@login_required()
+@user_passes_test(allow_jv_print)
 def jv_pdf(request, pk):
     company_info = Company_info.objects.all()
     header = VoucherHeader.objects.filter(id = pk).first()
@@ -2058,7 +2506,11 @@ def jv_pdf(request, pk):
     return HttpResponse("Not found")
 
 
+@login_required()
+@user_passes_test(allow_reports)
 def sale_detail_report(request):
+    srb_amount = 0
+    gst_amount = 0
     company_info = Company_info.objects.all()
     from_date = request.POST.get('from_date')
     to_date = request.POST.get('to_date')
@@ -2077,24 +2529,25 @@ def sale_detail_report(request):
         amount_before_discount = float(gst_srb) + float(total_amount)
         discount_amount = (amount_before_discount / float(100) * float(value.discount) )
         gross_amount = float(amount_before_discount) - float(discount_amount)
-
         info = {
         "id":value.id,
         "date": value.date,
         "invoice_no": value.sale_no,
         "customer_name": value.account_id.account_title,
-        "gst_srb":gst_srb,
+        "srb_amount":srb_amount,
+        "gst_amount":gst_amount,
+        "gst_percent":value.gst,
+        "srb_percent":value.srb,
         "discount":value.discount,
         "gross_amount": gross_amount,
         }
         sale_header.append(info)
-
     context = {
     "sale_detail_list":sale_header,
     "sale_detail":sale_detail,
     "company_info":company_info,
     "from_date":from_date,
-    "to_date":to_date
+    "to_date":to_date,
     }
     pdf = render_to_pdf('transaction/sale_detail_report.html', context)
     if pdf:
@@ -2106,6 +2559,8 @@ def sale_detail_report(request):
     return HttpResponse("Not found")
 
 
+@login_required()
+@user_passes_test(allow_reports)
 def daily_report(request):
     sale_detail_list = []
     sale_detail_list_on_cash = []
@@ -2123,7 +2578,7 @@ def daily_report(request):
     grand_total_expense = 0
     total_crv = 0
     company_info = Company_info.objects.all()
-    date = Q(date = "2019-08-02")
+    date = Q(date = datetime.date.today())
     on_credit = Q(payment_method = "Credit")
     daily_sales_on_credit = SaleHeader.objects.filter(date,on_credit).all()
     sale_detail = SaleDetail.objects.all()
@@ -2174,12 +2629,13 @@ def daily_report(request):
         "total_amount":final_total_amount,
         }
         sale_detail_list_on_cash.append(sales_on_cash)
+    print("Here",str(datetime.date.today()))
     cursor = connection.cursor()
     expense_account = cursor.execute('''select VH.id, VH.voucher_no, COA.account_title as "Expense Account", VH.description as "Discription" , VD.debit as "Amount"
                                     from transaction_voucherdetail VD
                                     inner join transaction_voucherheader VH on VH.id = VD.header_id_id
                                     inner join transaction_chartofaccount COA on COA.id = VD.account_id_id
-                                    where VH.voucher_no like '%JV%' and VH.doc_date = "2019-12-12" and VD.account_id_id != "6"
+                                    where VH.voucher_no like '%JV%' and VH.doc_date = 2019-09-13 and VD.account_id_id != "6"
                                     group by VD.id, VH.id''')
     expense_account = expense_account.fetchall()
     for expens in expense_account:

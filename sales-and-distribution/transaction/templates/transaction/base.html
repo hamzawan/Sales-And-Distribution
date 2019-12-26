@@ -10,7 +10,7 @@
   <meta name="description" content="">
   <meta name="author" content="">
 
-  <title>Print Links</title>
+  <title>Marketing 247 Services</title>
 
 
   <!-- Custom fonts for this template-->
@@ -32,7 +32,7 @@
 
   <nav class="navbar navbar-expand navbar-dark bg-dark static-top">
 
-    <a class="navbar-brand mr-1" href="{% url 'transaction-home' %}">Admin</a>
+    <a class="navbar-brand mr-1" href="{% url 'transaction-home' %}">{{request.user}}</a>
 
     <button class="btn btn-link btn-sm text-white order-1 order-sm-0" id="sidebarToggle" href="#">
       <i class="fas fa-bars"></i>
@@ -48,10 +48,8 @@
           <i class="fas fa-user-circle fa-fw"></i>
         </a>
         <div class="dropdown-menu dropdown-menu-right" aria-labelledby="userDropdown">
-          <a class="dropdown-item" href="#">Settings</a>
-          <a class="dropdown-item" href="#">Activity Log</a>
-          <a class="dropdown-item" href="{% url 'register' %}">Register an Account</a>
-          <div class="dropdown-divider"></div>
+          <!-- <a class="dropdown-item" href="{% url 'register' %}">Register an Account</a> -->
+          <!-- <div class="dropdown-divider"></div> -->
           <a class="dropdown-item" href="{% url 'login' %}" data-toggle="modal" data-target="#logoutModal">Logout</a>
         </div>
       </li>
@@ -69,41 +67,21 @@
           <span>Dashboard</span>
         </a>
       </li>
-      <li class="nav-item dropdown">
-        <a class="nav-link dropdown-toggle" href="#" id="pagesDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-          <i class="fa fa-archive"></i>
-          <span>Inventory</span>
-        </a>
-        <div class="dropdown-menu" aria-labelledby="pagesDropdown">
-          <a class="dropdown-item" href="{% url 'add-item' %}">Add Item</a>
-          <a class="dropdown-item" href="{% url 'stock' %}">Stock</a>
-        </div>
-      </li>
-      <li class="nav-item dropdown">
-        <a class="nav-link dropdown-toggle" href="{% url 'job-order' %}"  role="button" >
-          <i class="fa fa-tasks" aria-hidden="true"></i>
-          <span>Job Orders</span>
-        </a>
-      </li>
-      <li class="nav-item dropdown">
-        <a class="nav-link dropdown-toggle" href="#" id="pagesDropDown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-hidden="false">
-          <i class="fas fa-exchange-alt"></i>
-          <span>Transaction</span></a>
-          <div class="dropdown-menu" aria-labelledby="pagesDropdown">
-            <a class="dropdown-item" href="{% url 'chart-of-account' %}">Chart Of Accounts</a>
-          <a class="dropdown-item" href="{% url 'purchase' %}">Purchase</a>
-          <a class="dropdown-item" href="{% url 'sale' %}">Sale</a>
-          <a class="dropdown-item" href="{% url 'journal-voucher-summary' %}">Journal Voucher</a>
-          <a class="dropdown-item" href="{% url 'cash-receiving-voucher' %}">Cash Receiving Vou</a>
-          <a class="dropdown-item" href="{% url 'cash-payment-voucher' %}">Cash Payment Vou</a>
-      </div>
-      </li>
-      <li class="nav-item dropdown">
-        <a class="nav-link dropdown-toggle" href="{% url 'reports' %}" role="button" aria-haspopup="true" aria-expanded="false">
-          <i class="fa fa-chart-bar"></i>
-          <span>Reports</span>
-        </a>
-      </li>
+      {% for Objects in ObjectHead %}
+       <li class="nav-item dropdown">
+         <a class="nav-link dropdown-toggle" href="#" id="pagesDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+           <i class="{{Objects.Icons}}"></i>
+           <span>{{Objects.ObjectTitle}}</span>
+         </a>
+         <div class="dropdown-menu" aria-labelledby="pagesDropdown">
+         {% for Child in ObjectHeadChild %}
+         {% if Child.3 == Objects.ObjectID %}
+           <a class="dropdown-item" href="{% url Child.2 %}">{{Child.1}}</a>
+         {% endif %}
+         {% endfor %}
+         </div>
+       </li>
+     {% endfor %}
     </ul>
 
     <div id="content-wrapper">

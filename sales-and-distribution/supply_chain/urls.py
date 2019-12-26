@@ -17,6 +17,8 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from users import views as user_views
 from django.urls import path, include
+from . import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -29,4 +31,13 @@ urlpatterns = [
     path('register/', user_views.register, name='register'),
     path('transaction/', include('transaction.urls')),
     path('inventory/', include('inventory.urls')),
+    path('users/Profile', user_views.profile, name='Profile'),
+    path('users/roles', user_views.user_roles, name = 'user-roles'),
+    path('roles/new', user_views.add_user_roles, name = 'add-user-roles'),
+    path('roles/edit/<id>', user_views.edit_user_roles, name = 'edit-user-roles'),
+    path('roles/delete/<id>', user_views.delete_user_roles, name = 'delete-user-roles'),
 ]
+
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

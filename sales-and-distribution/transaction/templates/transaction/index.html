@@ -13,19 +13,31 @@
 <div class="row">
   <div class="col-xl-3 col-sm-6 mb-3">
     <div class="card text-white bg-primary o-hidden h-100">
-    <a  href="{% url 'new-job-order' %}" style="color:white;">
-      <div class="card-body">
-        <div class="card-body-icon">
-          <i class="fas fa-tasks"></i>
+      {% if jo %}
+      <a  href="{% url 'new-job-order' %}" style="color:white;">
+        <div class="card-body">
+          <div class="card-body-icon">
+            <i class="fas fa-tasks"></i>
+          </div>
+          <div class="mr-5"><b>+ New Job Order</b></div>
         </div>
-        <div class="mr-5"><b>+ New Job Order</b></div>
-      </div>
       </a>
+      {% else %}
+      <a  href="" class="disableClick" style="color:white;">
+        <div class="card-body">
+          <div class="card-body-icon">
+            <i class="fas fa-tasks"></i>
+          </div>
+          <div class="mr-5"><b>+ New Job Order</b></div>
+        </div>
+      </a>
+      {% endif %}
       <a class="card-footer text-white clearfix small z-1" href="#">
-      </a>
+    </a>
     </div>
   </div>
   <div class="col-xl-3 col-sm-6 mb-3">
+    {% if purchase %}
     <a  href="{% url 'new-purchase' %}" style="color:white;">
     <div class="card text-white bg-warning o-hidden h-100">
       <div class="card-body">
@@ -35,22 +47,46 @@
         <div class="mr-5"><b>+ New Purchase</b></div>
       </div>
       </a>
+      {% else %}
+      <a  href="" class="disableClick" style="color:white;">
+      <div class="card text-white bg-warning o-hidden h-100">
+        <div class="card-body">
+          <div class="card-body-icon">
+            <i class="fa fa-shopping-basket" aria-hidden="true"></i>
+          </div>
+          <div class="mr-5"><b>+ New Purchase</b></div>
+        </div>
+        </a>
+      {% endif %}
     </div>
   </div>
   <div class="col-xl-3 col-sm-6 mb-3">
-  <a style="color:white;" href="{% url 'new-sale' %}">
-    <div class="card text-white bg-success o-hidden h-100">
-      <div class="card-body">
-        <div class="card-body-icon">
-          <i class="fas fa-fw fa-shopping-cart"></i>
+    {% if sale %}
+    <a style="color:white;" href="{% url 'new-sale' %}">
+      <div class="card text-white bg-success o-hidden h-100">
+        <div class="card-body">
+          <div class="card-body-icon">
+            <i class="fas fa-fw fa-shopping-cart"></i>
+          </div>
+          <div class="mr-5"><b>+ New Sale</b></div>
         </div>
-        <div class="mr-5"><b>+ New Sale</b></div>
-      </div>
       </a>
-    </div>
+      {% else %}
+      <a style="color:white;" class="disableClick" href="">
+        <div class="card text-white bg-success o-hidden h-100">
+          <div class="card-body">
+            <div class="card-body-icon">
+              <i class="fas fa-fw fa-shopping-cart"></i>
+            </div>
+            <div class="mr-5"><b>+ New Sale</b></div>
+          </div>
+        </a>
+      {% endif %}
+  </div>
   </div>
   <div class="col-xl-3 col-sm-6 mb-3">
     <div class="card text-white bg-danger o-hidden h-100">
+      {% if report %}
     <a  href="{% url 'reports' %}" style="color:white;">
       <div class="card-body">
         <div class="card-body-icon">
@@ -59,6 +95,16 @@
         <div class="mr-5"><b>Account Ledger</b></div>
       </div>
       </a>
+      {% else %}
+      <a  href="" class="disableClick" style="color:white;">
+        <div class="card-body">
+          <div class="card-body-icon">
+            <i class="fas fa-fw fa-life-ring"></i>
+          </div>
+          <div class="mr-5"><b>Account Ledger</b></div>
+        </div>
+        </a>
+      {% endif %}
     </div>
   </div>
 </div>
