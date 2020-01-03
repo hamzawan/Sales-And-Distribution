@@ -997,8 +997,18 @@ $('#edit-purchase-return-submit').on('submit',function(e){
 							var gst = $("#gst").val();
 							var gst_amount = (sum / 100) * gst;
 							var discount = $("#discount").val();
+							var discount_amount = 0
+							var discount_in_val = $("#discount_in_val").val();
 							var amount_before_discount = parseFloat(sum + srb_amount + gst_amount);
-							var discount_amount = (amount_before_discount / 100) * discount;
+							if (discount_in_val != 0) {
+									discount_amount = (amount_before_discount / 100) * discount_in_val;
+							}
+							// else if (discount != 0) {
+							// 	discount_amount = parseFloat(discount_in_val);
+							// }
+							else{
+								discount_amount = 0;
+							}
 							var credit_balance_amount = $("#credit_balance").val()
 							$('#grand_total').val(sum + srb_amount + gst_amount - discount_amount);
 							credit_balance_hidden = parseFloat($("#credit_balance_hidden").val());
@@ -1012,8 +1022,18 @@ $('#edit-purchase-return-submit').on('submit',function(e){
 						var gst = $("#gst").val();
 						var gst_amount = (sum / 100) * gst;
 						var discount = $("#discount").val();
+						var discount_amount = 0
+						var discount_in_val = $("#discount_in_val").val();
 						var amount_before_discount = parseFloat(sum + srb_amount + gst_amount);
-						var discount_amount = (amount_before_discount / 100) * discount;
+						if (discount_in_val != 0 ) {
+								console.log("here is ", discount_in_val);
+								discount_amount = (amount_before_discount / 100) * discount_in_val;
+						}
+						// else if (discount != 0) {
+						// 	discount_amount = parseFloat(discount);
+						// }
+						var discount_in_percentage = ((((Math.abs(discount_in_val) + amount_before_discount) / amount_before_discount) * 100) - 100)
+						$("#discount").val(discount_in_percentage.toFixed(2));
 						if (!isNaN(v) && v.length != 0){
 						$("#grand_total").val(parseFloat(sum) + srb_amount + gst_amount - discount_amount);
 						credit_balance_hidden = parseFloat($("#credit_balance_hidden").val());
@@ -1024,14 +1044,22 @@ $('#edit-purchase-return-submit').on('submit',function(e){
 
 
 					$("#gst").on('keyup', function(){
-
 						var v = this.value;
 						var srb = $("#srb").val();
 						var srb_amount = (sum / 100) * srb;
 						var gst_amount = (sum / 100) * v;
 						var discount = $("#discount").val();
+						var discount_amount = 0
+						var discount_in_val = $("#discount_in_val").val();
 						var amount_before_discount = parseFloat(sum + srb_amount + gst_amount);
-						var discount_amount = (amount_before_discount / 100) * discount;
+						if (discount_in_val != 0) {
+								discount_amount = (amount_before_discount / 100) * discount_in_val;
+						}
+						// else if (discount != 0) {
+						// 	discount_amount = parseFloat(discount);
+						// }
+						var discount_in_percentage = ((((Math.abs(discount_in_val) + amount_before_discount) / amount_before_discount) * 100) - 100)
+						$("#discount").val(discount_in_percentage.toFixed(2));
 						if (!isNaN(v) && v.length != 0){
 						$("#grand_total").val(parseFloat(sum) + srb_amount + gst_amount - discount_amount);
 						credit_balance_hidden = parseFloat($("#credit_balance_hidden").val());
@@ -1040,7 +1068,24 @@ $('#edit-purchase-return-submit').on('submit',function(e){
 						}
 					})
 
-					$("#discount").on('keyup', function(){
+					// $("#discount").on('keyup', function(){
+					// 	var v = this.value;
+					// 	var srb = $("#srb").val();
+					// 	var srb_amount = (sum / 100) * srb;
+					// 	var gst = $("#gst").val();
+					// 	var gst_amount = (sum / 100) * gst;
+					// 	var amount_before_discount = parseFloat(sum + srb_amount + gst_amount);
+					// 	var discount_amount = (amount_before_discount / 100) * v;
+					// 	$("#discount_in_val").val(discount_amount.toFixed(2));
+					// 	if (!isNaN(v) && v.length != 0){
+					// 	$("#grand_total").val(parseFloat(sum) + srb_amount + gst_amount - discount_amount);
+					// 	credit_balance_hidden = parseFloat($("#credit_balance_hidden").val());
+					// 	grand_total_for_balance = parseFloat($("#grand_total").val());
+					// 	$("#credit_balance").val(credit_balance_hidden + grand_total_for_balance);
+					// 	}
+					// })
+
+					$("#discount_in_val").on('keyup', function(){
 
 						var v = this.value;
 						var srb = $("#srb").val();
@@ -1048,7 +1093,9 @@ $('#edit-purchase-return-submit').on('submit',function(e){
 						var gst = $("#gst").val();
 						var gst_amount = (sum / 100) * gst;
 						var amount_before_discount = parseFloat(sum + srb_amount + gst_amount);
-						var discount_amount = (amount_before_discount / 100) * v;
+						var discount_amount = parseFloat(v);
+						var discount_in_percentage = ((((Math.abs(v) + amount_before_discount) / amount_before_discount) * 100) - 100)
+						$("#discount").val(discount_in_percentage.toFixed(2));
 						if (!isNaN(v) && v.length != 0){
 						$("#grand_total").val(parseFloat(sum) + srb_amount + gst_amount - discount_amount);
 						credit_balance_hidden = parseFloat($("#credit_balance_hidden").val());
@@ -3808,6 +3855,9 @@ $('#tree1').treed();
 							})
 					$(".delete-crv-summary").on('click',function(){
 							$("#modal_delete_button").attr("href", `/transaction/cash_receiving_voucher/delete/${this.id}`);
+						})
+					$(".delete-cpv-summary").on('click',function(){
+							$("#modal_delete_button").attr("href", `/transaction/cash_payment_voucher/delete/${this.id}`);
 						})
 					$(".delete-ur-summary").on('click',function(){
 							$("#modal_delete_button").attr("href", `/roles/delete/${this.id}`);

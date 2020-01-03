@@ -100,9 +100,9 @@
       <td style="text-align:center;"><font size="12px"><b>{{debit_amount|abs|floatformat:2}} </b></font></td>
       <td style="text-align:center;"><font size="12px"><b>{{credit_amount|abs|floatformat:2}}</b></font></td>
       {% if debit_amount|add:credit_amount|floatformat:2|length < 0 %}
-        <td style="width: 200px; text-align:center;"><font size="12px"><b>{{debit_amount|add:credit_amount|abs|floatformat:2}} Dr.</b></font></td>
+        <td style="width: 200px; text-align:center;"><font size="12px"><b>{{total_balance_of_ledger|floatformat:2}} Dr.</b></font></td>
       {% else %}
-        <td style="width: 200px; text-align:center;"><font size="12px"><b>{{debit_amount|add:credit_amount|abs|floatformat:2}} Cr.</b></font></td>
+        <td style="width: 200px; text-align:center;"><font size="12px"><b>{{total_balance_of_ledger|abs|floatformat:2}} Cr.</b></font></td>
       {% endif %}
       </tr>
       </tbody>

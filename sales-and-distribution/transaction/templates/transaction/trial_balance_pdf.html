@@ -56,8 +56,7 @@
          <img style="width:150px; height:100px;" src="{{image.company_logo}}" align="right"/>
          {% for value in company_info %}
          <font size="25px" color="#0a012c" ><b>{{value.company_name}}</b></font></br>
-         <font size="11px" color="#0a012c" >33 Amina Mansion, Belasis Street,</font><br>
-         <font size="11px" color="#0a012c" >New Chali Karachi Pakistan</font><br>
+         <font size="11px" color="#0a012c" >{{ value.company_address }}</font></br>
          <font size="11px" color="#0a012c" >{{ value.phone_no }}</font></br>
          <font size="11px" color="#0a012c" >{{ value.mobile_no }}</font></br>
          <font size="11px" color="#0a012c" >{{ value.email }}</font></br>

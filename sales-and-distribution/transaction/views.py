@@ -1312,7 +1312,7 @@ def trial_balance(request):
             response['Content-Disposition'] = content
             return response
         return HttpResponse("Not Found")
-    return redirect('report')
+    return redirect('reports')
 
 
 @login_required()
@@ -1372,8 +1372,29 @@ def account_ledger(request):
         print(row)
         ledger_list = []
         balance = 0
+        total_balance_of_ledger = 0
         for i,value in enumerate(row):
-            balance = balance + float(value[6]) + float(value[7])
+            if value[0] == 'Sale Invoice' and value[7] > 0:
+                balance = balance + float(value[6]) + float(value[7])
+                total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
+            elif value[0] == 'JV' and value[7] < 0:
+                balance = balance + float(value[6]) + float(value[7])
+                total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
+            elif value[5] == 'Sale CRV' and value[7] < 0:
+                balance = balance + float(value[6]) + float(value[7])
+                total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
+            elif value[0] == 'Opening' and value[7] < 0:
+                balance = balance + float(value[6]) + float(value[7])
+                total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
+            elif value[0] == 'Opening' and value[7] > 0:
+                balance = balance + float(value[6]) + float(value[7])
+                total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
+            elif value[0] == 'Purchase Invoice' and value[7] < 0:
+                balance = balance + float(value[6]) - float(value[7])
+                total_balance_of_ledger = total_balance_of_ledger - float(value[6]) - float(value[7])
+            else:
+                balance = balance + float(value[6]) + 0
+                total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + 0
             info = {
             "date": value[2],
             "voucher_no": value[3],
@@ -1391,12 +1412,10 @@ def account_ledger(request):
                     debit_amount = debit_amount + v[6]
                 if v[7] <= 0:
                     credit_amount = credit_amount + v[7]
-        print("here",debit_amount)
-        print("here",credit_amount)
         account_id = ChartOfAccount.objects.filter(id = pk).first()
         account_title = account_id.account_title
         id = account_id.id
-        pdf = render_to_pdf('transaction/account_ledger_pdf.html', {'ledger_list':ledger_list,'company_info':company_info,'image':image,'row':row, 'debit_amount':debit_amount, 'credit_amount': credit_amount, 'account_title':account_title, 'from_date':from_date,'to_date':to_date,'id':id})
+        pdf = render_to_pdf('transaction/account_ledger_pdf.html', {'ledger_list':ledger_list,'company_info':company_info,'image':image,'row':row, 'debit_amount':debit_amount, 'credit_amount': credit_amount, 'account_title':account_title, 'from_date':from_date,'to_date':to_date,'id':id,'total_balance_of_ledger':total_balance_of_ledger})
         if pdf:
             response = HttpResponse(pdf, content_type='application/pdf')
             filename = "Account_Ledger%s.pdf" %("000")
@@ -1467,8 +1486,26 @@ def account_ledger_with_credit_days(request):
         print(row)
         ledger_list = []
         balance = 0
+        total_balance_of_ledger = 0
         for i,value in enumerate(row):
-            balance = balance + float(value[6]) + float(value[7])
+            if value[0] == 'Sale Invoice' and value[7] > 0:
+                balance = balance + float(value[6]) + float(value[7])
+                total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
+            elif value[0] == 'JV' and value[7] < 0:
+                balance = balance + float(value[6]) + float(value[7])
+                total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
+            elif value[5] == 'Sale CRV' and value[7] < 0:
+                balance = balance + float(value[6]) + float(value[7])
+                total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
+            elif value[0] == 'Opening' and value[7] < 0:
+                balance = balance + float(value[6]) + float(value[7])
+                total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
+            elif value[0] == 'Opening' and value[7] > 0:
+                balance = balance + float(value[6]) + float(value[7])
+                total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
+            else:
+                balance = balance + float(value[6]) + 0
+                total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + 0
             today = datetime.date.today()
             past = value[2]
             if past:
@@ -1497,7 +1534,7 @@ def account_ledger_with_credit_days(request):
         account_id = ChartOfAccount.objects.filter(id = pk).first()
         account_title = account_id.account_title
         id = account_id.id
-        pdf = render_to_pdf('transaction/account_ledger_with_credit_days.html', {'ledger_list':ledger_list,'company_info':company_info,'image':image,'row':row, 'debit_amount':debit_amount, 'credit_amount': credit_amount, 'account_title':account_title, 'from_date':from_date,'to_date':to_date,'id':id})
+        pdf = render_to_pdf('transaction/account_ledger_with_credit_days.html', {'ledger_list':ledger_list,'company_info':company_info,'image':image,'row':row, 'debit_amount':debit_amount, 'credit_amount': credit_amount, 'account_title':account_title, 'from_date':from_date,'to_date':to_date,'id':id,'total_balance_of_ledger':total_balance_of_ledger})
         if pdf:
             response = HttpResponse(pdf, content_type='application/pdf')
             filename = "Account_Ledger%s.pdf" %("000")
