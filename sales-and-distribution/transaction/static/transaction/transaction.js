@@ -3529,81 +3529,79 @@ $('#tree1').treed();
 						 })
 					});
 
-					$('#new-jv-form-cpv').on('submit',function(e){
-							e.preventDefault();
-							var account_id = 0
-							var table = $('#new-cpv-table');
-							var data = [];
-							var debit = 0;
-							var credit = 0;
-							var invoice_no = $('#invoice_no').val();
-							var doc_date = $('#doc_date').val();
-							var date = $('#date').val();
-							var vendor = $('#account_title').find(":selected").text();
-							var description = $('#description').val();
-
-							table.find('tr').each(function (i, el){
-								if(i != 0)
-								{
-									var $tds = $(this).find('td');
-									var row = {
-										'account_id' : "",
-										'account_title' : "",
-										'invoice_no' : "",
-										'debit' : "",
-										'credit' : "",
-										'balance' : "",
-									};
-									$tds.each(function(i, el){
-										if (i === 0) {
-												row["account_id"] = ($(this).text());
-										}
-										if (i === 1) {
-												row["account_title"] = ($(this).text());
-										}
-										else if (i === 2) {
-												row["invoice_no"] = ($(this).text());
-												debit = debit + parseFloat(($(this).text()));
-										}
-										else if (i === 3) {
-												row["debit"] = ($(this).text());
-												debit = debit + parseFloat(($(this).text()));
-										}
-										else if (i === 4) {
-												row["credit"] = ($(this).text());
-												credit = credit + parseFloat(($(this).text()));
-										}
-										else if (i === 5) {
-												row["balance"] = ($(this).text());
-												credit = credit + parseFloat(($(this).text()));
-										}
-									});
-									data.push(row);
-								}
-							});
-
-								req =	$.ajax({
-									 headers: { "X-CSRFToken": getCookie("csrftoken") },
-									 type: 'POST',
-									 url : '/transaction/cash_payment_voucher/new/',
-									 data:{
-										 'account_id':account_id,
-										 'invoice_no': invoice_no,
-										 'doc_date': doc_date,
-										 'description': description,
-										 'date':date,
-										 'vendor':vendor,
-										 'items': JSON.stringify(data),
-									 },
-									 dataType: 'json'
-								 })
-								 .done(function done(data){
-									 alert("CP Voucher Submitted");
-									 location.reload();
-								 })
-
-
-						});
+					// $('#new-jv-form-cpv').on('submit',function(e){
+					// 		e.preventDefault();
+					// 		var account_id = 0
+					// 		var table = $('#new-cpv-table');
+					// 		var data = [];
+					// 		var debit = 0;
+					// 		var credit = 0;
+					// 		var invoice_no = $('#invoice_no').val();
+					// 		var doc_date = $('#doc_date').val();
+					// 		var date = $('#date').val();
+					// 		var vendor = $('#account_title').find(":selected").text();
+					// 		var description = $('#description').val();
+					//
+					// 		table.find('tr').each(function (i, el){
+					// 			if(i != 0)
+					// 			{
+					// 				var $tds = $(this).find('td');
+					// 				var row = {
+					// 					'account_id' : "",
+					// 					'account_title' : "",
+					// 					'invoice_no' : "",
+					// 					'debit' : "",
+					// 					'credit' : "",
+					// 					'balance' : "",
+					// 				};
+					// 				$tds.each(function(i, el){
+					// 					if (i === 0) {
+					// 							row["account_id"] = ($(this).text());
+					// 					}
+					// 					if (i === 1) {
+					// 							row["account_title"] = ($(this).text());
+					// 					}
+					// 					else if (i === 2) {
+					// 							row["invoice_no"] = ($(this).text());
+					// 							debit = debit + parseFloat(($(this).text()));
+					// 					}
+					// 					else if (i === 3) {
+					// 							row["debit"] = ($(this).text());
+					// 							debit = debit + parseFloat(($(this).text()));
+					// 					}
+					// 					else if (i === 4) {
+					// 							row["credit"] = ($(this).text());
+					// 							credit = credit + parseFloat(($(this).text()));
+					// 					}
+					// 					else if (i === 5) {
+					// 							row["balance"] = ($(this).text());
+					// 							credit = credit + parseFloat(($(this).text()));
+					// 					}
+					// 				});
+					// 				data.push(row);
+					// 			}
+					// 		});
+					//
+					// 			req =	$.ajax({
+					// 				 headers: { "X-CSRFToken": getCookie("csrftoken") },
+					// 				 type: 'POST',
+					// 				 url : '/transaction/cash_payment_voucher/new/',
+					// 				 data:{
+					// 					 'account_id':account_id,
+					// 					 'invoice_no': invoice_no,
+					// 					 'doc_date': doc_date,
+					// 					 'description': description,
+					// 					 'date':date,
+					// 					 'vendor':vendor,
+					// 					 'items': JSON.stringify(data),
+					// 				 },
+					// 				 dataType: 'json'
+					// 			 })
+					// 			 .done(function done(data){
+					// 				 alert("CP Voucher Submitted");
+					// 				 location.reload();
+					// 			 })
+					// 	});
 
 
 				// Add row on add button click
@@ -3906,5 +3904,373 @@ $('#tree1').treed();
 					 $("#credit_balance_hidden").val(Math.round(data.debit_amount + data.credit_amount).toFixed(2));
 				 })
 			});
+
+
+			$("#account_cpv").on('change',function(){
+				var account_cpv = $('#account_cpv').find(":selected").val();
+				req =	$.ajax({
+					 headers: { "X-CSRFToken": getCookie("csrftoken") },
+					 type: 'POST',
+					 url:'',
+					 data:{
+						 'account_cpv':account_cpv
+					 },
+					 dataType: 'json'
+				 })
+				 .done(function done(data){
+					 $("#new-cpv-table tbody tr").empty();
+					 if (data.pi.length > 0) {
+						 console.log("here is data");
+						 count = 1;
+						 row_count = 0
+						 var balance_amount = 0;
+						 var parent_amount = $('#amount').val();
+							 var index = $("table tbody tr:last-child").index();
+							 for (var i = 0; i < data.pi.length; i++) {
+								 balance_amount = parseFloat(data.pi[i][4]) - Math.abs(parseFloat(data.pi[i][5]))
+									 var row = '<tr>' +
+											 '<td>'+ count++ +'</td>' +
+											 '<td><b>'+data.pi[i][2]+'</b></td>' +
+											 '<td align="right">'+data.pi[i][4].toFixed(2)+'</td>' +
+											 '<td align="right">'+Math.abs(data.pi[i][5].toFixed(2))+'</td>' +
+											 '<td align="right"><input type="text" disabled class="form-control form-control-sm invoice_amount"/></td>' +
+											 '<td align="right">'+balance_amount.toFixed(2)+'</td>' +
+											 '<td align="center" ><input class="invoice_checked" type="checkbox" ></td>' +
+										 '</tr>';
+								 $("#new-cpv-table").append(row);
+							 }
+
+					 } else {
+						 console.log("no data");
+						 var row = '<tr>' +
+								 '<td align="center" colspan="6" >No Data Found</td>' +
+							 '</tr>';
+							$("#new-cpv-table").append(row);
+					 }
+				 })
+			});
+
+			var check_paying_amount = 0;
+			$("#new-cpv-table").on('change','.invoice_checked', function(){
+				$(this).parents('tr:eq(0)').find('td:eq(4) > input').attr("disabled", false)
+				var amount = $(this).parents('tr:eq(0)').find('td:eq(4)').text();
+				hide_amount = parseFloat($(this).parents('tr:eq(0)').find('td:eq(2)').text()) - parseFloat($(this).parents('tr:eq(0)').find('td:eq(3)').text());
+				if(this.checked) {
+				$(this).parents('tr:eq(0)').find('td:eq(4) > input').val(hide_amount)
+				$(this).parents('tr:eq(0)').find('td:eq(5)').text("0.00")
+			}
+			else{
+				$(this).parents('tr:eq(0)').find('td:eq(4) > input').attr("disabled", "disabled")
+				$(this).parents('tr:eq(0)').find('td:eq(4) > input').val("")
+				$(this).parents('tr:eq(0)').find('td:eq(5)').text(hide_amount)
+			}
+			})
+
+
+			$("#on_account").change(function() {
+			    if(this.checked) {
+						$("#new-cpv-table").toggleClass("active");
+						$("tr").css('color', 'grey');
+						$("#new-cpv-table").find("*").attr("disabled", "disabled");
+						$('#new-cpv-table > tbody  > tr').each(function(index, tr) {
+						check_action = $(this).find('td:eq(5) > input').is(":checked")
+						if (check_action) {
+							$(this).find('td:eq(5) > input').prop("checked", false);
+							$(this).find('td:eq(4) > input').attr("disabled", "disabled");
+						}
+						});
+						$("#paying_amount").prop('disabled', false);
+			    }
+					else {
+						$("#paying_amount").prop('disabled', true);
+						$("tr").css('color', 'black');
+						$("#new-cpv-table").toggleClass("active");
+						$('#new-cpv-table > tbody  > tr').each(function(index, tr) {
+							$(this).find('td:eq(6) > input').attr("disabled", false);
+						});
+					}
+			});
+
+			$("#paying_amount").on('keyup', function(){
+
+			})
+
+			$("#new-cpv-table").on('keyup','.invoice_amount', function(){
+				hide_amount = parseFloat($(this).parents('tr:eq(0)').find('td:eq(2)').text()) - parseFloat($(this).parents('tr:eq(0)').find('td:eq(3)').text());
+				var invoice_amount = hide_amount - parseFloat($(this).val());
+				if (isNaN(invoice_amount)) {
+					$(this).parents('tr:eq(0)').find('td:eq(5)').text(hide_amount);
+				} else {
+					$(this).parents('tr:eq(0)').find('td:eq(5)').text(invoice_amount);
+				}
+
+			})
+
+
+			$('#new-jv-form-cpv').on('submit',function(e){
+					e.preventDefault();
+					paying_amount_checked = $("#on_account").is(":checked");
+					var account_id = 0
+					var paying_amount = $("#paying_amount").val();
+					var table = $('#new-cpv-table');
+					var data = [];
+					var debit = 0;
+					var credit = 0;
+					var invoice_no = $('#invoice_no').val();
+					var doc_date = $('#doc_date').val();
+					var date = $('#date').val();
+					var vendor = $('#account_cpv').find(":selected").val();
+					var description = $('#description').val();
+
+					if (paying_amount_checked) {
+						req =	$.ajax({
+							 headers: { "X-CSRFToken": getCookie("csrftoken") },
+							 type: 'POST',
+							 url : '/transaction/cash_payment_voucher/new/',
+							 data:{
+								 'doc_date': doc_date,
+								 'description': description,
+								 'date':date,
+								 'vendor':vendor,
+								 'on_account': 1,
+								 'paying_amount':paying_amount,
+							 },
+							 dataType: 'json'
+						 })
+						 .done(function done(data){
+							 alert("CPV Submitted");
+							 location.reload();
+						 });
+					} else {
+						table.find('tr').each(function (i, el){
+							if(i != 0)
+							{
+								var $tds = $(this).find('td');
+								var row = {
+									'account_id' : "",
+									'invoice_amount':"",
+									'invoice_no' : "",
+								};
+								row_checked = $(el).find('td:eq(6) > input').is(":checked");
+								$tds.each(function(i, el){
+										if (row_checked) {
+											if (i === 0) {
+													row["account_id"] = vendor;
+											}
+											else if (i === 1) {
+													row["invoice_no"] = $(this).text();
+											}
+											else if (i === 4) {
+													row["invoice_amount"] = ($(this).find('input').val());
+													data.push(row);
+											}
+								}
+						});
+							}
+						});
+							req =	$.ajax({
+								 headers: { "X-CSRFToken": getCookie("csrftoken") },
+								 type: 'POST',
+								 url : '/transaction/cash_payment_voucher/new/',
+								 data:{
+									 'doc_date': doc_date,
+									 'description': description,
+									 'date':date,
+									 'vendor':vendor,
+									 'items': JSON.stringify(data),
+								 },
+								 dataType: 'json'
+							 })
+							 .done(function done(data){
+								 alert("CPV Submitted");
+								 location.reload();
+							 });
+					}
+				});
+
+
+// =============================================================================
+
+
+$("#account_crv").on('change',function(){
+	var account_crv = $('#account_crv').find(":selected").val();
+	req =	$.ajax({
+		 headers: { "X-CSRFToken": getCookie("csrftoken") },
+		 type: 'POST',
+		 url:'',
+		 data:{
+			 'account_crv':account_crv
+		 },
+		 dataType: 'json'
+	 })
+	 .done(function done(data){
+		 $("#new-crv-table tbody tr").empty();
+		 if (data.pi.length > 0) {
+			 count = 1;
+			 row_count = 0
+			 var balance_amount = 0;
+			 var parent_amount = $('#amount').val();
+				 var index = $("table tbody tr:last-child").index();
+				 for (var i = 0; i < data.pi.length; i++) {
+					 balance_amount = parseFloat(data.pi[i][4]) - Math.abs(parseFloat(data.pi[i][5]))
+						 var row = '<tr>' +
+								 '<td>'+ count++ +'</td>' +
+								 '<td><b>'+data.pi[i][2]+'</b></td>' +
+								 '<td align="right">'+data.pi[i][4].toFixed(2)+'</td>' +
+								 '<td align="right">'+Math.abs(data.pi[i][5].toFixed(2))+'</td>' +
+								 '<td align="right"><input type="text" disabled class="form-control form-control-sm invoice_amount"/></td>' +
+								 '<td align="right">'+balance_amount.toFixed(2)+'</td>' +
+								 '<td align="center" ><input class="invoice_checked" type="checkbox" ></td>' +
+							 '</tr>';
+					 $("#new-crv-table").append(row);
+				 }
+
+		 } else {
+			 console.log("no data");
+			 var row = '<tr>' +
+					 '<td align="center" colspan="6" >No Data Found</td>' +
+				 '</tr>';
+				$("#new-crv-table").append(row);
+		 }
+	 })
+});
+
+var check_paying_amount = 0;
+$("#new-crv-table").on('change','.invoice_checked', function(){
+	$(this).parents('tr:eq(0)').find('td:eq(4) > input').attr("disabled", false)
+	var amount = $(this).parents('tr:eq(0)').find('td:eq(4)').text();
+	hide_amount = parseFloat($(this).parents('tr:eq(0)').find('td:eq(2)').text()) - parseFloat($(this).parents('tr:eq(0)').find('td:eq(3)').text());
+	if(this.checked) {
+	$(this).parents('tr:eq(0)').find('td:eq(4) > input').val(hide_amount)
+	$(this).parents('tr:eq(0)').find('td:eq(5)').text("0.00")
+}
+else{
+	$(this).parents('tr:eq(0)').find('td:eq(4) > input').attr("disabled", "disabled")
+	$(this).parents('tr:eq(0)').find('td:eq(4) > input').val("")
+	$(this).parents('tr:eq(0)').find('td:eq(5)').text(hide_amount)
+}
+})
+
+
+$("#on_account_crv").change(function() {
+		if(this.checked) {
+			$("#new-crv-table").toggleClass("active");
+			$("tr").css('color', 'grey');
+			$("#new-crv-table").find("*").attr("disabled", "disabled");
+			$('#new-crv-table > tbody  > tr').each(function(index, tr) {
+			check_action = $(this).find('td:eq(5) > input').is(":checked")
+			if (check_action) {
+				$(this).find('td:eq(5) > input').prop("checked", false);
+				$(this).find('td:eq(4) > input').attr("disabled", "disabled");
+			}
+			});
+			$("#receiving_amount").prop('disabled', false);
+		}
+		else {
+			$("#receiving_amount").prop('disabled', true);
+			$("tr").css('color', 'black');
+			$("#new-crv-table").toggleClass("active");
+			$('#new-crv-table > tbody  > tr').each(function(index, tr) {
+				$(this).find('td:eq(6) > input').attr("disabled", false);
+			});
+		}
+});
+
+$("#receiving_amount").on('keyup', function(){
+
+})
+
+$("#new-crv-table").on('keyup','.invoice_amount', function(){
+	hide_amount = parseFloat($(this).parents('tr:eq(0)').find('td:eq(2)').text()) - parseFloat($(this).parents('tr:eq(0)').find('td:eq(3)').text());
+	var invoice_amount = hide_amount - parseFloat($(this).val());
+	if (isNaN(invoice_amount)) {
+		$(this).parents('tr:eq(0)').find('td:eq(5)').text(hide_amount);
+	} else {
+		$(this).parents('tr:eq(0)').find('td:eq(5)').text(invoice_amount);
+	}
+
+})
+
+
+$('#new-jv-form-crv').on('submit',function(e){
+		e.preventDefault();
+		receiving_amount_checked = $("#on_account_crv").is(":checked");
+		var account_id = 0
+		var receiving_amount = $("#receiving_amount").val();
+		var table = $('#new-crv-table');
+		var data = [];
+		var debit = 0;
+		var credit = 0;
+		var invoice_no = $('#invoice_no').val();
+		var doc_date = $('#doc_date').val();
+		var date = $('#date').val();
+		var vendor = $('#account_crv').find(":selected").val();
+		var description = $('#description').val();
+		if (receiving_amount_checked) {
+			console.log(receiving_amount_checked);
+			req =	$.ajax({
+				 headers: { "X-CSRFToken": getCookie("csrftoken") },
+				 type: 'POST',
+				 url : '/transaction/cash_receiving_voucher/new/',
+				 data:{
+					 'doc_date': doc_date,
+					 'description': description,
+					 'date':date,
+					 'vendor':vendor,
+					 'on_account_crv': 1,
+					 'receiving_amount':receiving_amount,
+				 },
+				 dataType: 'json'
+			 })
+			 .done(function done(data){
+				 alert("CRV Submitted");
+				 location.reload();
+			 });
+		} else {
+			table.find('tr').each(function (i, el){
+				if(i != 0)
+				{
+					var $tds = $(this).find('td');
+					var row = {
+						'account_id' : "",
+						'invoice_amount':"",
+						'invoice_no' : "",
+					};
+					row_checked = $(el).find('td:eq(6) > input').is(":checked");
+					$tds.each(function(i, el){
+							if (row_checked) {
+								if (i === 0) {
+										row["account_id"] = vendor;
+								}
+								else if (i === 1) {
+										row["invoice_no"] = $(this).text();
+								}
+								else if (i === 4) {
+										row["invoice_amount"] = ($(this).find('input').val());
+										data.push(row);
+								}
+					}
+			});
+				}
+			});
+				req =	$.ajax({
+					 headers: { "X-CSRFToken": getCookie("csrftoken") },
+					 type: 'POST',
+					 url : '/transaction/cash_receiving_voucher/new/',
+					 data:{
+						 'doc_date': doc_date,
+						 'description': description,
+						 'date':date,
+						 'vendor':vendor,
+						 'items': JSON.stringify(data),
+					 },
+					 dataType: 'json'
+				 })
+				 .done(function done(data){
+					 alert("CRV Submitted");
+					 location.reload();
+				 });
+		}
+	});
 
 		});

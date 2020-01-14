@@ -70,8 +70,8 @@
         <thead>
           <tr class="heading_row">
             <th align="center" style="width: 150px;"><font size="14px">Date</font></th>
-            <th style="width:300px;"><font size="14px">Voucher</font></th>
-            <th style="width:500px;"><font size="14px">Particular</font></th>
+            <th style="width:200px;"><font size="14px">Voucher</font></th>
+            <th style="width:800px;"><font size="14px">Particular</font></th>
             <th style="width:200px;"><font size="14px">Debit</font></th>
             <th style="width:200px;"><font size="14px">Credit</font></th>
             <th style="width:200px;"><font size="14px">Balance</font></th>
@@ -82,12 +82,12 @@
         <tr class="">
           {% if value.tran_type == "Opening" %}
             <td style="width: 150px; height:30px;"></td>
-            <td style="width: 300px;"></td>
-            <td style="width: 500px; text-align:center;"><font size="12px">Balance B/F</font></td>
+            <td style="width: 200px;"></td>
+            <td style="width: 800px; text-align:center;"><font size="12px">Balance B/F</font></td>
           {% else %}
             <td style="width: 150px; height:30px;"><font size="12px">{{value.date}}</font></td>
-            <td style="width: 300px;"><font size="12px">{{value.tran_type}} {{value.voucher_no}}</font></td>
-            <td style="width: 500px; text-align:center;"><font size="12px">{{value.voucher_no}} / Refrence Date: {{value.date}}</font></td>
+            <td style="width: 200px;"><font size="12px">{{value.tran_type}} {{value.voucher_no}}</font></td>
+            <td style="width: 800px; text-align:center;"><font size="12px">{{value.voucher_no}} / Refrence Date: {{value.date}} ({{value.detail_remarks}})</font></td>
           {% endif %}
           <td style="width: 200px; text-align:center;"><font size="12px">{{value.debit|abs|floatformat:2}}</font></td>
           <td style="width: 200px; text-align:center;"><font size="12px">{{value.credit|abs|floatformat:2}}</font></td>

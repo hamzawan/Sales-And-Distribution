@@ -160,7 +160,7 @@ class Transactions(models.Model):
     ref_inv_tran_type = models.CharField(max_length = 100)
     voucher_id = models.ForeignKey(VoucherHeader, models.SET_NULL, blank = True, null = True)
     remarks = models.CharField(max_length = 100)
-
+    detail_remarks = models.CharField(max_length = 200)
 
 class JobOrderHeader(models.Model):
     job_no = models.CharField(max_length = 100)

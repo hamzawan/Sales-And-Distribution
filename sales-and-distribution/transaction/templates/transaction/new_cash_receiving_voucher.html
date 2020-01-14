@@ -32,28 +32,21 @@
           <div class="row">
             <div class="col-md-2">
               <label for="">Customers</label>
-              <select class="form-control form-control-sm" id="account_title">
+              <select class="form-control form-control-sm" id="account_crv">
+                <option value="0">select: </option>
                 {% for value in all_accounts %}
                 <option value="{{value.id}}">{{value.account_title}}</option>
                 {% endfor %}
               </select>
             </div>
               <div class="form-group col-md-2">
-                <input type="checkbox" name="check" id="box" class="check" >
-                <label for="">Invoice #</label>
-                <input type="text" list="inv_no" id="invoice_no" class="form-control form-control-sm" disabled/>
-                <datalist class="" id="inv_no">
-                  {% for v in all_invoices %}
-                    <option value="{{v.sale_no}}">{{v.sale_no}}</option>
-                  {% endfor %}
-                </datalist>
-              </div>
-              <div class="form-group col-md-2">
                 <label for="">Amount</label>
-                <input type="text" id="amount" class="form-control form-control-sm"/>
+                <input type="text" id="receiving_amount" disabled class="form-control form-control-sm"/>
               </div>
-              <div class="form-group col-md-2">
-                <button type="button" style="margin-top:30px;" class="btn btn-info load-invoices"><i class="fa fa-plus"></i>Load Invoices</button>
+              <div class="form-group col-md-4">
+                <label for="">On Account</label>
+                <br>
+                <input id="on_account_crv" type="checkbox">
               </div>
           </div>
       </div>
@@ -63,12 +56,13 @@
       <table class="table table-bordered" id="new-crv-table">
           <thead>
               <tr>
-                  <th width="100px" style="font-size:10px;">Account Id</th>
-                  <th width="300px">Account Title</th>
-                  <th width="100px">Invoice No</th>
-                  <th width="100px">Debit</th>
-                  <th width="100px">Credit</th>
+                  <th width="100px" style="font-size:10px;">S No.</th>
+                  <th width="300px">Invoice No</th>
+                  <th width="100px">Total Amount</th>
+                  <th width="100px">Paid Amount</th>
+                  <th width="100px">Amount</th>
                   <th width="100px">Balance</th>
+                  <th width="100px">Action</th>
               </tr>
           </thead>
           <tbody>
@@ -84,6 +78,5 @@
 </form>
 </ul>
 </div>
-
 
 {% endblock body %}

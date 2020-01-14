@@ -59,6 +59,7 @@ urlpatterns = [
     path('cash_payment_voucher/new/', views.new_cash_payment_voucher, name='new-cash-payment-voucher'),
     path('cash_payment_voucher/view/<pk>', views.view_cash_payment, name='view-cash-payment'),
     path('cash_payment_voucher/delete/<pk>', views.delete_cash_payment, name='delete-cash-payment'),
+    # path('check_cash_payment_voucher/new/', views.check_new_cash_payment_voucher, name='check-new-cash-payment-voucher'),
     path('cpv_pdf/<pk>', views.cpv_pdf, name='cpv'),
 
     path('job_order/', views.job_order, name='job-order'),

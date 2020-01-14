@@ -35,12 +35,15 @@
       <table class="table table-bordered sort" id="dataTable">
           <thead>
               <tr>
-                  <th>Voucher No.</th>
-                  <th width="300px">Transaction ID.</th>
-                  <th>Invoice No.</th>
+                  <th width="50px">Voucher No.</th>
+                  <th width="100px">Transaction ID.</th>
+                  <th width="50px">Invoice No.</th>
+                  <th>Head</th>
+                  <th>Amount</th>
+                  <th>Description</th>
                   <th>Date</th>
                   <th>From</th>
-                  <th width="600px">Action</th>
+                  <th width="">Action</th>
               </tr>
           </thead>
           <tbody>
@@ -49,6 +52,9 @@
                     <td>{{ value.0 }}</td>
                     <td>{{value.1}}</td>
                     <td>{{value.2}}</td>
+                    <td>{{value.7}}</td>
+                    <td>{{value.8}}</td>
+                    <td><pre style="font-family:calibri,arial,sans-serif;" >{{value.5}}</pre></td>
                     <td>{{value.3}}</td>
                     <td>{{value.6}}</td>
                     <td>

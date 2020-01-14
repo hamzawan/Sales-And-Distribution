@@ -136,14 +136,22 @@
       <td></td>
       <td style="text-align:center;" >{{total_amount|floatformat:2}}</td>
     </tr>
+    {% if discount %}
+    <tr>
+      <td style="text-align:right;" colspan="8">Discount</td> &nbsp; &nbsp; &nbsp; &nbsp;
+      <td style="text-align:right; height:70px;"><font size="12px" style="text-decoration:underline, overline; text-decoration-style:double;"><b>{{discount|floatformat:2}}</b></font></td>
+    </tr>
+    {% endif %}
+    <tr>
+      <td style="text-align:right;" colspan="8">NET AMOUNT</td> &nbsp; &nbsp; &nbsp; &nbsp;
+      <td style="text-align:right; height:70px;"><font size="12px" style="text-decoration:underline, overline; text-decoration-style:double;"><b>{{total_amount_after_discount|floatformat:2}}</b></font></td>
+    </tr>
+    {% if header.account_id.account_title != "Walk in Customers" %}
     <tr>
       <td style="text-align:right;" colspan="8">CREDIT BAL</td> &nbsp; &nbsp; &nbsp; &nbsp;
       <td style="text-align:right; height:70px;"><font size="12px" style="text-decoration:underline, overline; text-decoration-style:double;"><b>{{credit_balance|floatformat:2}}</b></font></td>
     </tr>
-    <tr>
-      <td style="text-align:right;" colspan="8">NET AMOUNT</td> &nbsp; &nbsp; &nbsp; &nbsp;
-      <td style="text-align:right; height:70px;"><font size="12px" style="text-decoration:underline, overline; text-decoration-style:double;"><b>{{total_amount|floatformat:2}}</b></font></td>
-    </tr>
+    {% endif %}
   </tbody>
 </table>
 <br>

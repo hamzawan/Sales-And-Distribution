@@ -51,7 +51,8 @@
         {% endfor %}
         <p style="text-align:center; padding-top:-60px ; font-family: "Times New Roman", Times, serif; " color="#0a012c"  ><font size="14px">Daily Report</font></p>
         <br/>
-    </div>
+        <font size="12px">From Date: {{from_date}} To Date : {{to_date}}</font>
+          </div>
       <h1>Sale Detail <small>(on cash)</small> </h1>
      <table cellpadding="3" id="item_table">
         <thead>
@@ -246,7 +247,19 @@
       </tr>
     </tbody>
   </table>
-
+  <br>
+  <br>
+  <table cellpadding="2">
+    <tbody>
+      <tr>
+        <td width="50px" align="center" style="border-top:1px solid black;"><font size="14px"></font></td>
+        <td width="100px"style="border-top:1px solid black;" ><font size="14px"></font></td>
+        <td width="200px" align="center" style="border-top:1px solid black;"><font size="14px"></font></td>
+        <td width="250px" align="right" style="border-top:1px solid black;"><font size="14px"><b>Total</b></font></td>
+        <td width="110px" align="right" style="border-top:1px solid black;"><font size="14px"><b>{{last_total|floatformat:2}}</b></font></td>
+      </tr>
+    </tbody>
+  </table>
 </div>
 </body>
 </html>
