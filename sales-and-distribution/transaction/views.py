@@ -1624,6 +1624,8 @@ def delete_cash_receiving(request,pk):
     ref_inv_tran_type = Q(ref_inv_tran_type = "Sale CRV")
     voucher_id = Q(voucher_id = pk)
     Transactions.objects.filter(ref_inv_tran_type, voucher_id).all().delete()
+    tran_type = Q(tran_type = "Opening Balance")
+    Transactions.objects.filter(tran_type, voucher_id).all().delete()
     VoucherDetail.objects.filter(header_id = pk).all().delete()
     VoucherHeader.objects.filter(id = pk).delete()
     messages.add_message(request, messages.SUCCESS, "Cash Receiving Voucher Deleted")
@@ -2775,13 +2777,11 @@ def daily_report(request):
 def new_cash_payment_voucher(request):
     balance_amount = 0
     cursor = connection.cursor()
-    get_last_tran_id = cursor.execute('''select * from transaction_voucherheader where voucher_no LIKE '%CPV%'
-                                        order by voucher_no DESC LIMIT 1''')
-    get_last_tran_id = get_last_tran_id.fetchall()
+    get_last_tran_id = VoucherHeader.objects.filter(voucher_no__contains = 'CPV').last()
     date = datetime.date.today()
     date = date.strftime('%Y%m')
+    get_last_tran_id = get_last_tran_id.voucher_no
     if get_last_tran_id:
-        get_last_tran_id = get_last_tran_id[0][1]
         get_last_tran_id = get_last_tran_id[7:]
         serial = str((int(get_last_tran_id) + 1))
         get_last_tran_id = date[2:]+'CPV'+serial
@@ -2838,6 +2838,7 @@ def new_cash_payment_voucher(request):
                     if balance_amount > 0:
                         if paying_amount > balance_amount:
                             invoice_no = PurchaseHeader.objects.get(purchase_no = value[2])
+                            vendor = request.POST.get('vendor', False)
                             vendor = ChartOfAccount.objects.filter(id = vendor).first()
                             voucher_id = VoucherHeader.objects.filter(voucher_no = get_last_tran_id).first()
                             detail_remarks = f"Paid amount {balance_amount} RS, against invoice no {invoice_no.purchase_no}."
@@ -2856,6 +2857,7 @@ def new_cash_payment_voucher(request):
                         else:
                             voucher_id = VoucherHeader.objects.filter(voucher_no = get_last_tran_id)
                             invoice_no = PurchaseHeader.objects.get(purchase_no = value[2])
+                            vendor = request.POST.get('vendor', False)
                             vendor = ChartOfAccount.objects.filter(id = vendor).first()
                             voucher_id = VoucherHeader.objects.filter(voucher_no = get_last_tran_id).first()
                             balance_amount = paying_amount
@@ -3042,15 +3044,17 @@ def new_cash_receiving_voucher(request):
                     balance_amount = value[4] - value[5]
                     if balance_amount > 0:
                         if receiving_amount > balance_amount:
+                            vendor = request.POST.get('vendor', False)
                             invoice_no = SaleHeader.objects.get(sale_no = value[2])
+                            vendor = request.POST.get('vendor', False)
                             vendor = ChartOfAccount.objects.filter(id = vendor).first()
                             voucher_id = VoucherHeader.objects.filter(voucher_no = get_last_tran_id).first()
                             detail_remarks = f"Received amount {balance_amount} RS, against invoice no {invoice_no.sale_no}."
                             tran1 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = -abs(balance_amount),
-                                                date = date, remarks = "", account_id = vendor,ref_inv_tran_id = invoice_no.id,ref_inv_tran_type = "Sale CRV", voucher_id = voucher_id, detail_remarks = detail_remarks )
+                                                date = date, remarks = get_last_tran_id, account_id = vendor,ref_inv_tran_id = invoice_no.id,ref_inv_tran_type = "Sale CRV", voucher_id = voucher_id, detail_remarks = detail_remarks )
                             tran1.save()
                             tran2 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = balance_amount,
-                                                date = date, remarks = "", account_id = cash_account,ref_inv_tran_id = invoice_no.id,ref_inv_tran_type = "Sale CRV", voucher_id = voucher_id,detail_remarks = detail_remarks )
+                                                date = date, remarks = get_last_tran_id, account_id = cash_account,ref_inv_tran_id = invoice_no.id,ref_inv_tran_type = "Sale CRV", voucher_id = voucher_id,detail_remarks = detail_remarks )
                             tran2.save()
                             header_id = VoucherHeader.objects.get(voucher_no = get_last_tran_id)
                             jv_detail1 = VoucherDetail(account_id = cash_account, debit = 0.00, credit = -abs(balance_amount), header_id = header_id, invoice_id = invoice_no.id)
@@ -3061,16 +3065,17 @@ def new_cash_receiving_voucher(request):
                         else:
                             voucher_id = VoucherHeader.objects.filter(voucher_no = get_last_tran_id)
                             invoice_no = SaleHeader.objects.get(sale_no = value[2])
+                            vendor = request.POST.get('vendor', False)
                             vendor = ChartOfAccount.objects.filter(id = vendor).first()
                             voucher_id = VoucherHeader.objects.filter(voucher_no = get_last_tran_id).first()
                             balance_amount = receiving_amount
                             invoice_id = SaleHeader.objects.get(sale_no = value[2])
                             detail_remarks = f"Received amount {balance_amount} RS, against invoice no {invoice_id.sale_no}."
                             tran1 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = -abs(balance_amount),
-                                                date = date, remarks = "", account_id = vendor,ref_inv_tran_id = invoice_no.id,ref_inv_tran_type = "Sale CRV",voucher_id = voucher_id ,detail_remarks = detail_remarks)
+                                                date = date, remarks = get_last_tran_id, account_id = vendor,ref_inv_tran_id = invoice_no.id,ref_inv_tran_type = "Sale CRV",voucher_id = voucher_id ,detail_remarks = detail_remarks)
                             tran1.save()
                             tran2 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = balance_amount,
-                                                date = date, remarks = "", account_id = cash_account,ref_inv_tran_id = invoice_no.id,ref_inv_tran_type = "Sale CRV", voucher_id = voucher_id ,detail_remarks = detail_remarks )
+                                                date = date, remarks = get_last_tran_id, account_id = cash_account,ref_inv_tran_id = invoice_no.id,ref_inv_tran_type = "Sale CRV", voucher_id = voucher_id ,detail_remarks = detail_remarks )
                             tran2.save()
                             header_id = VoucherHeader.objects.get(voucher_no = get_last_tran_id)
                             jv_detail1 = VoucherDetail(account_id = cash_account, debit = 0.00, credit = -abs(balance_amount), header_id = header_id, invoice_id = invoice_no.id)
@@ -3087,10 +3092,10 @@ def new_cash_receiving_voucher(request):
                         if receiving_amount > balance_amount:
                             detail_remarks = f"Received amount against opening balance."
                             tran1 = Transactions(refrence_id = vendor.id, refrence_date = doc_date, tran_type = 'Opening Balance', amount = -abs(balance_amount),
-                                                date = date, remarks = "", account_id = vendor,ref_inv_tran_id = 0,ref_inv_tran_type = "-", voucher_id = voucher_id ,detail_remarks = detail_remarks )
+                                                date = date, remarks = get_last_tran_id, account_id = vendor,ref_inv_tran_id = 0,ref_inv_tran_type = "-", voucher_id = voucher_id ,detail_remarks = detail_remarks )
                             tran1.save()
                             tran2 = Transactions(refrence_id = vendor.id, refrence_date = doc_date, tran_type = 'Opening Balance', amount = balance_amount,
-                                                date = date, remarks = "", account_id = cash_account,ref_inv_tran_id = 0,ref_inv_tran_type = "-", voucher_id = voucher_id ,detail_remarks = detail_remarks )
+                                                date = date, remarks = get_last_tran_id, account_id = cash_account,ref_inv_tran_id = 0,ref_inv_tran_type = "-", voucher_id = voucher_id ,detail_remarks = detail_remarks )
                             tran2.save()
                             header_id = VoucherHeader.objects.get(voucher_no = get_last_tran_id)
                             jv_detail1 = VoucherDetail(account_id = cash_account, debit = balance_amount, credit = 0.00, header_id = header_id, invoice_id = 0)
@@ -3102,10 +3107,10 @@ def new_cash_receiving_voucher(request):
                             balance_amount = receiving_amount
                             detail_remarks = f"Received amount against opening balance."
                             tran1 = Transactions(refrence_id = vendor.id, refrence_date = doc_date, tran_type = 'Opening Balance', amount = -abs(balance_amount),
-                                                date = date, remarks = "", account_id = vendor,ref_inv_tran_id = 0,ref_inv_tran_type = "-",voucher_id = voucher_id ,detail_remarks = detail_remarks )
+                                                date = date, remarks = get_last_tran_id, account_id = vendor,ref_inv_tran_id = 0,ref_inv_tran_type = "-",voucher_id = voucher_id ,detail_remarks = detail_remarks )
                             tran1.save()
                             tran2 = Transactions(refrence_id = vendor.id, refrence_date = doc_date, tran_type = 'Opening Balance', amount = balance_amount,
-                                                date = date, remarks = "", account_id = cash_account,ref_inv_tran_id = 0,ref_inv_tran_type = "-",voucher_id = voucher_id, detail_remarks = detail_remarks )
+                                                date = date, remarks = get_last_tran_id, account_id = cash_account,ref_inv_tran_id = 0,ref_inv_tran_type = "-",voucher_id = voucher_id, detail_remarks = detail_remarks )
                             tran2.save()
                             header_id = VoucherHeader.objects.get(voucher_no = get_last_tran_id)
                             jv_detail1 = VoucherDetail(account_id = cash_account, debit = balance_amount, credit = 0.00, header_id = header_id, invoice_id = 0)

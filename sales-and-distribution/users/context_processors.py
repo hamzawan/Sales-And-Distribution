@@ -5,11 +5,11 @@ import mysql.connector
 from django.db import connection
 
 def side_bar_objects(request):
-    ObjectHead = tblObjectHead.objects.filter(ParentID = 0).all()
+    ObjectHead = tblObjectHead.objects.filter(ParentID = 0,).all()
     cursor = connection.cursor()
     cursor.execute('''Select * from tblObjectHead Where ObjectID in
                     (
-                    Select ObjectID From tblUserRights Where UserID = %s AND ActionID = 1 AND isAllow = 1)
+                    Select ObjectID From tblUserRights Where UserID = %s AND ActionID = 1 AND isAllow = 1 AND tblObjectHead.isActive = 1)
                     ''',[request.user.id])
     ObjectHeadChild = cursor.fetchall()
     return {'ObjectHead':ObjectHead,'ObjectHeadChild':ObjectHeadChild}
