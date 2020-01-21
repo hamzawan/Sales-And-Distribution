@@ -161,6 +161,8 @@ class Transactions(models.Model):
     voucher_id = models.ForeignKey(VoucherHeader, models.SET_NULL, blank = True, null = True)
     remarks = models.CharField(max_length = 100)
     detail_remarks = models.CharField(max_length = 200)
+    is_partialy = models.BooleanField(default = False)
+
 
 class JobOrderHeader(models.Model):
     job_no = models.CharField(max_length = 100)

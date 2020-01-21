@@ -38,8 +38,8 @@
     <!-- Content for Static Frame 'header_frame' -->
     <div id="#header_content">
       <div>
-       <img style="width:200px; height:150px;" src="{{image.company_logo}}" align="left"/><br>
-       <font size="12px" color="#0a012c" ><pre>{{image.company_address}}</pre></font>
+       <img style="width:200px; height:auto;" src="{{image.company_logo}}" align="left"/><br>
+       <font size="11px" color="#0a012c" ><pre>{{image.company_address}}</pre></font>
      </div>
      <br>
      <br>
@@ -147,10 +147,12 @@
       <td style="text-align:right; height:70px;"><font size="12px" style="text-decoration:underline, overline; text-decoration-style:double;"><b>{{total_amount_after_discount|floatformat:2}}</b></font></td>
     </tr>
     {% if header.account_id.account_title != "Walk in Customers" %}
+    {% if credit_balance > 0 %}
     <tr>
       <td style="text-align:right;" colspan="8">CREDIT BAL</td> &nbsp; &nbsp; &nbsp; &nbsp;
       <td style="text-align:right; height:70px;"><font size="12px" style="text-decoration:underline, overline; text-decoration-style:double;"><b>{{credit_balance|floatformat:2}}</b></font></td>
     </tr>
+    {% endif %}
     {% endif %}
   </tbody>
 </table>

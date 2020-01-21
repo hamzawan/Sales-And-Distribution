@@ -34,22 +34,24 @@
       <table class="table table-bordered sort" id="dataTable">
           <thead>
               <tr>
+                  <th>S No.</th>
                   <th width="150px">Sales ID</th>
                   <th >Date</th>
                   <th >Account Title</th>
                   <th >Account Holder</th>
-                  <th >From</th>
+                  <th >Total Amount</th>
                   <th width="600px">Action</th>
               </tr>
           </thead>
           <tbody>
-            {% for value in all_sales reversed %}
+            {% for value in all_sales %}
             <tr>
-                <td>{{ value.sale_no }}</td>
+                <td>{{ forloop.counter }}</td>
+                <td><b>{{ value.sale_no }}</b></td>
                 <td>{{ value.date }}</td>
-                <td>{{ value.account_id.account_title }}</td>
+                <td>{{ value.account_title }}</td>
                 <td>{{ value.account_holder }}</td>
-                <td>{{value.user.username}}</td>
+                <td>{{value.total_amount|floatformat:2 }}</td>
                 <td>
                   {% if allow_edit.0.0 == 1 %}
                     <a class="edit_list" href="{% url 'edit-sale' pk=value.id %}" data-toggle=""><i class="material-icons">&#xE254;</i></a>
@@ -57,7 +59,7 @@
                     <a class="edit_list disableClick" href="" data-toggle=""><i class="material-icons">&#xE254;</i></a>
                   {% endif %}
                   {% if allow_print.0.0 == 1 %}
-                  <a href="#" target="_blank" data-toggle="modal" class="has_id" id="{{value.id}}" data-target="#invoiceType"><i class="fa fa-print" id="print_icon" aria-hidden="true"></i></a>
+                  <a href="#" target="_blank" data-toggle="modal" class="has_id" id="{{value.id }}" data-target="#invoiceType"><i class="fa fa-print" id="print_icon" aria-hidden="true"></i></a>
                   {% else %}
                   <a href="#" target="_blank" data-toggle="modal" class="disableClick"><i class="fa fa-print" id="print_icon" aria-hidden="true"></i></a>
                   {% endif %}

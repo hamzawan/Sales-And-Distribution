@@ -38,10 +38,10 @@
           <thead>
               <tr>
                   <th>S No.</th>
-                  <th width="150px">Sales ID</th>
+                  <th width="150px">Purchase ID</th>
                   <th >Date</th>
                   <th >Supplier</th>
-                  <th >From</th>
+                  <th >Total Amount</th>
                   <th width="600px">Action</th>
               </tr>
           </thead>
@@ -49,23 +49,23 @@
             {% for value in all_purchases reversed %}
             <tr>
                 <td>{{ forloop.counter }}</td>
-                <td>{{ value.purchase_no }}</td>
-                <td>{{ value.date }}</td>
-                <td>{{ value.account_id.account_title }}</td>
-                <td>{{value.user.username}}</td>
+                <td><b>{{ value.1 }}</b></td>
+                <td>{{ value.2 }}</td>
+                <td>{{ value.3 }}</td>
+                <td>{{value.4 }}</td>
                 <td>
                   {% if allow_edit.0.0 == 1 %}
-                    <a class="edit_list" href="{% url 'edit-purchase' pk=value.id %}" data-toggle=""><i class="material-icons">&#xE254;</i></a>
+                    <a class="edit_list" href="{% url 'edit-purchase' pk=value.0 %}" data-toggle=""><i class="material-icons">&#xE254;</i></a>
                   {% else %}
                     <a class="edit_list disableClick" ><i class="material-icons">&#xE254;</i></a>
                   {% endif %}
                   {% if allow_print.0.0 == 1 %}
-                    <a href="{% url 'purchase-print' pk=value.id %}" target="_blank"><i class="fa fa-print" id="print_icon" aria-hidden="true"></i></a>
+                    <a href="{% url 'purchase-print' pk=value.0 %}" target="_blank"><i class="fa fa-print" id="print_icon" aria-hidden="true"></i></a>
                   {% else %}
                     <a href="" class="disableClick" target="_blank"><i class="fa fa-print" id="print_icon" aria-hidden="true"></i></a>
                   {% endif %}
                   {% if allow_delete.0.0 == 1 %}
-                    <a class="delete_purchase" href="#" data-toggle="modal" data-target="#deletePurchaseInvoiceModal" id="{{value.id}}"><i class="material-icons">&#xE872;</i></a>
+                    <a class="delete_purchase" href="#" data-toggle="modal" data-target="#deletePurchaseInvoiceModal" id="{{value.0 }}"><i class="material-icons">&#xE872;</i></a>
                   {% else %}
                     <a class="delete_purchase disableClick" href="#" ><i class="material-icons">&#xE872;</i></a>
                   {% endif %}

@@ -148,34 +148,36 @@
         <div class="form-inline">
           <div class="form-group">
             <label for="text" style="font-size:14px;"><b>SRB in % :&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></label>
-            <input type="text" required  class="form-control form-control-sm" style="border-top: 0px; border-right:0px; border-left:0px;" id="srb" name="srb"  value="{{sale_header.srb}}">
+            <input type="text" required  class="form-control form-control-sm" style="border-top: 0px; border-right:0px; border-left:0px;" id="edit_srb" name="srb"  value="{{sale_header.srb}}">
           </div>
         </div>
         <div class="form-inline">
           <div class="form-group">
             <label for="text" style="font-size:14px;"><b>GST in % :&nbsp;&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></label>
-            <input type="text" required placeholder="in percent"  class="form-control form-control-sm" style="border-top: 0px; border-right:0px; border-left:0px;" id="gst" name="gst" value="{{sale_header.gst}}">
+            <input type="text" required placeholder="in percent"  class="form-control form-control-sm" style="border-top: 0px; border-right:0px; border-left:0px;" id="edit_gst" name="gst" value="{{sale_header.gst}}">
           </div>
         </div>
         <div class="form-inline">
           <div class="form-group">
             <label for="text" style="font-size:14px;"><b>DISC in %:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></label>
-            <input type="text" required class="form-control form-control-sm" style="border-top: 0px; border-right:0px; border-left:0px;" id="discount" name="discount" value="{{sale_header.discount}}">
+            <input type="text" readonly class="form-control form-control-sm" style="border-top: 0px; border-right:0px; border-left:0px;" id="edit_discount" name="discount" value="{{sale_header.discount}}">
           </div>
         </div>
-        <!-- <div class="form-inline">
+        <div class="form-inline">
           <div class="form-group">
-            <label for="text" style="font-size:14px;"><b>DISC in val.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></label>
-            <input type="text" required  class="form-control form-control-sm" style="border-top: 0px; border-right:0px; border-left:0px;" id="discount_in_val" name="discount" value="0">
+            <label for="text" style="font-size:14px;"><b>DISC in val:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></label>
+            <input type="text"  class="form-control form-control-sm" style="border-top: 0px; border-right:0px; border-left:0px;" name="discount" id="discount_in_val" value="0.00">
           </div>
-        </div> -->
-        <!-- <div class="form-inline">
+        </div>
+        <div class="form-inline">
           <div class="form-group">
-            <label for="text" style="font-size:14px;"><b>Grand Total:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></label>
-            <input type="text"  class="form-control form-control-sm" style="border-top: 0px; border-right:0px; border-left:0px;" id="grand_total" readonly value="0">
+            <label for="text" style="font-size:14px;"><b>Grand Total:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></label>
+            <input type="text" required class="form-control form-control-sm" style="border-top: 0px; border-right:0px; border-left:0px;" id="grand_total" readonly name="" value="">
           </div>
-        </div> -->
+        </div>
       </div>
+      <br>
+      <br>
       <br>
       <br>
       <br>

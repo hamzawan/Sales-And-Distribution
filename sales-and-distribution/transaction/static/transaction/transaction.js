@@ -1,4 +1,10 @@
 $(document).ready(function(){
+
+	// document.body.onkeydown = function(e){
+	//    if (e.keyCode == 13) {
+	//    		e.preventDefault();
+	//    }
+	// };
 	var arr = [];
 	var count = 1;
 	var sum = 0;
@@ -40,47 +46,53 @@ $(document).ready(function(){
 			return "";
 	 }
 
-						$(".add-item-x-purchase").click(function(){
-							var x_stand = $('#x_stand_purchase').val();
+	 		$('#x_stand_purchase').keypress(function(e){
+				e.preventDefault();
+				if (e.which == 13) {
+				var x_stand = $('#x_stand_purchase').val();
 
-								req =	$.ajax({
-									headers: { "X-CSRFToken": getCookie("csrftoken") },
-									type: 'POST',
-									url : '/transaction/purchase/new/',
-									data:{
-										'x_stand': x_stand,
-									},
-									dataType: 'json'
-								})
-								.done(function done(data){
-									console.log(data.items);
-									type = JSON.parse(data.items)
-									console.log(type);
-									console.log(type[0].fields["item_code"]);
-									var index = $("table tbody tr:last-child").index();
-											var row = '<tr>' +
-													'<td>'+count+'</td>' +
-													'<td>'+type[0].fields["item_code"]+'</td>'+
-													'<td>'+type[0].fields["item_name"]+'</td>'+
-													'<td><pre>'+type[0].fields["item_description"]+'</pre></td>'+
-													'<td>'+type[0].fields["unit"]+'</td>'+
-													'<td id="width">0</td>'+
-													'<td id="height">0</td>'+
-													'<td id="quantity"><input type="text" style="width:80px;" class="form-control"></td>'+
-													'<td id="sqft">0</td>'+
-													'<td id="rate"><input type="text" style="width:80px;" class="form-control"></td>' +
-													'<td id="total" style="font-weight:bold;" class="sum"><b>0.00</b></td>' +
-													'<td style="display:none;"></td>'+
-										'<td><a class="add-transaction-purchase" title="Add" data-toggle="tooltip"><i class="material-icons">&#xE03B;</i></a><a class="edit-transaction-purchase" title="Edit" data-toggle="tooltip" id="edit_purchase"><i class="material-icons">&#xE254;</i></a><a class="delete-transaction-purchase" title="Delete" data-toggle="tooltip"><i class="material-icons">&#xE872;</i></a></td>' +
-											'</tr>';
-											count++;
-										$("table").append(row);
-									$("table tbody tr").eq(index + 1).find(".edit-transaction-purchase, .add-transaction-purchase").toggle();
-											$('[data-toggle="tooltip"]').tooltip();
-											$('#item_code_purchase').val("");
+					req =	$.ajax({
+						headers: { "X-CSRFToken": getCookie("csrftoken") },
+						type: 'POST',
+						url : '/transaction/purchase/new/',
+						data:{
+							'x_stand': x_stand,
+						},
+						dataType: 'json'
+					})
+					.done(function done(data){
+						console.log(data.items);
+						type = JSON.parse(data.items)
+						console.log(type);
+						console.log(type[0].fields["item_code"]);
+						var index = $("table tbody tr:last-child").index();
+								var row = '<tr>' +
+										'<td>'+count+'</td>' +
+										'<td>'+type[0].fields["item_code"]+'</td>'+
+										'<td>'+type[0].fields["item_name"]+'</td>'+
+										'<td><pre>'+type[0].fields["item_description"]+'</pre></td>'+
+										'<td>'+type[0].fields["unit"]+'</td>'+
+										'<td id="width">0</td>'+
+										'<td id="height">0</td>'+
+										'<td id="quantity"><input type="text" style="width:80px;" class="form-control"></td>'+
+										'<td id="sqft">0</td>'+
+										'<td id="rate"><input type="text" style="width:80px;" class="form-control"></td>' +
+										'<td id="total" style="font-weight:bold;" class="sum"><b>0.00</b></td>' +
+										'<td style="display:none;"></td>'+
+							'<td><a class="add-transaction-purchase" title="Add" data-toggle="tooltip"><i class="material-icons">&#xE03B;</i></a><a class="edit-transaction-purchase" title="Edit" data-toggle="tooltip" id="edit_purchase"><i class="material-icons">&#xE254;</i></a><a class="delete-transaction-purchase" title="Delete" data-toggle="tooltip"><i class="material-icons">&#xE872;</i></a></td>' +
+								'</tr>';
+								count++;
+							$("table").append(row);
+						$("table tbody tr").eq(index + 1).find(".edit-transaction-purchase, .add-transaction-purchase").toggle();
+								$('[data-toggle="tooltip"]').tooltip();
+								$('#item_code_purchase').val("");
 
-								});
-							});
+					});
+				}
+			})
+
+						// $(".add-item-x-purchase").click(function(){
+						// 	});
 
 						 $('#new-purchase-table tbody tr').each(function() {
 								 var tdObject = $(this).find('td:eq(11)'); //locate the <td> holding select;
@@ -91,52 +103,96 @@ $(document).ready(function(){
 								 $('#grand_total').val(sum.toFixed(2));
 						 });
 
+						 $("#item_code_purchase").keypress(function(e){
+							 e.preventDefault();
+							 if (e.which == 13) {
+								 var item_code_purchase = $('#item_code_purchase').val();
+									 req =	$.ajax({
+											headers: { "X-CSRFToken": getCookie("csrftoken") },
+											type: 'POST',
+											url : '/transaction/purchase/new/',
+											data:{
+												'item_code_purchase': item_code_purchase,
+											},
+											dataType: 'json'
+										})
+										.done(function done(data){
+											type = JSON.parse(data.items)
+
+										 var index = $("table tbody tr:last-child").index();
+												 var row = '<tr>' +
+														 '<td>'+count+'</td>' +
+														 '<td>'+type[0].fields['item_code']+'</td>'+
+														 '<td>'+type[0].fields['item_name']+'</td>'+
+														 '<td><pre>'+type[0].fields['item_description']+'</pre></td>'+
+														 '<td ><select id="sel" class="form-control" style="height:40px;"><option>sq.ft</option><option>sq.inches</option></select></td>' +
+														 '<td id="width"><input type="text"  class="form-control input_width"></td>'+
+														 '<td id="height"><input type="text"  class="form-control"></td>'+
+														 '<td id="quantity"><input type="text"  class="form-control"></td>'+
+														 '<td id="square_fit"></td>'+
+														 '<td id="rate" ><input type="text" style="width:70px;" class="form-control"></td>' +
+														 '<td id="total" style="font-weight:bold;" class="sum"><b>0.00</b></td>' +
+														 '<td style="display:none;" id="measurment"></td>' +
+											 '<td><a class="add-transaction-purchase" title="Add" data-toggle="tooltip"><i class="material-icons">&#xE03B;</i></a><a class="edit-transaction-purchase" title="Edit" data-toggle="tooltip" id="edit_purchase"><i class="material-icons">&#xE254;</i></a><a class="delete-transaction-purchase" title="Delete" data-toggle="tooltip"><i class="material-icons">&#xE872;</i></a></td>' +
+												 '</tr>';
+												 count++;
+											 $("table").append(row);
+										 $("table tbody tr").eq(index + 1).find(".edit-transaction-purchase, .add-transaction-purchase").toggle();
+												 $('[data-toggle="tooltip"]').tooltip();
+												 $('#item_code_sale').val("");
+										});
+							 }
+						 })
 
 	 	 					$(".add-item-purchase").click(function(){
-	 	 						var item_code_purchase = $('#item_code_purchase').val();
+								var item_code_purchase = $('#item_code_purchase').val();
 
-	 	 							req =	$.ajax({
-	 	 								 headers: { "X-CSRFToken": getCookie("csrftoken") },
-	 	 								 type: 'POST',
-	 	 								 url : '/transaction/purchase/new/',
-	 	 								 data:{
-	 	 									 'item_code_purchase': item_code_purchase,
-	 	 								 },
-	 	 								 dataType: 'json'
-	 	 							 })
-	 	 							 .done(function done(data){
-	 									 type = JSON.parse(data.items)
-
-	 	 								var index = $("table tbody tr:last-child").index();
-	 	 										var row = '<tr>' +
-	 	 												'<td>'+count+'</td>' +
-	 	 												'<td>'+type[0].fields['item_code']+'</td>'+
-	 	 												'<td>'+type[0].fields['item_name']+'</td>'+
-	 	 												'<td><pre>'+type[0].fields['item_description']+'</pre></td>'+
-	 	 												'<td ><select id="sel" class="form-control" style="height:40px;"><option>sq.ft</option><option>sq.inches</option></select></td>' +
-	 	 												'<td id="width"><input type="text"  class="form-control"></td>'+
-	 	 												'<td id="height"><input type="text"  class="form-control"></td>'+
-	 	 												'<td id="quantity"><input type="text"  class="form-control"></td>'+
-	 	 												'<td id="square_fit"></td>'+
-	 	 												'<td id="rate" ><input type="text" style="width:70px;" class="form-control"></td>' +
-	 	 												'<td id="total" style="font-weight:bold;" class="sum"><b>0.00</b></td>' +
-	 													'<td style="display:none;" id="measurment"></td>' +
-	 	 									'<td><a class="add-transaction-purchase" title="Add" data-toggle="tooltip"><i class="material-icons">&#xE03B;</i></a><a class="edit-transaction-purchase" title="Edit" data-toggle="tooltip" id="edit_purchase"><i class="material-icons">&#xE254;</i></a><a class="delete-transaction-purchase" title="Delete" data-toggle="tooltip"><i class="material-icons">&#xE872;</i></a></td>' +
-	 	 										'</tr>';
-	 	 										count++;
-	 	 									$("table").append(row);
-	 	 								$("table tbody tr").eq(index + 1).find(".edit-transaction-purchase, .add-transaction-purchase").toggle();
-	 	 										$('[data-toggle="tooltip"]').tooltip();
-	 	 										$('#item_code_sale').val("");
-
-	 	 							 });
+									req =	$.ajax({
+										 headers: { "X-CSRFToken": getCookie("csrftoken") },
+										 type: 'POST',
+										 url : '/transaction/purchase/new/',
+										 data:{
+											 'item_code_purchase': item_code_purchase,
+										 },
+										 dataType: 'json'
+									 })
+									 .done(function done(data){
+										 type = JSON.parse(data.items)
+										var index = $("table tbody tr:last-child").index();
+												var row = '<tr>' +
+														'<td>'+count+'</td>' +
+														'<td>'+type[0].fields['item_code']+'</td>'+
+														'<td>'+type[0].fields['item_name']+'</td>'+
+														'<td><pre>'+type[0].fields['item_description']+'</pre></td>'+
+														'<td ><select id="sel" class="form-control" style="height:40px;"><option>sq.ft</option><option>sq.inches</option></select></td>' +
+														'<td id="width"><input type="text" class="form-control input_width"></td>'+
+														'<td id="height"><input type="text"  class="form-control"></td>'+
+														'<td id="quantity"><input type="text"  class="form-control"></td>'+
+														'<td id="square_fit"></td>'+
+														'<td id="rate" ><input type="text" style="width:70px;" class="form-control"></td>' +
+														'<td id="total" style="font-weight:bold;" class="sum"><b>0.00</b></td>' +
+														'<td style="display:none;" id="measurment"></td>' +
+											'<td><a class="add-transaction-purchase" title="Add" data-toggle="tooltip"><i class="material-icons">&#xE03B;</i></a><a class="edit-transaction-purchase" title="Edit" data-toggle="tooltip" id="edit_purchase"><i class="material-icons">&#xE254;</i></a><a class="delete-transaction-purchase" title="Delete" data-toggle="tooltip"><i class="material-icons">&#xE872;</i></a></td>' +
+												'</tr>';
+												count++;
+											$("table").append(row);
+										$("table tbody tr").eq(index + 1).find(".edit-transaction-purchase, .add-transaction-purchase").toggle();
+												$('[data-toggle="tooltip"]').tooltip();
+												$('#item_code_sale').val("");
+									 });
 	 	 					});
+
+							$("#new-purchase-table").on('keyup','.input_width', function(){
+								console.log($(this).val());
+								if (isNaN($(".input_width").val())) {
+									console.log(this);
+								}
+							})
 
 	 	 					// Add row on add button click
 	 	 					$(document).on("click", ".add-transaction-purchase", function(){
-								$('#sel').prop('disabled', 'disabled');
+								$(this).parents("tr").find('select').prop('disabled', 'disabled');
 	 	 						sum = 0;
-
 	 	 							var empty = false;
 	 	 							var input = $(this).parents("tr").find('input[type="text"]');
 	 	 									input.each(function(){
@@ -159,11 +215,10 @@ $(document).ready(function(){
 	 	 							$(".add-item-purchase").removeAttr("disabled");
 	 	 						}
 
-			 					var meas;
+			 					var meas = $(this).parents("tr").find('select').val()
 	 							$('#new-purchase-table tbody tr').each(function() {
-	 									var tdObject = $(this).find('td:eq(4)'); //locate the <td> holding select;
-	 									var selectObject = tdObject.find("select"); //grab the <select> tag assuming that there will be only single select box within that <td>
-	 									meas = selectObject.val(); // get the selected country from current <tr>
+	 									var tdObject = $(this).find('td:eq(4)');
+	 									var selectObject = tdObject.find("select");
 	 						});
 
 	 					var get_height = $($(this).parents("tr").find("#height")).filter(function() {
@@ -181,8 +236,7 @@ $(document).ready(function(){
 	 									quantity = $(this).text();
 	 									return quantity
 	 							}).closest("tr");
-
-	 							console.log(meas);
+	 							console.log("HERE IS MEAS",meas);
 	 					if (meas === "sq.ft") {
 	 						square_fit = parseFloat(width) * parseFloat(height);
 	 						square_fit = square_fit * parseFloat(quantity)
@@ -226,7 +280,6 @@ $(document).ready(function(){
 								check = $(this).text();
 								return check;
 						}).closest("tr");
-						console.log(check);
 							if (check == "0") {
 								var get_quantity = $($(this).parents("tr").find("#quantity")).filter(function() {
 											quantity = $(this).text();
@@ -239,7 +292,6 @@ $(document).ready(function(){
 									}).closest("tr");
 
 								var total = parseFloat(quantity) * parseFloat(rate)
-								console.log(total);
 								var get_total = $($(this).parents("tr").find("#total")).filter(function() {
 											$(this).text(total.toFixed(2));
 											return total;
@@ -256,7 +308,6 @@ $(document).ready(function(){
 							$('#new-purchase-table tbody tr').each(function() {
 									var tdObject = $(this).find('td:eq(10)');
 									var total = tdObject.text()
-									console.log(total);
 									if (!isNaN(total) && total.length !== 0) {
 											sum += parseFloat(total);
 									}
@@ -265,9 +316,9 @@ $(document).ready(function(){
 
 	 	 					});
 
-	 	 								// Edit row on edit button click
+						// Edit row on edit button click
 	 	 				$(document).on("click", ".edit-transaction-purchase", function(){
-							$('#sel').prop('disabled', false);
+							$(this).parents("tr").find('select').prop('disabled', false);
 	 	 						$(this).parents("tr").find("td:not(:last-child)").each(function(i){
 	 								if (i === 5) {
 										 if ($(this).text() == "0") {
@@ -288,10 +339,9 @@ $(document).ready(function(){
 	 								if (i === 7) {
 	 									 $(this).html('<input type="text" style="width:60px;" class="form-control" value="' + $(this).text() + '">');
 	 								}
-	 	 								if (i === 9) {
-	 	 									 $(this).html('<input type="text" style="width:80px;" class="form-control" value="' + $(this).text() + '">');
-										  }
-
+ 	 								if (i === 9) {
+ 	 									 $(this).html('<input type="text" style="width:80px;" class="form-control" value="' + $(this).text() + '">');
+									  }
 	 	 					});
 	 	 					$(this).parents("tr").find(".add-transaction-purchase, .edit-transaction-purchase").toggle();
 	 	 					$(".add-item-purchase").attr("disabled", "disabled");
@@ -306,8 +356,22 @@ $(document).ready(function(){
 	 	 						});
 	 	 						$(this).parents("tr").remove();
 	 	 						$(".add-item-purchase").removeAttr("disabled");
-	 	 					});
+								after_delete_purchase();
+							});
 
+
+						function after_delete_purchase(){
+							var delete_sum = 0;
+							$('#new-purchase-table tbody tr').each(function() {
+									var tdObject = $(this).find('td:eq(10)');
+									var total = tdObject.text()
+									console.log(total);
+									if (!isNaN(total) && total.length !== 0) {
+											delete_sum += parseFloat(total);
+									}
+									$('#grand_total').val(delete_sum.toFixed(2));
+							});
+						}
 
 
 
@@ -657,8 +721,23 @@ $(document).on("click", ".edit-purchase-edit", function(){
 		});
 		$(this).parents("tr").remove();
 		$(".add-item-purchase-edit").removeAttr("disabled");
+
+		after_delete_purchase_edit();
 	});
 
+
+		function after_delete_purchase_edit(){
+			var delete_sum = 0;
+			$('#edit-purchase-table tbody tr').each(function() {
+					var tdObject = $(this).find('td:eq(11)');
+					var total = tdObject.text()
+					console.log(total);
+					if (!isNaN(total) && total.length !== 0) {
+							delete_sum += parseFloat(total);
+					}
+					$('#grand_total').val(delete_sum.toFixed(2));
+			});
+		}
 
 		//EDIT PURCHASE END
 
@@ -1003,9 +1082,6 @@ $('#edit-purchase-return-submit').on('submit',function(e){
 							if (discount_in_val != 0) {
 									discount_amount = (amount_before_discount / 100) * discount_in_val;
 							}
-							// else if (discount != 0) {
-							// 	discount_amount = parseFloat(discount_in_val);
-							// }
 							else{
 								discount_amount = 0;
 							}
@@ -1258,21 +1334,80 @@ $('#edit-purchase-return-submit').on('submit',function(e){
 				});
 
 
-
-
-// // ==================================================================================================================================
-
 // =============================================================================
 				$('#edit-sale-table tbody tr').each(function() {
-						var tdObject = $(this).find('td:eq(10)');
-						var total = tdObject.text()
-						console.log(total);
-						if (!isNaN(total) && total.length !== 0) {
-								sum += parseFloat(total);
-						}
-						console.log(sum);
-						$('#grand_total').val(sum.toFixed(2));
+					var tdObject = $(this).find('td:eq(10)');
+					var total = tdObject.text()
+					if (!isNaN(total) && total.length !== 0) {
+							sum += parseFloat(total);
+					}
+					var srb = $("#edit_srb").val();
+					var srb_amount = (sum / 100) * srb;
+					var gst = $("#edit_gst").val();
+					var gst_amount = (sum / 100) * gst;
+					var discount = $("#edit_discount").val();
+					var discount_amount = 0
+					var amount_before_discount = parseFloat(sum + srb_amount + gst_amount);
+					discount_amount = amount_before_discount * discount / 100
+					$("#discount_in_val").val(discount_amount);
+					$('#grand_total').val(Math.round(sum + srb_amount + gst_amount - discount_amount).toFixed(2));
 				});
+
+				$("#edit_gst").on('keyup', function(){
+					var v = this.value;
+					var srb = $("#edit_srb").val();
+					var srb_amount = (sum / 100) * srb;
+					var gst_amount = (sum / 100) * v;
+					var discount = $("#edit_discount").val();
+					var discount_amount = 0
+					var discount_in_val = $("#discount_in_val").val();
+					var amount_before_discount = parseFloat(sum + srb_amount + gst_amount);
+					if (discount_in_val != 0) {
+							discount_amount =  discount_in_val;
+					}
+					console.log(discount_amount);
+					var discount_in_percentage = ((((Math.abs(discount_in_val) + amount_before_discount) / amount_before_discount) * 100) - 100)
+					$("#edit_discount").val(discount_in_percentage.toFixed(2));
+					if (!isNaN(v) && v.length != 0){
+					$("#grand_total").val(parseFloat(sum) + srb_amount + gst_amount - discount_amount);
+					}
+				})
+
+
+				$("#edit_srb").on('keyup', function(){
+					var v = this.value;
+					var gst = $("#edit_gst").val();
+					var srb_amount = (sum / 100) * v;
+					var gst_amount = (sum / 100) * gst;
+					var discount = $("#edit_discount").val();
+					var discount_amount = 0
+					var discount_in_val = $("#discount_in_val").val();
+					var amount_before_discount = parseFloat(sum + srb_amount + gst_amount);
+					if (discount_in_val != 0) {
+							discount_amount =  discount_in_val;
+					}
+					var discount_in_percentage = ((((Math.abs(discount_in_val) + amount_before_discount) / amount_before_discount) * 100) - 100)
+					$("#edit_discount").val(discount_in_percentage.toFixed(2));
+					if (!isNaN(v) && v.length != 0){
+					$("#grand_total").val((parseFloat(sum) + srb_amount + gst_amount - discount_amount).toFixed(2));
+					}
+				})
+
+				$("#discount_in_val").on('keyup', function(){
+					var v = this.value;
+					var srb = $("#edit_srb").val();
+					console.log(isNaN(srb));
+					var srb_amount = (sum / 100) * srb;
+					var gst = $("#edit_gst").val();
+					var gst_amount = (sum / 100) * gst;
+					var amount_before_discount = parseFloat(sum + srb_amount + gst_amount);
+					var discount_amount = parseFloat(v);
+					var discount_in_percentage = ((((Math.abs(v) + amount_before_discount) / amount_before_discount) * 100) - 100)
+					$("#discount").val(discount_in_percentage.toFixed(2));
+					if (!isNaN(v) && v.length != 0){
+					$("#grand_total").val(parseFloat(sum) + srb_amount + gst_amount - discount_amount);
+					}
+				})
 
 				$(".add-item-sale-edit").click(function(){
 					console.log(edit_id);
@@ -1470,16 +1605,7 @@ $('#edit-purchase-return-submit').on('submit',function(e){
 
 				// Delete row on delete button click
 				$(document).on("click", ".delete-transaction-sale-edit", function(){
-					// $('#edit-sale-table tbody tr').each(function() {
-					// 		var tdObject = $(this).find('td:eq(10)');
-					// 		var total = tdObject.text()
-					// 		console.log(total);
-					// 		if (!isNaN(total) && total.length !== 0) {
-					// 				sum -= parseFloat(total);
-					// 		}
-					// 		console.log(sum);
-					// 		$('#grand_total').val(sum.toFixed(2));
-					// });
+
 				var row =  $(this).closest('tr');
 				var siblings = row.siblings();
 				siblings.each(function(index) {
@@ -1487,7 +1613,30 @@ $('#edit-purchase-return-submit').on('submit',function(e){
 				});
 				$(this).parents("tr").remove();
 				$(".add-item-sale").removeAttr("disabled");
+				after_delete_sale_edit();
 				});
+
+
+
+				function after_delete_sale_edit(){
+					console.log("u");
+					var delete_sum = 0;
+					$('#edit-sale-table tbody tr').each(function() {
+							var tdObject = $(this).find('td:eq(10)');
+							var total = tdObject.text()
+							if (!isNaN(total) && total.length !== 0) {
+									delete_sum += parseFloat(total);
+							}
+							var srb = $("#edit_srb").val();
+							var srb_amount = (delete_sum / 100) * srb;
+							var gst = $("#edit_gst").val();
+							var gst_amount = (delete_sum / 100) * gst;
+							var discount = $("#discount_in_val").val();
+							var amount_before_discount = parseFloat(delete_sum + srb_amount + gst_amount);
+							var discount_amount =  discount;
+							$('#grand_total').val((delete_sum + srb_amount + gst_amount - discount_amount).toFixed(2));
+					});
+				}
 
 
 
@@ -1505,7 +1654,6 @@ $('#edit-purchase-return-submit').on('submit',function(e){
 				var srb = $('#srb').val();
 				var discount = $('#discount').val();
 				var footer_desc = $('#footer_desc').val();
-
 
 				table.find('tr').each(function (i, el){
 				if(i != 0)
@@ -3900,8 +4048,14 @@ $('#tree1').treed();
 					 dataType: 'json'
 				 })
 				 .done(function done(data){
-					 $("#credit_balance").val(Math.round(data.debit_amount + data.credit_amount).toFixed(2));
-					 $("#credit_balance_hidden").val(Math.round(data.debit_amount + data.credit_amount).toFixed(2));
+					 console.log(Math.round(data.debit_amount + data.credit_amount).toFixed(2));
+					 if (Math.round(data.debit_amount + data.credit_amount).toFixed(2) > 0) {
+						 $("#credit_balance").val(Math.round(data.debit_amount + data.credit_amount).toFixed(2));
+						 $("#credit_balance_hidden").val(Math.round(data.debit_amount + data.credit_amount).toFixed(2));
+					 } else {
+						 $("#credit_balance").val(0.00);
+						 $("#credit_balance_hidden").val(0.00);
+					 }
 				 })
 			});
 
@@ -4272,5 +4426,4 @@ $('#new-jv-form-crv').on('submit',function(e){
 				 });
 		}
 	});
-
 		});
