@@ -66,4 +66,5 @@ urlpatterns = [
     path('job_order/new/', views.new_job_order, name='new-job-order'),
     path('job_order/edit/<pk>', views.edit_job_order, name='edit-job-order'),
     path('job_order/delete/<pk>', views.delete_job_order, name='delete-job-order'),
+
 ]

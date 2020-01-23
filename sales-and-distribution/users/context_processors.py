@@ -1,7 +1,6 @@
 from django.http import request
 from .models import tblObjectHead
 from django.contrib.auth.models import User
-import mysql.connector
 from django.db import connection
 
 def side_bar_objects(request):

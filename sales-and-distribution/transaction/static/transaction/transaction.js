@@ -1,10 +1,6 @@
 $(document).ready(function(){
 
-	// document.body.onkeydown = function(e){
-	//    if (e.keyCode == 13) {
-	//    		e.preventDefault();
-	//    }
-	// };
+
 	var arr = [];
 	var count = 1;
 	var sum = 0;
@@ -91,8 +87,44 @@ $(document).ready(function(){
 				}
 			})
 
-						// $(".add-item-x-purchase").click(function(){
-						// 	});
+						$(".add-item-x-purchase").click(function(){
+							var x_stand = $('#x_stand_purchase').val();
+
+							req =	$.ajax({
+								headers: { "X-CSRFToken": getCookie("csrftoken") },
+								type: 'POST',
+								url : '/transaction/purchase/new/',
+								data:{
+									'x_stand': x_stand,
+								},
+								dataType: 'json'
+							})
+							.done(function done(data){
+								type = JSON.parse(data.items)
+								var index = $("table tbody tr:last-child").index();
+										var row = '<tr>' +
+												'<td>'+count+'</td>' +
+												'<td>'+type[0].fields["item_code"]+'</td>'+
+												'<td>'+type[0].fields["item_name"]+'</td>'+
+												'<td><pre>'+type[0].fields["item_description"]+'</pre></td>'+
+												'<td>'+type[0].fields["unit"]+'</td>'+
+												'<td id="width">0</td>'+
+												'<td id="height">0</td>'+
+												'<td id="quantity"><input type="text" style="width:80px;" class="form-control"></td>'+
+												'<td id="sqft">0</td>'+
+												'<td id="rate"><input type="text" style="width:80px;" class="form-control"></td>' +
+												'<td id="total" style="font-weight:bold;" class="sum"><b>0.00</b></td>' +
+												'<td style="display:none;"></td>'+
+									'<td><a class="add-transaction-purchase" title="Add" data-toggle="tooltip"><i class="material-icons">&#xE03B;</i></a><a class="edit-transaction-purchase" title="Edit" data-toggle="tooltip" id="edit_purchase"><i class="material-icons">&#xE254;</i></a><a class="delete-transaction-purchase" title="Delete" data-toggle="tooltip"><i class="material-icons">&#xE872;</i></a></td>' +
+										'</tr>';
+										count++;
+									$("table").append(row);
+								$("table tbody tr").eq(index + 1).find(".edit-transaction-purchase, .add-transaction-purchase").toggle();
+										$('[data-toggle="tooltip"]').tooltip();
+										$('#item_code_purchase').val("");
+		
+							});
+							});
 
 						 $('#new-purchase-table tbody tr').each(function() {
 								 var tdObject = $(this).find('td:eq(11)'); //locate the <td> holding select;
