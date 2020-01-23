@@ -223,7 +223,7 @@ def if_cpv_avaliable(pk):
         if cpv_avaliable:
             return False
         else:
-            True
+            return True
     except Exception as e :
         print(e)
 
@@ -607,7 +607,7 @@ def if_crv_avaliable(pk):
         if crv_avaliable:
             return False
         else:
-            True
+            return True
     except Exception as e :
         print(e)
 
