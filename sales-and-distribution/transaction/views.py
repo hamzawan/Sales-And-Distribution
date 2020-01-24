@@ -159,26 +159,27 @@ def new_purchase(request):
 
 
 def voucher_avaliable_purchase(pk):
-    cusror = connection.cursor()
-    row = cusror.execute('''select case
-                            when exists (select id from transaction_voucherdetail  where  invoice_id = %s)
-                            then 'y'
-                            else 'n'
-                            end''',[pk])
-    row = row.fetchall()
-    res_list = [x[0] for x in row]
-    if res_list[0] == "n":
-        refrence_id = Q(refrence_id = pk)
-        tran_type = Q(tran_type = "Purchase Invoice")
-        ref_inv_tran_id = Q(ref_inv_tran_id = pk)
-        ref_inv_tran_type = Q(ref_inv_tran_type = "Purchase CPV")
-        Transactions.objects.filter(refrence_id , tran_type).all().delete()
-        Transactions.objects.filter(ref_inv_tran_id , ref_inv_tran_type).all().delete()
-        PurchaseDetail.objects.filter(purchase_id = pk).all().delete()
-        PurchaseHeader.objects.filter(id = pk).delete()
-        return True
-    else:
-        return False
+    # cusror = connection.cursor()
+    # row = cusror.execute('''select case
+    #                         when exists (select id from transaction_voucherdetail  where  invoice_id = %s)
+    #                         then 'y'
+    #                         else 'n'
+    #                         end''',[pk])
+    # row = row.fetchall()
+    # res_list = [x[0] for x in row]
+    # if res_list[0] == "n":
+    refrence_id = Q(refrence_id = pk)
+    tran_type = Q(tran_type = "Purchase Invoice")
+    # ref_inv_tran_id = Q(ref_inv_tran_id = pk)
+    # ref_inv_tran_type = Q(ref_inv_tran_type = "Purchase CPV")
+    Transactions.objects.filter(refrence_id , tran_type).all().delete()
+    # Transactions.objects.filter(ref_inv_tran_id , ref_inv_tran_type).all().delete()
+    PurchaseDetail.objects.filter(purchase_id = pk).all().delete()
+    PurchaseHeader.objects.filter(id = pk).delete()
+    return True
+    # else:
+    #     return False
+
 
 def allow_delete_purchase(user):
     user_id = Q(UserID = user.id)
@@ -230,92 +231,87 @@ def if_cpv_avaliable(pk):
 @login_required()
 @user_passes_test(allow_edit_purchase)
 def edit_purchase(request, pk):
-    cpv_avaliable = if_cpv_avaliable(pk)
-    if cpv_avaliable:
-        total_amount = 0
-        net = 0
-        all_item_code = Add_item.objects.all()
-        purchase_header = PurchaseHeader.objects.filter(id=pk).first()
-        purchase_detail = PurchaseDetail.objects.filter(purchase_id=pk).all()
-        all_accounts = ChartOfAccount.objects.all()
-        all_pcs = Add_item.objects.filter(unit = "pcs").all()
-        item_code_purchase = request.POST.get('item_code_purchase', False)
-        x_stand = request.POST.get('x_stand_edit')
-        if x_stand:
-            items = Add_item.objects.filter(item_code = x_stand)
-            items = serializers.serialize('json',items)
-            return JsonResponse({"items":items})
-        if item_code_purchase:
-            data = Add_item.objects.filter(item_code = item_code_purchase)
-            items = serializers.serialize('json', data)
-            return HttpResponse(json.dumps({'items': items}))
-        if request.method == 'POST':
-            purchase_detail.delete()
-            purchase_id = request.POST.get('purchase_id', False)
-            supplier = request.POST.get('supplier', False)
-            follow_up = request.POST.get('follow_up', False)
-            payment_method = request.POST.get('payment_method', False)
-            footer_desc = request.POST.get('footer_desc', False)
-            account_id = ChartOfAccount.objects.get(account_title=supplier)
-            date = datetime.date.today()
-            purchase_header.follow_up = follow_up
-            purchase_header.payment_method = payment_method
-            purchase_header.footer_description = footer_desc
-            purchase_header.account_id = account_id
+    total_amount = 0
+    net = 0
+    all_item_code = Add_item.objects.all()
+    purchase_header = PurchaseHeader.objects.filter(id=pk).first()
+    purchase_detail = PurchaseDetail.objects.filter(purchase_id=pk).all()
+    all_accounts = ChartOfAccount.objects.all()
+    all_pcs = Add_item.objects.filter(unit = "pcs").all()
+    item_code_purchase = request.POST.get('item_code_purchase', False)
+    x_stand = request.POST.get('x_stand_edit')
+    if x_stand:
+        items = Add_item.objects.filter(item_code = x_stand)
+        items = serializers.serialize('json',items)
+        return JsonResponse({"items":items})
+    if item_code_purchase:
+        data = Add_item.objects.filter(item_code = item_code_purchase)
+        items = serializers.serialize('json', data)
+        return HttpResponse(json.dumps({'items': items}))
+    if request.method == 'POST':
+        purchase_detail.delete()
+        purchase_id = request.POST.get('purchase_id', False)
+        supplier = request.POST.get('supplier', False)
+        follow_up = request.POST.get('follow_up', False)
+        payment_method = request.POST.get('payment_method', False)
+        footer_desc = request.POST.get('footer_desc', False)
+        account_id = ChartOfAccount.objects.get(account_title=supplier)
+        date = datetime.date.today()
+        purchase_header.follow_up = follow_up
+        purchase_header.payment_method = payment_method
+        purchase_header.footer_description = footer_desc
+        purchase_header.account_id = account_id
 
-            purchase_header.save()
+        purchase_header.save()
 
-            items = json.loads(request.POST.get('items'))
-            purchase_header.save()
-            header_id = PurchaseHeader.objects.get(purchase_no=purchase_id)
-            for value in items:
-                item_id = Add_item.objects.get(id = value["id"])
-                if value["width"] == "0.00" or value["width"] == "0" and value["height"] == "0.00" or value["height"] == "0":
-                    pcs_amount = float(value["rate"]) * float(value["quantity"])
-                    total_amount = total_amount + pcs_amount
-                    purchase_detail = PurchaseDetail(item_id = item_id, item_description = "", width = 0, height = 0, quantity = 0, meas = "pieces", rate = value["rate"], purchase_id = header_id, total_amount = pcs_amount, total_square_fit = 0, total_pcs = value["quantity"])
-                else:
-                    amount = float(value["sqft"]) * float(value["rate"])
-                    total_amount = total_amount + amount
-                    total_square_fit = value["sqft"]
-                    purchase_detail = PurchaseDetail(item_id = item_id, item_description = "", width = value["width"], height = value["height"], quantity = value["quantity"], meas = value["measurment"], rate = value["rate"], purchase_id = header_id, total_amount = amount, total_square_fit = total_square_fit, total_pcs = 0)
-                    net = net + total_amount
-                purchase_detail.save()
-
-            cash_in_hand = ChartOfAccount.objects.get(account_title = 'Cash')
-            if payment_method == 'Cash':
-                detail_remarks = f"Purchase invoice {total_amount} RS, against invoice no {purchase_header.footer_description} on Cash."
-                refrence_id = Q(refrence_id = pk)
-                tran_type = Q(tran_type = "Purchase Invoice")
-                ref_inv_tran_id = Q(ref_inv_tran_id = pk)
-                ref_inv_tran_type = Q(ref_inv_tran_type = "Purchase CPV")
-                Transactions.objects.filter(refrence_id , tran_type).all().delete()
-                Transactions.objects.filter(ref_inv_tran_id , ref_inv_tran_type).all().delete()
-                tran2 = Transactions(refrence_id = header_id.id, refrence_date = follow_up, account_id = account_id, tran_type = "Purchase Invoice", amount = total_amount, date = date, remarks = purchase_id, ref_inv_tran_id = 0, ref_inv_tran_type = "", detail_remarks = detail_remarks)
-                tran2.save()
-                tran1 = Transactions(refrence_id = header_id.id, refrence_date = follow_up, account_id = cash_in_hand, tran_type = "Purchase Invoice", amount = -abs(total_amount), date = date, remarks = purchase_id, ref_inv_tran_id = 0, ref_inv_tran_type = "", detail_remarks = detail_remarks)
-                tran1.save()
+        items = json.loads(request.POST.get('items'))
+        purchase_header.save()
+        header_id = PurchaseHeader.objects.get(purchase_no=purchase_id)
+        for value in items:
+            item_id = Add_item.objects.get(id = value["id"])
+            if value["width"] == "0.00" or value["width"] == "0" and value["height"] == "0.00" or value["height"] == "0":
+                pcs_amount = float(value["rate"]) * float(value["quantity"])
+                total_amount = total_amount + pcs_amount
+                purchase_detail = PurchaseDetail(item_id = item_id, item_description = "", width = 0, height = 0, quantity = 0, meas = "pieces", rate = value["rate"], purchase_id = header_id, total_amount = pcs_amount, total_square_fit = 0, total_pcs = value["quantity"])
             else:
-                detail_remarks = f"Purchase invoice {total_amount} RS, against invoice no {purchase_header.footer_description} on Credit."
-                refrence_id = Q(refrence_id = pk)
-                tran_type = Q(tran_type = "Purchase Invoice")
-                ref_inv_tran_id = Q(ref_inv_tran_id = pk)
-                ref_inv_tran_type = Q(ref_inv_tran_type = "Purchase CPV")
-                Transactions.objects.filter(refrence_id , tran_type).all().delete()
-                Transactions.objects.filter(ref_inv_tran_id , ref_inv_tran_type).all().delete()
-                purchase_account = ChartOfAccount.objects.get(account_title = 'Purchases')
-                tran1 = Transactions(refrence_id = header_id.id, refrence_date = follow_up, account_id = account_id, tran_type = "Purchase Invoice", amount = -abs(total_amount), date = follow_up, remarks = purchase_id, ref_inv_tran_id = 0, ref_inv_tran_type = "", detail_remarks = detail_remarks)
-                tran1.save()
-                tran2 = Transactions(refrence_id = header_id.id, refrence_date = follow_up, account_id = purchase_account, tran_type = "Purchase Invoice", amount = total_amount, date = follow_up, remarks = purchase_id, ref_inv_tran_id = 0, ref_inv_tran_type = "", detail_remarks = detail_remarks)
-                tran2.save()
-                return JsonResponse({'result':'success'})
-            return JsonResponse({'result': 'success'})
-        return render(request, 'transaction/edit_purchase.html',
-            {'all_item_code': all_item_code, 'all_accounts': all_accounts, 'purchase_header': purchase_header,
-            'purchase_detail': purchase_detail, 'pk': pk,'all_pcs':all_pcs})
-    else:
-        messages.add_message(request, messages.ERROR, "You Cannot Edit this Invoice, it has CPV created.")
-        return redirect('purchase')
+                amount = float(value["sqft"]) * float(value["rate"])
+                total_amount = total_amount + amount
+                total_square_fit = value["sqft"]
+                purchase_detail = PurchaseDetail(item_id = item_id, item_description = "", width = value["width"], height = value["height"], quantity = value["quantity"], meas = value["measurment"], rate = value["rate"], purchase_id = header_id, total_amount = amount, total_square_fit = total_square_fit, total_pcs = 0)
+                net = net + total_amount
+            purchase_detail.save()
+
+        cash_in_hand = ChartOfAccount.objects.get(account_title = 'Cash')
+        if payment_method == 'Cash':
+            detail_remarks = f"Purchase invoice {total_amount} RS, against invoice no {purchase_header.footer_description} on Cash."
+            refrence_id = Q(refrence_id = pk)
+            tran_type = Q(tran_type = "Purchase Invoice")
+            # ref_inv_tran_id = Q(ref_inv_tran_id = pk)
+            # ref_inv_tran_type = Q(ref_inv_tran_type = "Purchase CPV")
+            Transactions.objects.filter(refrence_id , tran_type).all().delete()
+            # Transactions.objects.filter(ref_inv_tran_id , ref_inv_tran_type).all().delete()
+            tran2 = Transactions(refrence_id = header_id.id, refrence_date = follow_up, account_id = account_id, tran_type = "Purchase Invoice", amount = total_amount, date = date, remarks = purchase_id, ref_inv_tran_id = 0, ref_inv_tran_type = "", detail_remarks = detail_remarks)
+            tran2.save()
+            tran1 = Transactions(refrence_id = header_id.id, refrence_date = follow_up, account_id = cash_in_hand, tran_type = "Purchase Invoice", amount = -abs(total_amount), date = date, remarks = purchase_id, ref_inv_tran_id = 0, ref_inv_tran_type = "", detail_remarks = detail_remarks)
+            tran1.save()
+        else:
+            detail_remarks = f"Purchase invoice {total_amount} RS, against invoice no {purchase_header.footer_description} on Credit."
+            refrence_id = Q(refrence_id = pk)
+            tran_type = Q(tran_type = "Purchase Invoice")
+            # ref_inv_tran_id = Q(ref_inv_tran_id = pk)
+            # ref_inv_tran_type = Q(ref_inv_tran_type = "Purchase CPV")
+            Transactions.objects.filter(refrence_id , tran_type).all().delete()
+            # Transactions.objects.filter(ref_inv_tran_id , ref_inv_tran_type).all().delete()
+            purchase_account = ChartOfAccount.objects.get(account_title = 'Purchases')
+            tran1 = Transactions(refrence_id = header_id.id, refrence_date = follow_up, account_id = account_id, tran_type = "Purchase Invoice", amount = -abs(total_amount), date = follow_up, remarks = purchase_id, ref_inv_tran_id = 0, ref_inv_tran_type = "", detail_remarks = detail_remarks)
+            tran1.save()
+            tran2 = Transactions(refrence_id = header_id.id, refrence_date = follow_up, account_id = purchase_account, tran_type = "Purchase Invoice", amount = total_amount, date = follow_up, remarks = purchase_id, ref_inv_tran_id = 0, ref_inv_tran_type = "", detail_remarks = detail_remarks)
+            tran2.save()
+            return JsonResponse({'result':'success'})
+        return JsonResponse({'result': 'success'})
+    return render(request, 'transaction/edit_purchase.html',
+        {'all_item_code': all_item_code, 'all_accounts': all_accounts, 'purchase_header': purchase_header,
+        'purchase_detail': purchase_detail, 'pk': pk,'all_pcs':all_pcs})
 
 
 @login_required()
@@ -543,26 +539,27 @@ def new_sale(request):
 
 
 def voucher_avaliable_sale(pk):
-    cusror = connection.cursor()
-    row = cusror.execute('''select case
-                            when exists (select id from transaction_voucherdetail  where  invoice_id = %s)
-                            then 'y'
-                            else 'n'
-                            end''',[pk])
-    row = row.fetchall()
-    res_list = [x[0] for x in row]
-    if res_list[0] == "n":
-        refrence_id = Q(refrence_id = pk)
-        tran_type = Q(tran_type = "Sale Invoice")
-        ref_inv_tran_id = Q(ref_inv_tran_id = pk)
-        ref_inv_tran_type = Q(ref_inv_tran_type = "Sale CRV")
-        Transactions.objects.filter(refrence_id , tran_type).all().delete()
-        Transactions.objects.filter(ref_inv_tran_id , ref_inv_tran_type).all().delete()
-        SaleDetail.objects.filter(sale_id = pk).all().delete()
-        SaleHeader.objects.filter(id = pk).delete()
-        return True
-    else:
-        return False
+    # cusror = connection.cursor()
+    # row = cusror.execute('''select case
+    #                         when exists (select id from transaction_voucherdetail  where  invoice_id = %s)
+    #                         then 'y'
+    #                         else 'n'
+    #                         end''',[pk])
+    # row = row.fetchall()
+    # res_list = [x[0] for x in row]
+    # if res_list[0] == "n":
+    refrence_id = Q(refrence_id = pk)
+    tran_type = Q(tran_type = "Sale Invoice")
+    # ref_inv_tran_id = Q(ref_inv_tran_id = pk)
+    # ref_inv_tran_type = Q(ref_inv_tran_type = "Sale CRV")
+    Transactions.objects.filter(refrence_id , tran_type).all().delete()
+    # Transactions.objects.filter(ref_inv_tran_id , ref_inv_tran_type).all().delete()
+    SaleDetail.objects.filter(sale_id = pk).all().delete()
+    SaleHeader.objects.filter(id = pk).delete()
+    return True
+    # else:
+    #     return False
+
 
 def allow_sale_delete(user):
     user_id = Q(UserID = user.id)
@@ -614,115 +611,109 @@ def if_crv_avaliable(pk):
 @login_required()
 @user_passes_test(allow_sale_edit)
 def edit_sale(request, pk):
-    crv_avaliable = if_crv_avaliable(pk)
-    if crv_avaliable:
-        total_amount = 0
-        net = 0
-        job_no = JobOrderHeader.objects.all()
-        sale_header = SaleHeader.objects.filter(id=pk).first()
-        sale_detail = SaleDetail.objects.filter(sale_id=pk).all()
-        all_accounts = ChartOfAccount.objects.all()
-        all_pcs = Add_item.objects.filter(unit = "pcs").all()
-        item_code = request.POST.get('job_no_sale', False)
-        x_stand = request.POST.get('x_stand_edit')
-        if x_stand:
-            items = Add_item.objects.filter(item_code = x_stand)
-            items = serializers.serialize('json',items)
-            return JsonResponse({"items":items})
-        if item_code:
-            header_job = JobOrderHeader.objects.get(job_no = item_code)
-            cursor = connection.cursor()
-            items = cursor.execute('''select inventory_add_item.item_code, inventory_add_item.item_name, inventory_add_item.item_description,transaction_joborderdetail.meas, transaction_joborderdetail.width, transaction_joborderdetail.height, transaction_joborderdetail.quantity
-                                    from transaction_joborderdetail
-                                    inner join inventory_add_item on transaction_joborderdetail.item_id_id = inventory_add_item.id
-                                    where transaction_joborderdetail.header_id_id = %s
-                                    ''',[header_job.id])
-            items = items.fetchall()
-            return JsonResponse({"items":items})
-        if request.method == 'POST':
-            sale_detail.delete()
+    total_amount = 0
+    net = 0
+    job_no = JobOrderHeader.objects.all()
+    sale_header = SaleHeader.objects.filter(id=pk).first()
+    sale_detail = SaleDetail.objects.filter(sale_id=pk).all()
+    all_accounts = ChartOfAccount.objects.all()
+    all_pcs = Add_item.objects.filter(unit = "pcs").all()
+    item_code = request.POST.get('job_no_sale', False)
+    x_stand = request.POST.get('x_stand_edit')
+    if x_stand:
+        items = Add_item.objects.filter(item_code = x_stand)
+        items = serializers.serialize('json',items)
+        return JsonResponse({"items":items})
+    if item_code:
+        header_job = JobOrderHeader.objects.get(job_no = item_code)
+        cursor = connection.cursor()
+        items = cursor.execute('''select inventory_add_item.item_code, inventory_add_item.item_name, inventory_add_item.item_description,transaction_joborderdetail.meas, transaction_joborderdetail.width, transaction_joborderdetail.height, transaction_joborderdetail.quantity
+                                from transaction_joborderdetail
+                                inner join inventory_add_item on transaction_joborderdetail.item_id_id = inventory_add_item.id
+                                where transaction_joborderdetail.header_id_id = %s
+                                ''',[header_job.id])
+        items = items.fetchall()
+        return JsonResponse({"items":items})
+    if request.method == 'POST':
+        sale_detail.delete()
 
-            sale_id = request.POST.get('sale_id', False)
-            customer = request.POST.get('customer', False)
-            account_holder = request.POST.get('account_holder', False)
-            credit_days = request.POST.get('credit_days', False)
-            payment_method = request.POST.get('payment_method', False)
-            footer_desc = request.POST.get('footer_desc', False)
-            gst = request.POST.get('gst', False)
-            srb = request.POST.get('srb', False)
-            discount = request.POST.get('discount', False)
-            account_id = ChartOfAccount.objects.get(account_title=customer)
-            date = datetime.date.today()
-            start_date = str(date)
-            get_date = datetime.datetime.strptime(start_date, "%Y-%m-%d")
-            follow_up = get_date + datetime.timedelta(days=int(credit_days))
-            follow_up = datetime.datetime.strftime(follow_up, "%Y-%m-%d")
+        sale_id = request.POST.get('sale_id', False)
+        customer = request.POST.get('customer', False)
+        account_holder = request.POST.get('account_holder', False)
+        credit_days = request.POST.get('credit_days', False)
+        payment_method = request.POST.get('payment_method', False)
+        footer_desc = request.POST.get('footer_desc', False)
+        gst = request.POST.get('gst', False)
+        srb = request.POST.get('srb', False)
+        discount = request.POST.get('discount', False)
+        account_id = ChartOfAccount.objects.get(account_title=customer)
+        date = datetime.date.today()
+        start_date = str(date)
+        get_date = datetime.datetime.strptime(start_date, "%Y-%m-%d")
+        follow_up = get_date + datetime.timedelta(days=int(credit_days))
+        follow_up = datetime.datetime.strftime(follow_up, "%Y-%m-%d")
 
 
-            sale_header.follow_up = follow_up
-            sale_header.credit_days = credit_days
-            sale_header.account_holder = account_holder
-            sale_header.payment_method = payment_method
-            sale_header.footer_description = footer_desc
-            sale_header.account_id = account_id
-            sale_header.gst = gst
-            sale_header.srb = srb
-            sale_header.discount = discount
-            sale_header.save()
+        sale_header.follow_up = follow_up
+        sale_header.credit_days = credit_days
+        sale_header.account_holder = account_holder
+        sale_header.payment_method = payment_method
+        sale_header.footer_description = footer_desc
+        sale_header.account_id = account_id
+        sale_header.gst = gst
+        sale_header.srb = srb
+        sale_header.discount = discount
+        sale_header.save()
 
-            items = json.loads(request.POST.get('items'))
-            sale_header.save()
-            header_id = SaleHeader.objects.get(sale_no=sale_id)
-            header_id = header_id
-            for value in items:
-                item_id = Add_item.objects.get(item_code = value["id"])
-                if value["width"] == "0.00" or value["width"] == "0" and value["height"] == "0.00" or value["height"] == "0":
-                    pcs_amount = float(value["rate"]) * float(value["quantity"])
-                    total_amount = total_amount + pcs_amount
-                    sale_detail = SaleDetail(item_id = item_id, item_description = value["description"], width = 0, height = 0, quantity = 0, meas = "pieces", rate = value["rate"], sale_id = header_id, total_amount = pcs_amount, total_square_fit = 0, total_pcs = value["quantity"])
-                    print(total_amount)
-                else:
-                    amount = float(value["sqft"]) * float(value["rate"])
-                    total_amount = total_amount + amount
-                    total_square_fit = value["sqft"]
-                    sale_detail = SaleDetail(item_id = item_id, item_description = value["description"], width = value["width"], height = value["height"], quantity = value["quantity"], meas = value["measurment"], rate = value["rate"], sale_id = header_id, total_amount = amount, total_square_fit = total_square_fit, total_pcs = 0)
-                    net = net + total_amount
+        items = json.loads(request.POST.get('items'))
+        sale_header.save()
+        header_id = SaleHeader.objects.get(sale_no=sale_id)
+        header_id = header_id
+        for value in items:
+            item_id = Add_item.objects.get(item_code = value["id"])
+            if value["width"] == "0.00" or value["width"] == "0" and value["height"] == "0.00" or value["height"] == "0":
+                pcs_amount = float(value["rate"]) * float(value["quantity"])
+                total_amount = total_amount + pcs_amount
+                sale_detail = SaleDetail(item_id = item_id, item_description = value["description"], width = 0, height = 0, quantity = 0, meas = "pieces", rate = value["rate"], sale_id = header_id, total_amount = pcs_amount, total_square_fit = 0, total_pcs = value["quantity"])
                 print(total_amount)
-                sale_detail.save()
-            cash_in_hand = ChartOfAccount.objects.get(account_title = 'Cash')
-            header_id = header_id.id
-            if payment_method == 'Cash':
-                detail_remarks = f"Sale invoice amount {total_amount} RS, against invoice no {sale_id} on Cash."
-                refrence_id = Q(refrence_id = pk)
-                tran_type = Q(tran_type = "Sale Invoice")
-                ref_inv_tran_id = Q(ref_inv_tran_id = pk)
-                ref_inv_tran_type = Q(ref_inv_tran_type = "Sale CRV")
-                Transactions.objects.filter(refrence_id , tran_type).all().delete()
-                Transactions.objects.filter(ref_inv_tran_id , ref_inv_tran_type).all().delete()
-                tran1 = Transactions(refrence_id = header_id, refrence_date = sale_header.date, account_id = cash_in_hand, tran_type = "Sale Invoice", amount = total_amount, date = date, remarks = sale_id, ref_inv_tran_id = 0, ref_inv_tran_type = "", detail_remarks = detail_remarks)
-                tran1.save()
-                tran2 = Transactions(refrence_id = header_id, refrence_date = sale_header.date, account_id = account_id, tran_type = "Sale Invoice", amount = -abs(total_amount), date = date, remarks = sale_id, ref_inv_tran_id = 0, ref_inv_tran_type = "", detail_remarks = detail_remarks)
-                tran2.save()
             else:
-                detail_remarks = f"Sale invoice amount {total_amount} RS, against invoice no {sale_id} on Credit."
-                refrence_id = Q(refrence_id = pk)
-                tran_type = Q(tran_type = "Sale Invoice")
-                ref_inv_tran_id = Q(ref_inv_tran_id = pk)
-                ref_inv_tran_type = Q(ref_inv_tran_type = "Sale CRV")
-                Transactions.objects.filter(refrence_id , tran_type).all().delete()
-                Transactions.objects.filter(ref_inv_tran_id , ref_inv_tran_type).all().delete()
-                sale_account = ChartOfAccount.objects.get(account_title = 'Sales')
-                tran1 = Transactions(refrence_id = header_id, refrence_date = sale_header.date, account_id = account_id, tran_type = "Sale Invoice", amount = total_amount, date = date, remarks = sale_id, ref_inv_tran_id = 0, ref_inv_tran_type = "", detail_remarks = detail_remarks)
-                tran1.save()
-                tran2 = Transactions(refrence_id = header_id, refrence_date = sale_header.date, account_id = sale_account, tran_type = "Sale Invoice", amount = -abs(total_amount), date = date, remarks = sale_id, ref_inv_tran_id = 0, ref_inv_tran_type = "", detail_remarks = detail_remarks)
-                tran2.save()
-            return JsonResponse({'result':'success'})
-        return render(request, 'transaction/edit_sale.html',
-            {'job_no': job_no, 'sale_header': sale_header, 'sale_detail': sale_detail,'pk':pk, 'all_pcs':all_pcs})
-    else:
-        messages.add_message(request, messages.ERROR, "You Cannot Edit this Invoice, it has CRV created.")
-        return redirect('sale')
-
+                amount = float(value["sqft"]) * float(value["rate"])
+                total_amount = total_amount + amount
+                total_square_fit = value["sqft"]
+                sale_detail = SaleDetail(item_id = item_id, item_description = value["description"], width = value["width"], height = value["height"], quantity = value["quantity"], meas = value["measurment"], rate = value["rate"], sale_id = header_id, total_amount = amount, total_square_fit = total_square_fit, total_pcs = 0)
+                net = net + total_amount
+            print(total_amount)
+            sale_detail.save()
+        cash_in_hand = ChartOfAccount.objects.get(account_title = 'Cash')
+        header_id = header_id.id
+        if payment_method == 'Cash':
+            detail_remarks = f"Sale invoice amount {total_amount} RS, against invoice no {sale_id} on Cash."
+            refrence_id = Q(refrence_id = pk)
+            tran_type = Q(tran_type = "Sale Invoice")
+            # ref_inv_tran_id = Q(ref_inv_tran_id = pk)
+            # ref_inv_tran_type = Q(ref_inv_tran_type = "Sale CRV")
+            Transactions.objects.filter(refrence_id , tran_type).all().delete()
+            # Transactions.objects.filter(ref_inv_tran_id , ref_inv_tran_type).all().delete()
+            tran1 = Transactions(refrence_id = header_id, refrence_date = sale_header.date, account_id = cash_in_hand, tran_type = "Sale Invoice", amount = total_amount, date = date, remarks = sale_id, ref_inv_tran_id = 0, ref_inv_tran_type = "", detail_remarks = detail_remarks)
+            tran1.save()
+            tran2 = Transactions(refrence_id = header_id, refrence_date = sale_header.date, account_id = account_id, tran_type = "Sale Invoice", amount = -abs(total_amount), date = date, remarks = sale_id, ref_inv_tran_id = 0, ref_inv_tran_type = "", detail_remarks = detail_remarks)
+            tran2.save()
+        else:
+            detail_remarks = f"Sale invoice amount {total_amount} RS, against invoice no {sale_id} on Credit."
+            refrence_id = Q(refrence_id = pk)
+            tran_type = Q(tran_type = "Sale Invoice")
+            # ref_inv_tran_id = Q(ref_inv_tran_id = pk)
+            # ref_inv_tran_type = Q(ref_inv_tran_type = "Sale CRV")
+            Transactions.objects.filter(refrence_id , tran_type).all().delete()
+            # Transactions.objects.filter(ref_inv_tran_id , ref_inv_tran_type).all().delete()
+            sale_account = ChartOfAccount.objects.get(account_title = 'Sales')
+            tran1 = Transactions(refrence_id = header_id, refrence_date = sale_header.date, account_id = account_id, tran_type = "Sale Invoice", amount = total_amount, date = date, remarks = sale_id, ref_inv_tran_id = 0, ref_inv_tran_type = "", detail_remarks = detail_remarks)
+            tran1.save()
+            tran2 = Transactions(refrence_id = header_id, refrence_date = sale_header.date, account_id = sale_account, tran_type = "Sale Invoice", amount = -abs(total_amount), date = date, remarks = sale_id, ref_inv_tran_id = 0, ref_inv_tran_type = "", detail_remarks = detail_remarks)
+            tran2.save()
+        return JsonResponse({'result':'success'})
+    return render(request, 'transaction/edit_sale.html',
+        {'job_no': job_no, 'sale_header': sale_header, 'sale_detail': sale_detail,'pk':pk, 'all_pcs':all_pcs})
 
 
 @login_required()
