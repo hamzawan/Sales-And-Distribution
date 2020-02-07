@@ -1,7 +1,7 @@
 {% extends "transaction/base.html" %}
 {% load crispy_forms_tags %}
+{% load static %}
 {% block body %}
-
 <div class="card" style="width: 100%;">
 <div class="card-header">
   <h4>Purchase Invoice</h4>
@@ -10,6 +10,10 @@
 <form  action="" id="new-purchase-submit" autocomplete="off" method="post">
   {% csrf_token %}
   <li class="list-group-item">
+  {% comment %} <div id="loading" style="position: absolute; top:10px; left:600px;">
+    <img src="{% static 'transaction/images/loading.gif' %}" />  
+</div> {% endcomment %}
+
       <div class="form-row">
         <div class="form-group col-md-2">
           <label for="">Purchase ID</label>

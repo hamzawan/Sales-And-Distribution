@@ -612,10 +612,21 @@ def if_crv_avaliable(pk):
 @user_passes_test(allow_sale_edit)
 def edit_sale(request, pk):
     total_amount = 0
+    total_amount_for_discount = 0
+    total_amount_for_gst = 0
+    total_amount_for_srb = 0
     net = 0
     job_no = JobOrderHeader.objects.all()
     sale_header = SaleHeader.objects.filter(id=pk).first()
     sale_detail = SaleDetail.objects.filter(sale_id=pk).all()
+    for v in sale_detail:
+        total_amount_for_discount = total_amount_for_discount + float(v.total_amount)
+    total_amount_for_gst = float(total_amount_for_discount) / float(100)
+    total_amount_for_gst = float(total_amount_for_gst) * float(sale_header.gst)
+    total_amount_for_srb = float(total_amount_for_discount) / float(100)
+    total_amount_for_srb = float(total_amount_for_srb) * float(sale_header.srb)
+    total_amount_for_discount = total_amount_for_gst + total_amount_for_srb + total_amount_for_discount
+    discount_amount = float(sale_header.discount) * float(total_amount_for_discount) / 100
     all_accounts = ChartOfAccount.objects.all()
     all_pcs = Add_item.objects.filter(unit = "pcs").all()
     item_code = request.POST.get('job_no_sale', False)
@@ -713,7 +724,7 @@ def edit_sale(request, pk):
             tran2.save()
         return JsonResponse({'result':'success'})
     return render(request, 'transaction/edit_sale.html',
-        {'job_no': job_no, 'sale_header': sale_header, 'sale_detail': sale_detail,'pk':pk, 'all_pcs':all_pcs})
+        {'job_no': job_no, 'sale_header': sale_header, 'sale_detail': sale_detail,'pk':pk, 'all_pcs':all_pcs,'discount_amount':discount_amount})
 
 
 @login_required()
@@ -949,11 +960,13 @@ def allow_sale_print(user):
 @login_required()
 @user_passes_test(allow_sale_print)
 def print_sale(request, pk):
+    main_pk = pk
     lines = 0
     total_amount = 0
     total_quantity = 0
     total_square_fit = 0
     square_fit = 0
+    total_balance_of_ledger = 0
     header = SaleHeader.objects.filter(id = pk).first()
     detail = SaleDetail.objects.filter(sale_id = pk).all()
     image = Company_info.objects.first()
@@ -983,54 +996,62 @@ def print_sale(request, pk):
         credit_amount = 0
         pk = header.account_id.id
         cursor = connection.cursor()
-        cursor.execute('''Select tran_type,refrence_id,refrence_date,remarks,ref_inv_tran_id,ref_inv_tran_type,Sum(Debit) Debit,Sum(Credit) Credit From (
-                        Select Distinct account_id_id,'Opening' As tran_type,'' As refrence_id,'' As refrence_date,'Opening Balance' As remarks,
-                        '' AS ref_inv_tran_id,'' AS ref_inv_tran_type,
-                        Case When Sum(amount) > -1 Then  sum(amount) Else 0 End As Debit,
-                        Case When Sum(amount) < -1 Then  sum(amount) Else 0 End As Credit from (
-                        Select id As Account_id_id, Sum(Opening_Balance) As amount
-                        From transaction_chartofaccount Where ID = (
-                        Select id from transaction_chartofaccount Where Parent_ID = %s)
+        cursor.execute('''select tran_type,refrence_id,date,remarks,ref_inv_tran_id,ref_inv_tran_type,Debit as Debit,Credit as Credit, detail_remarks from
+                        (select '' as refrence_id,'Opening' as tran_type,'' as date,'' as ref_inv_tran_id,
+                        '' as ref_inv_tran_type,'Opening Balance' as remarks,id,'' as detail_remarks,
+                        Case When opening_balance > 0 then opening_balance else 0 End as Debit,
+                        Case When opening_balance < 0 then opening_balance else 0 End as Credit
+                        from transaction_chartofaccount Where id = %s
                         Union All
-                        Select id As account_id_id, Sum(Opening_Balance) As amount
-                        From transaction_chartofaccount Where ID = (%s)
-                        Union All
-                        Select account_id_id,Sum(amount) As amount From transaction_transactions
-                        where account_id_id in (
-                        Case When (Select id from transaction_chartofaccount Where Parent_ID = %s)
-                        <> '' Then (Select id from transaction_chartofaccount Where Parent_ID = %s)
-                        Else (%s) END) AND refrence_date < %s
-                        Union all
-                        Select account_id_id,Sum(amount) As amount From transaction_transactions
-                        where account_id_id in (%s) AND refrence_date < %s
-                        ) tblData
-                        Group By account_id_id
-                        Union all
-                        Select Distinct account_id_id,tran_type,refrence_id,refrence_date,remarks,ref_inv_tran_id,ref_inv_tran_type,
-                        Case When amount > -1 Then  amount Else 0 End As Debit,
-                        Case When amount < -1 Then  amount Else 0 End As Credit from (
-                        Select * From transaction_transactions
-                        where account_id_id in (
-                        Case When (Select id from transaction_chartofaccount Where Parent_ID = %s)
-                        <> '' Then (Select id from transaction_chartofaccount Where Parent_ID = %s)
-                        Else (%s) END)
-                        Union all
-                        Select * From transaction_transactions
-                        where account_id_id in (%s)
-                        ) tblData
-                        Where refrence_date Between %s And %s
-                        Order By account_id_id,refrence_date Asc
-                        ) As tblLedger
-                        Group By tran_type,refrence_id,refrence_date,remarks,ref_inv_tran_id,ref_inv_tran_type
-                        Order By refrence_date Asc''',[pk,pk,pk,pk,pk,from_date,pk,from_date,pk,pk,pk,pk,from_date,to_date])
-        row = cursor.fetchall()
-        if row:
-            for v in row:
-                if v[6] >= 0:
-                    debit_amount = debit_amount + v[6]
-                if v[7] <= 0:
-                    credit_amount = credit_amount + v[7]
-        credit_balance = debit_amount + credit_amount
+                        Select * From (
+                        Select refrence_id,tran_type,date,ref_inv_tran_id,ref_inv_tran_type,
+                        remarks,account_id_id,detail_remarks,
+                        Case When amount > 0 then amount else 0 End as Debit,
+                        Case When amount < 0 then amount else 0 End as Credit
+                        from transaction_transactions
+                        Where
+                        DATE(date) Between %s And %s and is_partialy = 0
+                        Order by date asc) As tblLedger
+                        Where account_id_id = %s
+                        union all
+                        Select refrence_id,tran_type,date,'merge' as ref_inv_tran_id,ref_inv_tran_type,
+                        remarks,account_id_id,'Partialy Receiving' as detail_remarks,
+                        Case When amount > 0 then sum(amount) else 0 End as Debit,
+                        Case When amount < 0 then sum(amount) else 0 End as Credit
+                        from transaction_transactions
+                        Where
+                        DATE(date) Between %s And %s
+                        and is_partialy = 1 and account_id_id = %s
+                        group by refrence_id,tran_type,date,ref_inv_tran_type,
+                        remarks,account_id_id
+                        )
+                        tbl order by date''',[pk,from_date,to_date,pk,from_date,to_date,pk])
+    row = cursor.fetchall()
+    for i,value in enumerate(row):
+        print("HERE IS BREAK", value[1], main_pk)
+        if value[0] == 'Sale Invoice' and value[7] > 0:
+            total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
+        elif value[0] == 'JV' and value[7] < 0:
+            total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
+        elif value[5] == 'Sale CRV' and value[7] < 0:
+            total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
+        elif value[5] == 'Purchase CPV' and value[7] > 0:
+            total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
+        elif value[0] == 'Opening' and value[7] < 0:
+            total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
+        elif value[0] == 'Opening' and value[7] > 0:
+            total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
+        elif value[0] == 'Purchase Invoice' and value[7] < 0:
+            total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
+        elif value[0] == 'Opening Balance' and value[7] < 0:
+            total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
+        elif value[0] == 'Opening Balance' and value[7] > 0:
+            total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
+        else:
+            total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + 0
+        if str(value[1]) == str(main_pk):
+            break
+    credit_balance = total_balance_of_ledger
     discount = float(header.discount) * float(total_amount) / 100
     total_amount_after_discount = total_amount  - discount
     pdf = render_to_pdf('transaction/sale_pdf.html', {'header':header, 'detail':detail,'image':image, 'total_lines':12, 'total_amount':total_amount, 'total_quantity':total_quantity,'total_square_fit':total_square_fit,"credit_balance":credit_balance,"total_amount_after_discount":total_amount_after_discount,"discount":discount})
@@ -1398,38 +1419,38 @@ def account_ledger(request):
         company_info = Company_info.objects.all()
         image = Company_info.objects.filter(id=1).first()
         cursor = connection.cursor()
-        cursor.execute('''select tran_type,refrence_id,date,remarks,ref_inv_tran_id,ref_inv_tran_type,Debit as Debit,Credit as Credit, detail_remarks from
+        cursor.execute('''select tran_type,refrence_id,date,remarks,ref_inv_tran_id,ref_inv_tran_type,Debit as Debit,Credit as Credit, detail_remarks, voucher_id_id from
                         (select '' as refrence_id,'Opening' as tran_type,'' as date,'' as ref_inv_tran_id,
-                            '' as ref_inv_tran_type,'Opening Balance' as remarks,id,'' as detail_remarks,
-                            Case When opening_balance > 0 then opening_balance else 0 End as Debit,
-                            Case When opening_balance < 0 then opening_balance else 0 End as Credit
-                            from transaction_chartofaccount Where id = %s
-                            Union All
-                            Select * From (
-                            Select refrence_id,tran_type,date,ref_inv_tran_id,ref_inv_tran_type,
-                            remarks,account_id_id,detail_remarks,
-                            Case When amount > 0 then amount else 0 End as Debit,
-                            Case When amount < 0 then amount else 0 End as Credit
-                            from transaction_transactions
-                            Where
-                            DATE(date) Between %s And %s and is_partialy = 0
-                            Order by date asc) As tblLedger
-                            Where account_id_id = %s
-                            union all
-                            Select refrence_id,tran_type,date,'merge' as ref_inv_tran_id,ref_inv_tran_type,
-                            remarks,account_id_id,'Partialy Receiving' as detail_remarks,
-                            Case When amount > 0 then sum(amount) else 0 End as Debit,
-                            Case When amount < 0 then sum(amount) else 0 End as Credit
-                            from transaction_transactions
-                            Where
-                            DATE(date) Between %s And %s
-                            and is_partialy = 1 and account_id_id = %s
-                            group by refrence_id,tran_type,date,ref_inv_tran_type,
-                            remarks,account_id_id
-                            )
-                            tbl order by date''',[pk,from_date,to_date,pk,from_date,to_date,pk])
+                        '' as ref_inv_tran_type,'Opening Balance' as remarks,id,'' as detail_remarks,'' as voucher_id_id,
+                        Case When opening_balance > 0 then opening_balance else 0 End as Debit,
+                        Case When opening_balance < 0 then opening_balance else 0 End as Credit
+                        from transaction_chartofaccount Where id = %s
+                        Union All
+                        Select * From (
+                        Select refrence_id,tran_type,date,ref_inv_tran_id,ref_inv_tran_type,
+                        remarks,account_id_id,detail_remarks,voucher_id_id,
+                        Case When amount > 0 then amount else 0 End as Debit,
+                        Case When amount < 0 then amount else 0 End as Credit
+                        from transaction_transactions
+                        Where
+                        DATE(date) Between %s And %s and is_partialy = 0
+                        Order by date asc) As tblLedger
+                        Where account_id_id = %s
+                        union all
+                        Select refrence_id,tran_type,date,'merge' as ref_inv_tran_id,ref_inv_tran_type,
+                        remarks,account_id_id,'Partialy Receiving' as detail_remarks,voucher_id_id,
+                        Case When amount > 0 then sum(amount) else 0 End as Debit,
+                        Case When amount < 0 then sum(amount) else 0 End as Credit
+                        from transaction_transactions
+                        Where
+                        DATE(date) Between %s And %s
+                        and is_partialy = 1 and account_id_id = %s
+                        group by refrence_id,tran_type,date,ref_inv_tran_type,
+                        remarks,account_id_id
+                        )
+                        tbl order by date''',[pk,from_date,to_date,pk,from_date,to_date,pk])
         row = cursor.fetchall()
-        print(row)
+        detail_remarks = ''
         ledger_list = []
         balance = 0
         partialy_debit = 0
@@ -1439,30 +1460,78 @@ def account_ledger(request):
             if value[0] == 'Sale Invoice' and value[7] > 0:
                 balance = balance + float(value[6]) + float(value[7])
                 total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
+                sale_id = Q(id = value[1])
+                client_sale_no = SaleHeader.objects.filter(sale_id).first()
+                if client_sale_no.payment_method == 'Cash':
+                    amount_value = abs(value[7])
+                    detail_remarks = f'Sale invoice {amount_value} RS, on Cash.'
+                else:
+                    amount_value = abs(value[6])
+                    detail_remarks = f'Sale invoice {amount_value} RS, on Credit.'
+            elif value[0] == 'Sale Invoice' and value[6] > 0:
+                balance = balance + float(value[6]) + float(value[7])
+                total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
+                sale_id = Q(id = value[1])
+                client_sale_no = SaleHeader.objects.filter(sale_id).first()
+                if client_sale_no.payment_method == 'Cash':
+                    amount_value = abs(value[7])
+                    detail_remarks = f'Sale invoice {amount_value} RS, on Cash.'
+                else:
+                    amount_value = abs(value[6])
+                    detail_remarks = f'Sale invoice {amount_value} RS, on Credit.'
             elif value[0] == 'JV' and value[7] < 0:
                 balance = balance + float(value[6]) + float(value[7])
                 total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
+                amount_value = abs(value[7])
+                detail_remarks = f'Journal Voucher'
             elif value[5] == 'Sale CRV' and value[7] < 0:
                 balance = balance + float(value[6]) + float(value[7])
                 total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
+                voucher_id = Q(id = value[9])
+                voucher = VoucherHeader.objects.filter(voucher_id).first()
+                s_detail = value[8]
+                detail_remarks = f'{s_detail} Received amount, ({voucher.description}).'
             elif value[5] == 'Purchase CPV' and value[7] > 0:
                 balance = balance + float(value[6]) - float(value[7])
                 total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
+                voucher_id = Q(id = value[9])
+                voucher = VoucherHeader.objects.filter(voucher_id).first()
+                s_detail = value[8]
+                detail_remarks = f'{s_detail} Paid amount, ({voucher.description}).'
+            elif value[5] == 'Purchase CPV' and value[6] > 0:
+                balance = balance + float(value[6]) - float(value[7])
+                total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
+                voucher_id = Q(id = value[9])
+                voucher = VoucherHeader.objects.filter(voucher_id).first()
+                s_detail = value[8]
+                detail_remarks = f'{s_detail} Paid amount, ({voucher.description}).'
             elif value[0] == 'Opening' and value[7] < 0:
                 balance = balance + float(value[6]) + float(value[7])
                 total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
+                detail_remarks = 'Opening Balance'
             elif value[0] == 'Opening' and value[7] > 0:
                 balance = balance + float(value[6]) + float(value[7])
                 total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
+                detail_remarks = 'Opening Balance'
             elif value[0] == 'Purchase Invoice' and value[7] < 0:
                 balance = balance + float(value[6]) + float(value[7])
                 total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
+                purchase_id = Q(id = value[1])
+                client_purchase_no = PurchaseHeader.objects.filter(purchase_id).first()
+                if client_purchase_no.payment_method == 'Cash':
+                    amount_value = abs(value[6])
+                    detail_remarks = f'Purchase invoice ,against invoice no {client_sale_no.footer_description} on Cash.'
+                else:
+                    amount_value = abs(value[6])
+                    detail_remarks = f'Purchase invoice , against invoice no {client_purchase_no.footer_description} on Credit.'
             elif value[0] == 'Opening Balance' and value[7] < 0:
                 balance = balance + float(value[6]) + float(value[7])
                 total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
+                detail_remarks = 'Opening Balance'
             elif value[0] == 'Opening Balance' and value[7] > 0:
                 balance = balance + float(value[6]) - float(value[7])
                 total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
+                detail_remarks = 'Opening Balance'
             else:
                 balance = balance + float(value[6]) + 0
                 total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + 0
@@ -1473,11 +1542,11 @@ def account_ledger(request):
             "debit":value[6],
             "credit":value[7],
             "balance": balance,
-            "detail_remarks":value[8],
+            "detail_remarks":detail_remarks,
             }
             ledger_list.append(info)
-        for value in row:
-            print(value)
+        # for value in row:
+        #     print(value)
         if row:
             for v in row:
                 if v[6] >= 0:
@@ -1636,7 +1705,7 @@ def allow_crv(user):
 def cash_receiving_voucher(request):
     request.session['objectID'] = 14
     cursor = connection.cursor()
-    all_vouchers = cursor.execute('''select VH.id,VH.voucher_no, VH.doc_date, COA.account_title, VH.description, sum(abs(VD.credit))
+    all_vouchers = cursor.execute('''select VH.id,VH.voucher_no, VH.doc_date, COA.account_title, VH.description, sum(abs(VD.credit)),sum(abs(VD.debit))
                                 from transaction_voucherheader VH
                                 inner join transaction_voucherdetail VD on VD.header_id_id = VH.id
                                 inner join transaction_chartofaccount COA on COA.id = VD.account_id_id

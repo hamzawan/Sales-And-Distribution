@@ -59,7 +59,7 @@
     <div class="table-title">
         <div class="row">
             <div class="form-group col-md-3">
-              <input type="text" list="dc" placeholder="Enter Job No here..." class="form-control form-control-sm" id="job_no_sale">
+              <input type="text" list="dc" placeholder="Enter Job No here..." class="form-control form-control-sm" id="job_no_sale_edit" data-id={{pk}}>
             </div>
             <datalist id="dc">
               {% for value in job_no %}
@@ -74,7 +74,7 @@
     <div class="table-title">
         <div class="row">
           <div class="form-group col-md-3">
-            <input type="text" list="item_x" placeholder="Enter Item Code here..." class="form-control form-control-sm" id="x_stand_edit">
+            <input type="text" list="item_x" placeholder="Enter Item Code here..." class="form-control form-control-sm" id="x_stand_edit_sale" data-id={{pk}}>
           </div>
           <datalist id="item_x">
             {% for value in all_pcs %}
@@ -100,7 +100,7 @@
                   <th width="60px">Qty</th>
                   <th width="90px">Sq.ft</th>
                   <th width="90px">Rate</th>
-                  <th width="110px">Amount</th>
+                  <th width="50px">Amount</th>
                   <th>Action</th>
               </tr>
           </thead>
@@ -110,32 +110,32 @@
                 <td>{{ forloop.counter }}</td>
                 <td>{{value.item_id.item_code}}</td>
                 <td>{{value.item_id.item_name}}</td>
-                <td><pre>{{value.item_description}}</pre></td>
+                <td><input type="text" style="width:300px;" class="form-control" value="{{value.item_description}}"></td>
                 <td id="quantity_edit"> {{value.item_id.unit}} </td>
                 {% if value.meas == "sq.ft" %}
                   <td id="width">{{value.width}}</td>
                   <td id="height">{{value.height}}</td>
                   <td id="quantity">{{value.quantity}}</td>
                   <td id="sqft">{{value.width|mul:value.height|mul:value.quantity|floatformat:2}}</td>
-                  <td id="rate">{{value.rate}}</td>
+                  <td id="rate"><input class="form-control from-control-sm input_rate_sale_edit" value="{{value.rate}}"/></td>
                   <td id="total" class="sum"><b>{{value.width|mul:value.height|mul:value.quantity|mul:value.rate|floatformat:2}}</b></td>
                 {% elif value.meas == "sq.inches" %}
                   <td id="width">{{value.width}}</td>
                   <td id="height">{{value.height}}</td>
                   <td id="quantity">{{value.quantity}}</td>
                   <td id="sqft">{{value.width|mul:value.height|div:144|mul:value.quantity|floatformat:2}}</td>
-                  <td id="rate">{{value.rate}}</td>
+                  <td id="rate"><input class="form-control from-control-sm input_rate_sale_edit" value="{{value.rate}}"/></td>
                   <td id="total" class="sum"><b>{{value.width|mul:value.height|div:144|mul:value.quantity|mul:value.rate|floatformat:2}}</b></td>
                 {% elif value.meas == "pieces" %}
                   <td id="width">0.00</td>
                   <td id="height">0.00</td>
-                  <td id="quantity">{{value.total_pcs}}</td>
+                  <td id="quantity"><input class="form-control from-control-sm input_quantity_x_sale_edit" value="{{value.total_pcs}}"/></td>
                   <td id="sqft">0.00</td>
-                  <td id="rate">{{value.rate}}</td>
+                  <td id="rate"><input class="form-control from-control-sm input_rate_x_sale_edit" value="{{value.rate}}"/></td>
                   <td id="total" class="sum"><b>{{value.total_pcs|mul:value.rate|floatformat:2}}</b></td>
                 {% endif %}
                 <td style="display:none;">{{value.meas}}</td>
-                <td><a class="add-transaction-sale-edit" title="Add" data-toggle="tooltip"><i class="material-icons">&#xE03B;</i></a><a class="edit-transaction-sale-edit" title="Edit" data-toggle="tooltip"><i class="material-icons">&#xE254;</i></a><a class="delete-transaction-sale-edit" title="Delete" data-toggle="tooltip"><i class="material-icons">&#xE872;</i></a></td>
+                <td><a class="delete-transaction-sale-edit" title="Delete" data-toggle="tooltip"><i class="material-icons">&#xE872;</i></a></td>
               </tr>
             {% endfor %}
           </tbody>
@@ -160,13 +160,13 @@
         <div class="form-inline">
           <div class="form-group">
             <label for="text" style="font-size:14px;"><b>DISC in %:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></label>
-            <input type="text" readonly class="form-control form-control-sm" style="border-top: 0px; border-right:0px; border-left:0px;" id="edit_discount" name="discount" value="{{sale_header.discount}}">
+            <input type="text" readonly class="form-control form-control-sm" style="border-top: 0px; border-right:0px; border-left:0px;" id="edit_discount" name="discount" value="{{sale_header.discount|floatformat:2}}">
           </div>
         </div>
         <div class="form-inline">
           <div class="form-group">
             <label for="text" style="font-size:14px;"><b>DISC in val:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></label>
-            <input type="text"  class="form-control form-control-sm" style="border-top: 0px; border-right:0px; border-left:0px;" name="discount" id="discount_in_val" value="0.00">
+            <input type="text"  class="form-control form-control-sm" style="border-top: 0px; border-right:0px; border-left:0px;" name="discount" id="discount_in_val_edit" value="{{discount_amount|floatformat:2}}">
           </div>
         </div>
         <div class="form-inline">

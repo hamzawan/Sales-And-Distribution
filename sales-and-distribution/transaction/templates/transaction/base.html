@@ -29,7 +29,6 @@
 </head>
 
 <body id="page-top">
-
   <nav class="navbar navbar-expand navbar-dark bg-dark static-top">
 
     <a class="navbar-brand mr-1" href="{% url 'transaction-home' %}">{{request.user}}</a>
@@ -58,7 +57,6 @@
   </nav>
 
   <div id="wrapper">
-
     <!-- Sidebar -->
     <ul class="sidebar navbar-nav toggled">
       <li class="nav-item active">
@@ -83,12 +81,9 @@
        </li>
      {% endfor %}
     </ul>
-
     <div id="content-wrapper">
-
       <div class="container-fluid">
-          {% block body %}
-
+          {% block body %}>
           {% endblock body %}
 
       </div>

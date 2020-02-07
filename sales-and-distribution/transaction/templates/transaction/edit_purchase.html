@@ -52,7 +52,7 @@
     <div class="table-title">
         <div class="row">
           <div class="form-group col-md-3">
-            <input type="text" list="item" placeholder="Enter Item Code here..." class="form-control form-control-sm" id="item_code_purchase_edit">
+            <input type="text" list="item" placeholder="Enter Item Code here..." class="form-control form-control-sm" id="item_code_purchase_edit" data-id="{{pk}}">
           </div>
           <datalist id="item">
             {% for value in all_item_code %}
@@ -67,7 +67,7 @@
     <div class="table-title">
         <div class="row">
           <div class="form-group col-md-3">
-            <input type="text" list="item_x" placeholder="Enter Item Code here..." class="form-control form-control-sm" id="x_stand_edit">
+            <input type="text" list="item_x" placeholder="Enter Item Code here..." class="form-control form-control-sm" id="x_stand_edit" data-id={{pk}}>
           </div>
           <datalist id="item_x">
             {% for value in all_pcs %}
@@ -105,33 +105,47 @@
                 <td> {{value.item_id.item_code}}</td>
                 <td> {{value.item_id.item_name}} </td>
                 <td><pre>{{value.item_id.item_description}}</pre></td>
-                <td><select id="sel" class="form-control form-control-sm" style=" height:35px;"><option>{{value.meas}}</option><option>sq.ft</option><option>sq.inches</option></select></td>
+                <td>
                 {% if value.meas == "sq.ft" %}
-                  <td id="width"> {{value.width}} </td>
-                  <td id="height"> {{value.height}} </td>
-                  <td id="quantity"> {{value.quantity}} </td>
+                  <select id="sel" class="form-control form-control-sm input_select_edit" style="height:35px;">
+                      <option>{{value.meas}}</option>
+                      <option>sq.inches</option>
+                  </select>
+                {% elif value.meas == "sq.inches" %}
+                  <select id="sel" class="form-control form-control-sm input_select_edit" style="height:35px;">
+                      <option>{{value.meas}}</option>
+                      <option>sq.ft</option>
+                  </select>
+                {% else %}
+                pcs
+                {% endif %}
+                </td>
+                {% if value.meas == "sq.ft" %}
+                  <td id="width"><input type="text" required class="form-control input_width_edit" value="{{value.width}}"></td>
+                  <td id="height"><input type="text" required class="form-control input_height_edit" value="{{value.height}}"></td>
+                  <td id="quantity"><input type="text" required class="form-control input_quantity_edit" value="{{value.quantity}}"></td>
                   <td id="square_fit">{{value.width|mul:value.height|mul:value.quantity|floatformat:2}}</td>
-                  <td id="rate">{{value.rate}}</td>
-                  <td id="total"><b>{{value.width|mul:value.height|mul:value.quantity|mul:value.rate|floatformat:2}}</b></td>
+                  <td id="rate"><input type="text" required class="form-control input_rate_edit" value="{{value.rate}}"></td>
+                  <td id="total" class="sum"><b>{{value.width|mul:value.height|mul:value.quantity|mul:value.rate|floatformat:2}}</b></td>
                   <td style="display:none;" id="measurment">{{value.meas}}</td>
                 {% elif value.meas == "sq.inches" %}
-                  <td id="width"> {{value.width}} </td>
-                  <td id="height"> {{value.height}} </td>
-                  <td id="quantity"> {{value.quantity}} </td>
+                  <td id="width"><input type="text" required class="form-control input_width_edit" value="{{value.width}}"></td>
+                  <td id="height"><input type="text" required class="form-control input_height_edit" value="{{value.height}}"></td>
+                  <td id="quantity"><input type="text" required class="form-control input_quantity_edit" value="{{value.quantity}}"></td>
                   <td id="square_fit">{{value.width|mul:value.height|div:144|mul:value.quantity|floatformat:2}}</td>
-                  <td id="rate">{{value.rate}}</td>
+                  <td id="rate"><input type="text" required class="form-control input_rate_edit" value="{{value.rate}}"></td>
                   <td id="total" class="sum"><b>{{value.width|mul:value.height|div:144|mul:value.quantity|mul:value.rate|floatformat:2}}</b></td>
                   <td style="display:none;" id="measurment">{{value.meas}}</td>
                 {%  elif value.meas == "pieces"  %}
                   <td id="width">0.00</td>
                   <td id="height">0.00</td>
-                  <td id="quantity">{{value.total_pcs}}</td>
+                  <td id="quantity"><input type="text" required class="form-control input_x_quantity_edit" value="{{value.total_pcs}}"></td>
                   <td id="square_fit">0.00</td>
-                  <td id="rate">{{value.rate}}</td>
+                  <td id="rate"><input type="text" required class="form-control input_x_rate_edit" value="{{value.rate}}"></td>
                   <td id="total" class="sum"><b>{{value.total_pcs|mul:value.rate|floatformat:2}}</b></td>
                   <td style="display:none;" id="measurment">{{value.meas}}</td>
                 {% endif %}
-                <td><a class="add-purchase-edit" title="Add" data-toggle="tooltip"><i class="material-icons">&#xE03B;</i></a><a class="edit-purchase-edit" title="Edit" data-toggle="tooltip"><i class="material-icons">&#xE254;</i></a><a class="delete-purchase-edit" title="Delete" data-toggle="tooltip"><i class="material-icons">&#xE872;</i></a></td>
+                <td><a class="delete-purchase-edit" title="Delete" data-toggle="tooltip"><i class="material-icons">&#xE872;</i></a></td>
               </tr>
             {% endfor %}
           </tbody>

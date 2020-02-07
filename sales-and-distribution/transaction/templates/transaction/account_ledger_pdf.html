@@ -87,7 +87,7 @@
           {% else %}
             <td style="width: 150px; height:30px;"><font size="12px">{{value.date}}</font></td>
             <td style="width: 200px;"><font size="12px">{{value.tran_type}} {{value.voucher_no}}</font></td>
-            <td style="width: 800px; text-align:center;"><font size="12px">{{value.voucher_no}} / Refrence Date: {{value.date}} ({{value.detail_remarks}})</font></td>
+            <td style="width: 800px; text-align:center;"><font size="12px">{{value.detail_remarks}}</font></td>
           {% endif %}
           <td style="width: 200px; text-align:center;"><font size="12px">{{value.debit|abs|floatformat:2}}</font></td>
           <td style="width: 200px; text-align:center;"><font size="12px">{{value.credit|abs|floatformat:2}}</font></td>

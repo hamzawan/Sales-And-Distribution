@@ -3,7 +3,9 @@ body {
     background: #F5F7FA;
 font-family: 'Open Sans', sans-serif;
 }
-
+.img-container{
+    
+  }
 table.active {background: #ccc;}
 
 
