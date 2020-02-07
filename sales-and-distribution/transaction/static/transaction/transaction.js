@@ -2266,6 +2266,7 @@ $('#edit-purchase-return-submit').on('submit',function(e){
 				var srb = $('#srb').val();
 				var gst = $('#gst').val();
 				var discount = $('#discount').val();
+				var date = $('#date').val();
 				var po_no = $('#po_no').val();
 				var grn_no = $('#grn_no').val();
 
@@ -2338,6 +2339,7 @@ $('#edit-purchase-return-submit').on('submit',function(e){
 						"discount":discount,
 						'po_no':po_no,
 						'grn_no':grn_no,
+						'date':date,
 						'items': JSON.stringify(data),
 					},
 					dataType: 'json'
@@ -2992,12 +2994,15 @@ $('#edit-purchase-return-submit').on('submit',function(e){
 				var table = $('#edit-sale-table');
 				var data = [];
 				var sale_id = $('#sale_id').val();
+				var date = $('#date').val();
 				var account_holder = $('#account_holder').val();
 				var credit_days = $('#credit_days').val();
 				var customer = $('#customer_name_sale').val();
 				var payment_method = $('#payment_method').val();
 				var gst = $('#edit_gst').val();
 				var srb = $('#edit_srb').val();
+				var po_no = $('#po_no').val();
+				var grn_no = $('#grn_no').val();
 				var discount = $('#edit_discount').val();
 				var footer_desc = $('#footer_desc').val();
 
@@ -3022,8 +3027,6 @@ $('#edit-purchase-return-submit').on('submit',function(e){
 					}
 					if (i === 3) {
 							row["description"] = ($(this).find('input').val());
-							console.log(row["description"]);
-							
 					}
 					else if (i === 5) {
 							row["width"] = ($(this).text());
@@ -3044,15 +3047,12 @@ $('#edit-purchase-return-submit').on('submit',function(e){
 					}
 					else if (i === 9) {
 							row["rate"] = ($(this).find('input').val());
-							console.log($(this).text());
 					}
 					else if (i === 10) {
 							row["total"] = ($(this).text());
-							console.log($(this).text());
 					}
 					else if (i === 11) {
 							row["measurment"] = ($(this).text());
-							console.log($(this).text());
 					}
 				});
 				data.push(row);
@@ -3073,6 +3073,9 @@ $('#edit-purchase-return-submit').on('submit',function(e){
 						'gst':gst,
 						'srb':srb,
 						'discount':discount,
+						'po_no':po_no,
+						'grn_no':grn_no,
+						'date':date,
 						'items': JSON.stringify(data),
 					},
 					dataType: 'json'

@@ -30,6 +30,10 @@
           <input type="text" class="form-control form-control-sm" value="{{ sale_header.account_holder }}" id="account_holder">
         </div>
         <div class="form-group col-md-2">
+          <label for="">Date</label>
+          <input type="date"  class="form-control form-control-sm"  value="{{ sale_header.date|date:'Y-m-d' }}" id="date" required>
+        </div>
+        <div class="form-group col-md-2">
          <label for="sel1">Payment Term:</label>
          <select class="form-control form-control-sm" id="payment_method">
            <option selected>{{sale_header.payment_method}}</option>
@@ -48,6 +52,14 @@
             <option value="60">60</option>
             <option value="90">90</option>
           </select>
+        </div>
+        <div class="form-group col-md-2">
+          <label for="">PO No</label>
+          <input type="text"  class="form-control form-control-sm"  value="{{sale_header.po_no}}" id="po_no">
+        </div>
+        <div class="form-group col-md-2">
+          <label for="">GRN #</label>
+          <input type="text"  class="form-control form-control-sm"  value="{{sale_header.grn_no}}" id="grn_no">
         </div>
         <div class="form-group">
           <label for="exampleFormControlTextarea2">Footer Description</label>

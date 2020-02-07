@@ -384,6 +384,7 @@ def new_sale(request):
     total_amount = 0
     net = 0
     serial = "0"
+    job_order_date = 0
     last_sale_no = SaleHeader.objects.last()
     all_job_order = JobOrderHeader.objects.all()
     all_pcs = Add_item.objects.filter(unit = "pcs").all()
@@ -406,6 +407,7 @@ def new_sale(request):
         return JsonResponse({"items":items})
     if job_no_sale:
         header_job = JobOrderHeader.objects.get(job_no = job_no_sale)
+        job_order_date = header_job
         cursor = connection.cursor()
         items = cursor.execute('''select inventory_add_item.item_code, inventory_add_item.item_name, inventory_add_item.item_description,transaction_joborderdetail.meas, transaction_joborderdetail.width, transaction_joborderdetail.height, transaction_joborderdetail.quantity
                                 from transaction_joborderdetail
@@ -416,7 +418,6 @@ def new_sale(request):
         return JsonResponse({"items":items})
     current_user = request.user
     account_name = request.POST.get('account_name',False)
-    print("account name",account_name)
     from_date = '2019-01-01'
     to_date = datetime.date.today()
     if account_name:
@@ -481,6 +482,7 @@ def new_sale(request):
         sale_id = request.POST.get('sale_id',False)
         srb = request.POST.get('srb',False)
         gst = request.POST.get('gst',False)
+        invoice_date = request.POST.get('date',False)
         discount = request.POST.get('discount',False)
         po_no = request.POST.get('po_no',False)
         grn_no = request.POST.get('grn_no',False)
@@ -496,7 +498,7 @@ def new_sale(request):
         follow_up = get_date + datetime.timedelta(days=int(credit_days))
         follow_up = datetime.datetime.strftime(follow_up, "%Y-%m-%d")
 
-        sale_header = SaleHeader(sale_no = last_sale_no, date = date, footer_description = footer_desc, payment_method = payment_method, account_id = account_id, account_holder = account_holder, credit_days = credit_days ,follow_up = follow_up, user = current_user, srb=srb,gst=gst,discount=discount, po_no=po_no, grn_no=grn_no)
+        sale_header = SaleHeader(sale_no = last_sale_no, date = invoice_date, footer_description = footer_desc, payment_method = payment_method, account_id = account_id, account_holder = account_holder, credit_days = credit_days ,follow_up = follow_up, user = current_user, srb=srb,gst=gst,discount=discount, po_no=po_no, grn_no=grn_no)
         sale_header.save()
         items = json.loads(request.POST.get('items'))
         header_id = SaleHeader.objects.get(sale_no = sale_id)
@@ -656,6 +658,9 @@ def edit_sale(request, pk):
         footer_desc = request.POST.get('footer_desc', False)
         gst = request.POST.get('gst', False)
         srb = request.POST.get('srb', False)
+        invoice_date = request.POST.get('date', False)
+        po_no = request.POST.get('po_no', False)
+        grn_no = request.POST.get('grn_no', False)
         discount = request.POST.get('discount', False)
         account_id = ChartOfAccount.objects.get(account_title=customer)
         date = datetime.date.today()
@@ -673,6 +678,9 @@ def edit_sale(request, pk):
         sale_header.account_id = account_id
         sale_header.gst = gst
         sale_header.srb = srb
+        sale_header.date = invoice_date
+        sale_header.po_no = po_no
+        sale_header.grn_no = grn_no
         sale_header.discount = discount
         sale_header.save()
 
