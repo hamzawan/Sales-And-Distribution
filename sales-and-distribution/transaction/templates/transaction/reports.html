@@ -21,7 +21,7 @@
       </div>
       <br>
       <div class="row">
-        <div class="col-md-4 col-sm-12"><button type="button" data-toggle="modal" data-target="#dailyReportModal" class="btn btn-primary btn-block"  name="button">Daily Report</button></div>
+        <div class="col-md-4 col-sm-12"><button type="button" data-toggle="modal" data-target="#dailyReportModal" class="btn btn-primary btn-block btn_report"  name="button">Daily Report</button></div>
       </div>
   </li>
 </ul>
@@ -238,7 +238,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-        <button type="submit" target="_blank" class="btn btn-primary">Generate</button>
+        <button type="button" target="_blank" class="btn btn-primary ">Generate</button>
       </div>
       </form>
     </div>
@@ -250,7 +250,7 @@
 <div class="modal fade" id="dailyReportModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
-      <form class="" action="{% url 'daily-report' %}" method="post">
+      <form class="" action="" id="daily-report-modal" method="post">
         {% csrf_token %}
       <div class="modal-header">
         <h5 class="modal-title" id="exampleModalLongTitle">Daily Report</h5>
@@ -272,10 +272,11 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-        <button type="submit" target="_blank" class="btn btn-primary">Generate</button>
+        <button type="submit" class="btn btn-primary">Generate</button>
       </div>
       </form>
     </div>
   </div>
 </div>
+
 {% endblock body %}

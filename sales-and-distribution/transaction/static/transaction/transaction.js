@@ -4234,7 +4234,6 @@ $('#tree1').treed();
 							return quantity
 					}).closest("tr");
 
-					console.log(meas);
 			if (meas === "sq.ft") {
 				square_fit = parseFloat(width) * parseFloat(height);
 				square_fit = square_fit * parseFloat(quantity)
@@ -4756,7 +4755,6 @@ $('#tree1').treed();
 
 
 			$(".add-item-cpv").click(function(){
-		        console.log("hamza")
 				var account_title = $('#account_title').val();
 				req =	$.ajax({
 					 headers: { "X-CSRFToken": getCookie("csrftoken") },
@@ -4862,7 +4860,6 @@ $('#tree1').treed();
 					 .done(function done(data){
 						 var balance_amount = 0;
 						 var parent_amount = $('#amount').val();
-						 console.log(data.pi);
 							 var index = $("table tbody tr:last-child").index();
 							 for (var i = 0; i < data.pi.length; i++) {
 								 b_amount = parseFloat(data.pi[i][4]) - parseFloat(data.pi[i][5])
@@ -4995,7 +4992,6 @@ $('#tree1').treed();
 						 .done(function done(data){
 							 var balance_amount = 0;
 							 var parent_amount = $('#amount').val();
-							 console.log(data.pi);
 								 var index = $("table tbody tr:last-child").index();
 								 for (var i = 0; i < data.pi.length; i++) {
 									 b_amount = parseFloat(data.pi[i][4]) + parseFloat(data.pi[i][5])
@@ -5334,21 +5330,21 @@ $('#tree1').treed();
 								$('#credit_limits').val(credit_limit);
 							})
 
-							$(".delete-chart-of-account").on('click',function(){
-									$("#modal_delete_button").attr("href", `/transaction/chart_of_account/delete/${this.id}`);
-								})
-							$(".delete-job-order").on('click',function(){
-									$("#modal_delete_button").attr("href", `/transaction/job_order/delete/${this.id}`);
-								})
-							$(".delete_purchase").on('click',function(){
-									$("#modal_delete_button").attr("href", `/transaction/purchase/delete/${this.id}`);
-								})
-							$(".delete_sale").on('click',function(){
-									$("#modal_delete_button").attr("href", `/transaction/sale/delete/${this.id}`);
-								})
-						$(".delete-journal-voucher").on('click',function(){
-								$("#modal_delete_button").attr("href", `/transaction/journal_voucher/delete/${this.id}`);
-							})
+					$(".delete-chart-of-account").on('click',function(){
+							$("#modal_delete_button").attr("href", `/transaction/chart_of_account/delete/${this.id}`);
+						})
+					$(".delete-job-order").on('click',function(){
+							$("#modal_delete_button").attr("href", `/transaction/job_order/delete/${this.id}`);
+						})
+					$(".delete_purchase").on('click',function(){
+							$("#modal_delete_button").attr("href", `/transaction/purchase/delete/${this.id}`);
+						})
+					$(".delete_sale").on('click',function(){
+							$("#modal_delete_button").attr("href", `/transaction/sale/delete/${this.id}`);
+						})
+					$(".delete-journal-voucher").on('click',function(){
+							$("#modal_delete_button").attr("href", `/transaction/journal_voucher/delete/${this.id}`);
+						})
 					$(".delete-crv-summary").on('click',function(){
 							$("#modal_delete_button").attr("href", `/transaction/cash_receiving_voucher/delete/${this.id}`);
 						})
@@ -5361,7 +5357,7 @@ $('#tree1').treed();
 
 
 						$(document).ready(function() {
-									$('.sort').DataTable();
+							$('.sort').DataTable();
 							} );
 
 			$('#sales_tax_invoice').on('click', function(){
@@ -5398,7 +5394,6 @@ $('#tree1').treed();
 					 dataType: 'json'
 				 })
 				 .done(function done(data){
-					 console.log(Math.round(data.debit_amount + data.credit_amount).toFixed(2));
 					 if (Math.round(data.debit_amount + data.credit_amount).toFixed(2) > 0) {
 						 $("#credit_balance").val(Math.round(data.debit_amount + data.credit_amount).toFixed(2));
 						 $("#credit_balance_hidden").val(Math.round(data.debit_amount + data.credit_amount).toFixed(2));
@@ -5711,7 +5706,6 @@ $('#new-jv-form-crv').on('submit',function(e){
 		var vendor = $('#account_crv').find(":selected").val();
 		var description = $('#description').val();
 		if (receiving_amount_checked) {
-			console.log(receiving_amount_checked);
 			req =	$.ajax({
 				 headers: { "X-CSRFToken": getCookie("csrftoken") },
 				 type: 'POST',
@@ -5776,4 +5770,8 @@ $('#new-jv-form-crv').on('submit',function(e){
 				 });
 		}
 	});
-		});
+
+	// Open Reports in New Tab
+
+
+});

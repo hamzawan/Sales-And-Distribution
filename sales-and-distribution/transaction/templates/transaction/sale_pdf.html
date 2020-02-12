@@ -146,8 +146,6 @@
       <td style="text-align:right;" colspan="8">NET AMOUNT</td> &nbsp; &nbsp; &nbsp; &nbsp;
       <td style="text-align:right; height:70px;"><font size="12px" style="text-decoration:underline, overline; text-decoration-style:double;"><b>{{total_amount_after_discount|floatformat:2}}</b></font></td>
     </tr>
-    {{header.account_id.account_title}}
-    {{credit_balance}}
     {% if header.account_id.account_title != "Walk in Customers" %}
     {% if credit_balance > 0 %}
     <tr>

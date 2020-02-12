@@ -18,7 +18,6 @@ def add_allow(request):
     try:
         if request.session["objectID"]:
             c = request.session["objectID"]
-            print("yahan per c ", c)
             cursor = connection.cursor()
             cursor.execute("""select isAllow from tblUserRights where UserID=%s and ActionID=2 and ObjectId=%s LIMIT 1""",[request.user.id, c])
             allow = cursor.fetchall()

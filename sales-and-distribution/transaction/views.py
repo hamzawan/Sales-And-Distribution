@@ -713,9 +713,9 @@ def edit_sale(request, pk):
             # ref_inv_tran_type = Q(ref_inv_tran_type = "Sale CRV")
             Transactions.objects.filter(refrence_id , tran_type).all().delete()
             # Transactions.objects.filter(ref_inv_tran_id , ref_inv_tran_type).all().delete()
-            tran1 = Transactions(refrence_id = header_id, refrence_date = sale_header.date, account_id = cash_in_hand, tran_type = "Sale Invoice", amount = total_amount, date = date, remarks = sale_id, ref_inv_tran_id = 0, ref_inv_tran_type = "", detail_remarks = detail_remarks)
+            tran1 = Transactions(refrence_id = header_id, refrence_date = invoice_date, account_id = cash_in_hand, tran_type = "Sale Invoice", amount = total_amount, date = date, remarks = sale_id, ref_inv_tran_id = 0, ref_inv_tran_type = "", detail_remarks = detail_remarks)
             tran1.save()
-            tran2 = Transactions(refrence_id = header_id, refrence_date = sale_header.date, account_id = account_id, tran_type = "Sale Invoice", amount = -abs(total_amount), date = date, remarks = sale_id, ref_inv_tran_id = 0, ref_inv_tran_type = "", detail_remarks = detail_remarks)
+            tran2 = Transactions(refrence_id = header_id, refrence_date = invoice_date, account_id = account_id, tran_type = "Sale Invoice", amount = -abs(total_amount), date = date, remarks = sale_id, ref_inv_tran_id = 0, ref_inv_tran_type = "", detail_remarks = detail_remarks)
             tran2.save()
         else:
             detail_remarks = f"Sale invoice amount {total_amount} RS, against invoice no {sale_id} on Credit."
@@ -726,9 +726,9 @@ def edit_sale(request, pk):
             Transactions.objects.filter(refrence_id , tran_type).all().delete()
             # Transactions.objects.filter(ref_inv_tran_id , ref_inv_tran_type).all().delete()
             sale_account = ChartOfAccount.objects.get(account_title = 'Sales')
-            tran1 = Transactions(refrence_id = header_id, refrence_date = sale_header.date, account_id = account_id, tran_type = "Sale Invoice", amount = total_amount, date = date, remarks = sale_id, ref_inv_tran_id = 0, ref_inv_tran_type = "", detail_remarks = detail_remarks)
+            tran1 = Transactions(refrence_id = header_id, refrence_date = invoice_date, account_id = account_id, tran_type = "Sale Invoice", amount = total_amount, date = invoice_date, remarks = sale_id, ref_inv_tran_id = 0, ref_inv_tran_type = "", detail_remarks = detail_remarks)
             tran1.save()
-            tran2 = Transactions(refrence_id = header_id, refrence_date = sale_header.date, account_id = sale_account, tran_type = "Sale Invoice", amount = -abs(total_amount), date = date, remarks = sale_id, ref_inv_tran_id = 0, ref_inv_tran_type = "", detail_remarks = detail_remarks)
+            tran2 = Transactions(refrence_id = header_id, refrence_date = invoice_date, account_id = sale_account, tran_type = "Sale Invoice", amount = -abs(total_amount), date = invoice_date, remarks = sale_id, ref_inv_tran_id = 0, ref_inv_tran_type = "", detail_remarks = detail_remarks)
             tran2.save()
         return JsonResponse({'result':'success'})
     return render(request, 'transaction/edit_sale.html',
@@ -998,6 +998,7 @@ def print_sale(request, pk):
         elif value.meas == "pieces":
             amount = float(value.rate) * float(value.total_pcs)
             total_amount = total_amount + amount
+        total_amount = round(total_amount)
         from_date = "2019-01-01"
         to_date = datetime.date.today()
         debit_amount = 0
@@ -1036,7 +1037,6 @@ def print_sale(request, pk):
                         tbl order by date''',[pk,from_date,to_date,pk,from_date,to_date,pk])
     row = cursor.fetchall()
     for i,value in enumerate(row):
-        print("HERE IS BREAK", value[1], main_pk)
         if value[0] == 'Sale Invoice' and value[7] > 0:
             total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
         elif value[0] == 'JV' and value[7] < 0:
@@ -1060,8 +1060,8 @@ def print_sale(request, pk):
         if str(value[1]) == str(main_pk):
             break
     credit_balance = total_balance_of_ledger
-    discount = float(header.discount) * float(total_amount) / 100
-    total_amount_after_discount = total_amount  - discount
+    discount = round(float(header.discount) * float(total_amount) / 100)
+    total_amount_after_discount = round(total_amount  - discount)
     pdf = render_to_pdf('transaction/sale_pdf.html', {'header':header, 'detail':detail,'image':image, 'total_lines':12, 'total_amount':total_amount, 'total_quantity':total_quantity,'total_square_fit':total_square_fit,"credit_balance":credit_balance,"total_amount_after_discount":total_amount_after_discount,"discount":discount})
     if pdf:
         response = HttpResponse(pdf, content_type='application/pdf')
@@ -1427,15 +1427,15 @@ def account_ledger(request):
         company_info = Company_info.objects.all()
         image = Company_info.objects.filter(id=1).first()
         cursor = connection.cursor()
-        cursor.execute('''select tran_type,refrence_id,date,remarks,ref_inv_tran_id,ref_inv_tran_type,Debit as Debit,Credit as Credit, detail_remarks, voucher_id_id from
-                        (select '' as refrence_id,'Opening' as tran_type,'' as date,'' as ref_inv_tran_id,
+        cursor.execute('''select tran_type,refrence_id,refrence_date,remarks,ref_inv_tran_id,ref_inv_tran_type,Debit as Debit,Credit as Credit, detail_remarks, voucher_id_id from
+                        (select '' as refrence_id,'Opening' as tran_type,'' as refrence_date,'' as ref_inv_tran_id,
                         '' as ref_inv_tran_type,'Opening Balance' as remarks,id,'' as detail_remarks,'' as voucher_id_id,
                         Case When opening_balance > 0 then opening_balance else 0 End as Debit,
                         Case When opening_balance < 0 then opening_balance else 0 End as Credit
                         from transaction_chartofaccount Where id = %s
                         Union All
                         Select * From (
-                        Select refrence_id,tran_type,date,ref_inv_tran_id,ref_inv_tran_type,
+                        Select refrence_id,tran_type,refrence_date,ref_inv_tran_id,ref_inv_tran_type,
                         remarks,account_id_id,detail_remarks,voucher_id_id,
                         Case When amount > 0 then amount else 0 End as Debit,
                         Case When amount < 0 then amount else 0 End as Credit
@@ -1445,7 +1445,7 @@ def account_ledger(request):
                         Order by date asc) As tblLedger
                         Where account_id_id = %s
                         union all
-                        Select refrence_id,tran_type,date,'merge' as ref_inv_tran_id,ref_inv_tran_type,
+                        Select refrence_id,tran_type,refrence_date,'merge' as ref_inv_tran_id,ref_inv_tran_type,
                         remarks,account_id_id,'Partialy Receiving' as detail_remarks,voucher_id_id,
                         Case When amount > 0 then sum(amount) else 0 End as Debit,
                         Case When amount < 0 then sum(amount) else 0 End as Credit
@@ -1453,10 +1453,10 @@ def account_ledger(request):
                         Where
                         DATE(date) Between %s And %s
                         and is_partialy = 1 and account_id_id = %s
-                        group by refrence_id,tran_type,date,ref_inv_tran_type,
+                        group by refrence_id,tran_type,refrence_date,ref_inv_tran_type,
                         remarks,account_id_id
                         )
-                        tbl order by date''',[pk,from_date,to_date,pk,from_date,to_date,pk])
+                        tbl order by refrence_date''',[pk,from_date,to_date,pk,from_date,to_date,pk])
         row = cursor.fetchall()
         detail_remarks = ''
         ledger_list = []
@@ -3082,11 +3082,11 @@ def new_cash_payment_voucher(request):
                     if balance_amount > 0:
                         if paying_amount > balance_amount:
                             detail_remarks = f"Paid amount against opening balance."
-                            tran1 = Transactions(refrence_id = vendor.id, refrence_date = doc_date, tran_type = 'Opening Balance', amount = balance_amount,
-                                                date = date, remarks = get_last_tran_id, account_id = vendor,ref_inv_tran_id = 0,ref_inv_tran_type = "-", voucher_id = voucher_id ,detail_remarks = detail_remarks, is_partialy = 1)
+                            tran1 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = balance_amount,
+                                                date = date, remarks = get_last_tran_id, account_id = vendor,ref_inv_tran_id = 0,ref_inv_tran_type = "Purchase CPV", voucher_id = voucher_id ,detail_remarks = detail_remarks, is_partialy = 1)
                             tran1.save()
-                            tran2 = Transactions(refrence_id = vendor.id, refrence_date = doc_date, tran_type = 'Opening Balance', amount = -abs(balance_amount),
-                                                date = date, remarks = get_last_tran_id, account_id = cash_account,ref_inv_tran_id = 0,ref_inv_tran_type = "-", voucher_id = voucher_id ,detail_remarks = detail_remarks, is_partialy = 1)
+                            tran2 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = -abs(balance_amount),
+                                                date = date, remarks = get_last_tran_id, account_id = cash_account,ref_inv_tran_id = 0,ref_inv_tran_type = "Purchase CPV", voucher_id = voucher_id ,detail_remarks = detail_remarks, is_partialy = 1)
                             tran2.save()
                             header_id = VoucherHeader.objects.get(voucher_no = get_last_tran_id)
                             jv_detail1 = VoucherDetail(account_id = cash_account, debit = 0.00, credit = -abs(balance_amount), header_id = header_id, invoice_id = 0)
@@ -3097,11 +3097,11 @@ def new_cash_payment_voucher(request):
                         else:
                             balance_amount = paying_amount
                             detail_remarks = f"Paid amount against opening balance."
-                            tran1 = Transactions(refrence_id = vendor.id, refrence_date = doc_date, tran_type = 'Opening Balance', amount = balance_amount,
-                                                date = date, remarks = get_last_tran_id, account_id = vendor,ref_inv_tran_id = 0,ref_inv_tran_type = "-",voucher_id = voucher_id ,detail_remarks = detail_remarks, is_partialy = 1)
+                            tran1 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = balance_amount,
+                                                date = date, remarks = get_last_tran_id, account_id = vendor,ref_inv_tran_id = 0,ref_inv_tran_type = "Purchase CPV",voucher_id = voucher_id ,detail_remarks = detail_remarks, is_partialy = 1)
                             tran1.save()
-                            tran2 = Transactions(refrence_id = vendor.id, refrence_date = doc_date, tran_type = 'Opening Balance', amount = -abs(balance_amount),
-                                                date = date, remarks = get_last_tran_id, account_id = cash_account,ref_inv_tran_id = 0,ref_inv_tran_type = "-",voucher_id = voucher_id, detail_remarks = detail_remarks, is_partialy = 1)
+                            tran2 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = -abs(balance_amount),
+                                                date = date, remarks = get_last_tran_id, account_id = cash_account,ref_inv_tran_id = 0,ref_inv_tran_type = "Purchase CPV",voucher_id = voucher_id, detail_remarks = detail_remarks, is_partialy = 1)
                             tran2.save()
                             header_id = VoucherHeader.objects.get(voucher_no = get_last_tran_id)
                             jv_detail1 = VoucherDetail(account_id = cash_account, debit = 0.00, credit = -abs(balance_amount), header_id = header_id, invoice_id = 0)
@@ -3289,11 +3289,11 @@ def new_cash_receiving_voucher(request):
                     if balance_amount > 0:
                         if receiving_amount > balance_amount:
                             detail_remarks = f"Received amount against opening balance."
-                            tran1 = Transactions(refrence_id = vendor.id, refrence_date = doc_date, tran_type = 'Opening Balance', amount = -abs(balance_amount),
-                                                date = date, remarks = get_last_tran_id, account_id = vendor,ref_inv_tran_id = 0,ref_inv_tran_type = "-", voucher_id = voucher_id ,detail_remarks = detail_remarks, is_partialy = 1 )
+                            tran1 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = -abs(balance_amount),
+                                                date = date, remarks = get_last_tran_id, account_id = vendor,ref_inv_tran_id = 0,ref_inv_tran_type = "Sale CRV", voucher_id = voucher_id ,detail_remarks = detail_remarks, is_partialy = 1 )
                             tran1.save()
-                            tran2 = Transactions(refrence_id = vendor.id, refrence_date = doc_date, tran_type = 'Opening Balance', amount = balance_amount,
-                                                date = date, remarks = get_last_tran_id, account_id = cash_account,ref_inv_tran_id = 0,ref_inv_tran_type = "-", voucher_id = voucher_id ,detail_remarks = detail_remarks, is_partialy = 1 )
+                            tran2 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = balance_amount,
+                                                date = date, remarks = get_last_tran_id, account_id = cash_account,ref_inv_tran_id = 0,ref_inv_tran_type = "Sale CRV", voucher_id = voucher_id ,detail_remarks = detail_remarks, is_partialy = 1 )
                             tran2.save()
                             header_id = VoucherHeader.objects.get(voucher_no = get_last_tran_id)
                             jv_detail1 = VoucherDetail(account_id = cash_account, debit = balance_amount, credit = 0.00, header_id = header_id, invoice_id = 0)
@@ -3304,11 +3304,11 @@ def new_cash_receiving_voucher(request):
                         else:
                             balance_amount = receiving_amount
                             detail_remarks = f"Received amount against opening balance."
-                            tran1 = Transactions(refrence_id = vendor.id, refrence_date = doc_date, tran_type = 'Opening Balance', amount = -abs(balance_amount),
-                                                date = date, remarks = get_last_tran_id, account_id = vendor,ref_inv_tran_id = 0,ref_inv_tran_type = "-",voucher_id = voucher_id ,detail_remarks = detail_remarks, is_partialy = 1 )
+                            tran1 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = -abs(balance_amount),
+                                                date = date, remarks = get_last_tran_id, account_id = vendor,ref_inv_tran_id = 0,ref_inv_tran_type = "Sale CRV",voucher_id = voucher_id ,detail_remarks = detail_remarks, is_partialy = 1 )
                             tran1.save()
-                            tran2 = Transactions(refrence_id = vendor.id, refrence_date = doc_date, tran_type = 'Opening Balance', amount = balance_amount,
-                                                date = date, remarks = get_last_tran_id, account_id = cash_account,ref_inv_tran_id = 0,ref_inv_tran_type = "-",voucher_id = voucher_id, detail_remarks = detail_remarks, is_partialy = 1 )
+                            tran2 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = balance_amount,
+                                                date = date, remarks = get_last_tran_id, account_id = cash_account,ref_inv_tran_id = 0,ref_inv_tran_type = "Sale CRV",voucher_id = voucher_id, detail_remarks = detail_remarks, is_partialy = 1 )
                             tran2.save()
                             header_id = VoucherHeader.objects.get(voucher_no = get_last_tran_id)
                             jv_detail1 = VoucherDetail(account_id = cash_account, debit = balance_amount, credit = 0.00, header_id = header_id, invoice_id = 0)
