@@ -2818,6 +2818,80 @@ def sale_detail_report(request):
         return response
     return HttpResponse("Not found")
 
+# return last day closing amount
+def last_day_closing(from_date, to_date):
+    print(datetime.datetime.strptime(from_date, "%Y-%m-%d") - datetime.timedelta(days=1))
+    print(type(from_date))
+    f_date = (datetime.datetime.strptime(from_date, "%Y-%m-%d") - datetime.timedelta(days=1)).date()
+    t_date = (datetime.datetime.strptime(from_date, "%Y-%m-%d") - datetime.timedelta(days=1)).date()
+    total_amount = 0
+    grand_total_on_credit = 0
+    grand_total_on_cash = 0
+    grand_total_expense = 0
+    total_crv = 0
+    total_cpv = 0
+    date = Q(date = datetime.date.today())
+    on_credit = Q(payment_method = "Credit")
+    daily_sales_on_credit = SaleHeader.objects.filter(on_credit,Q(date__gte=f_date) & Q(date__lte=t_date)).all()
+    sale_detail = SaleDetail.objects.all()
+    for sale in daily_sales_on_credit:
+        total_amount = 0
+        for detail in sale_detail:
+            if detail.sale_id.id == sale.id:
+                total_amount = total_amount + detail.total_amount
+        gst = sale.gst / 100 * total_amount
+        srb = sale.srb / 100 * total_amount
+        gst_srb = gst + srb
+        total_before_discount = total_amount + gst_srb
+        discount_amount =  total_before_discount / 100 * sale.discount
+        final_total_amount = total_before_discount - discount_amount
+        grand_total_on_credit = grand_total_on_credit + final_total_amount
+    on_cash = Q(payment_method = "Cash")
+    daily_sales_on_cash = SaleHeader.objects.filter(Q(date__gte=f_date) & Q(date__lte=t_date),on_cash).all()
+    sale_detail = SaleDetail.objects.all()
+    for sale in daily_sales_on_cash:
+        total_amount = 0
+        for detail in sale_detail:
+            if detail.sale_id.id == sale.id:
+                total_amount = total_amount + detail.total_amount
+        gst = sale.gst / 100 * total_amount
+        srb = sale.srb / 100 * total_amount
+        gst_srb = gst + srb
+        total_before_discount = total_amount + gst_srb
+        discount_amount =  total_before_discount / 100 * sale.discount
+        final_total_amount = total_before_discount - discount_amount
+        grand_total_on_cash = grand_total_on_cash + final_total_amount
+    today_date = str(datetime.date.today())
+    cursor = connection.cursor()
+    expense_account = cursor.execute('''select VH.id, VH.voucher_no, COA.account_title as "Expense Account", VH.description as "Discription" , VD.debit as "Amount"
+                                    from transaction_voucherdetail VD
+                                    inner join transaction_voucherheader VH on VH.id = VD.header_id_id
+                                    inner join transaction_chartofaccount COA on COA.id = VD.account_id_id
+                                    where VH.voucher_no like '%%JV%%' and VH.doc_date between %s and %s  and VD.account_id_id != "6"
+                                    group by VD.id, VH.id''',[f_date,t_date])
+    expense_account = expense_account.fetchall()
+    for expens in expense_account:
+        grand_total_expense = grand_total_expense + expens[4]
+    crv_details = cursor.execute('''select VH.id, VH.voucher_no, COA.account_title as "Customer", VH.description as "Discription" , VD.credit as "Amount"
+                        from transaction_voucherdetail VD
+                        inner join transaction_voucherheader VH on VH.id = VD.header_id_id
+                        inner join transaction_chartofaccount COA on COA.id = VD.account_id_id
+                        where VH.voucher_no like '%%CRV%%' and VH.doc_date between %s and %s and VD.account_id_id != "6"
+                        group by VD.id, VH.id''',[f_date, t_date])
+    crv_details = crv_details.fetchall()
+    for crv in crv_details:
+        total_crv = total_crv + abs(crv[4])
+    cpv_details = cursor.execute('''select VH.id, VH.voucher_no, COA.account_title as "Customer", VH.description as "Discription" , VD.debit as "Amount"
+                        from transaction_voucherdetail VD
+                        inner join transaction_voucherheader VH on VH.id = VD.header_id_id
+                        inner join transaction_chartofaccount COA on COA.id = VD.account_id_id
+                        where VH.voucher_no like '%%CPV%%' and VH.doc_date between %s and %s and VD.account_id_id != "6"
+                        group by VD.id, VH.id''',[f_date, t_date])
+    cpv_details = cpv_details.fetchall()
+    for cpv in cpv_details:
+        total_cpv = total_cpv + abs(cpv[4])
+    last_total = float(grand_total_on_credit) + float(grand_total_on_cash) - float(grand_total_expense) + float(total_crv) - float(total_cpv)
+    return round(last_total)
 
 @login_required()
 @user_passes_test(allow_reports)
@@ -2825,6 +2899,7 @@ def daily_report(request):
     if request.method == "POST":
         from_date = request.POST.get("from_date")
         to_date = request.POST.get("to_date")
+        last_day = last_day_closing(from_date, to_date)
         sale_detail_list = []
         sale_detail_list_on_cash = []
         expenses = []
@@ -2850,9 +2925,7 @@ def daily_report(request):
             total_amount = 0
             for detail in sale_detail:
                 if detail.sale_id.id == sale.id:
-                    print(detail.total_amount)
                     total_amount = total_amount + detail.total_amount
-                    print(total_amount)
             gst = sale.gst / 100 * total_amount
             srb = sale.srb / 100 * total_amount
             gst_srb = gst + srb
@@ -2875,9 +2948,7 @@ def daily_report(request):
             total_amount = 0
             for detail in sale_detail:
                 if detail.sale_id.id == sale.id:
-                    print(detail.total_amount)
                     total_amount = total_amount + detail.total_amount
-                    print(total_amount)
             gst = sale.gst / 100 * total_amount
             srb = sale.srb / 100 * total_amount
             gst_srb = gst + srb
@@ -2911,12 +2982,12 @@ def daily_report(request):
             "amount":expens[4],
             }
             expenses.append(daily_expenses)
-        crv_details = cursor.execute('''select VH.id, VH.voucher_no, COA.account_title as "Customer", VH.description as "Discription" , VD.credit as "Amount"
+        crv_details = cursor.execute('''select VH.id, VH.voucher_no, COA.account_title as "Customer", VH.description as "Discription" , sum(VD.credit) as "Amount"
                             from transaction_voucherdetail VD
                             inner join transaction_voucherheader VH on VH.id = VD.header_id_id
                             inner join transaction_chartofaccount COA on COA.id = VD.account_id_id
                             where VH.voucher_no like '%%CRV%%' and VH.doc_date between %s and %s and VD.account_id_id != "6"
-                            group by VD.id, VH.id''',[from_date, to_date])
+                            group by VH.id''',[from_date, to_date])
         crv_details = crv_details.fetchall()
         for crv in crv_details:
             total_crv = total_crv + abs(crv[4])
@@ -2928,12 +2999,12 @@ def daily_report(request):
             }
             crvs.append(daily_crv)
 
-        cpv_details = cursor.execute('''select VH.id, VH.voucher_no, COA.account_title as "Customer", VH.description as "Discription" , VD.debit as "Amount"
+        cpv_details = cursor.execute('''select VH.id, VH.voucher_no, COA.account_title as "Customer", VH.description as "Discription" , sum(VD.debit) as "Amount"
                             from transaction_voucherdetail VD
                             inner join transaction_voucherheader VH on VH.id = VD.header_id_id
                             inner join transaction_chartofaccount COA on COA.id = VD.account_id_id
                             where VH.voucher_no like '%%CPV%%' and VH.doc_date between %s and %s and VD.account_id_id != "6"
-                            group by VD.id, VH.id''',[from_date, to_date])
+                            group by VH.id''',[from_date, to_date])
         cpv_details = cpv_details.fetchall()
         for cpv in cpv_details:
             total_cpv = total_cpv + abs(cpv[4])
@@ -2944,8 +3015,8 @@ def daily_report(request):
             "amount":abs(cpv[4]),
             }
             cpvs.append(daily_cpv)
-        print("hahaha", cpv_details)
         last_total = float(grand_total_on_credit) + float(grand_total_on_cash) - float(grand_total_expense) + float(total_crv) - float(total_cpv)
+        last_total = (last_total + last_day)
         context = {
         "sale_detail_list":sale_detail_list,
         "sale_detail_list_on_cash":sale_detail_list_on_cash,
@@ -2960,7 +3031,8 @@ def daily_report(request):
         "company_info":company_info,
         "last_total":round(last_total),
         "from_date":from_date,
-        "to_date":to_date
+        "to_date":to_date,
+        "last_day":last_day
         }
         pdf = render_to_pdf('transaction/daily_report_pdf.html', context)
         if pdf:

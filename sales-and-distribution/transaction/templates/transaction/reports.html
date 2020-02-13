@@ -250,7 +250,7 @@
 <div class="modal fade" id="dailyReportModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
-      <form class="" action="" id="daily-report-modal" method="post">
+      <form class="" action="{% url 'daily-report' %}" id="daily-report-modal" method="post">
         {% csrf_token %}
       <div class="modal-header">
         <h5 class="modal-title" id="exampleModalLongTitle">Daily Report</h5>
