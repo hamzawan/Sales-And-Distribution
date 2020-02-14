@@ -103,17 +103,30 @@
       <div class="float-right">
         <div class="form-inline">
           <div class="form-group">
-            <label for="text" style="font-size:14px;">Grand Total:&nbsp;</label>
+            <label for="text" style="font-size:14px;"><b>DISC in % :&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></label>
+            <input type="text" required placeholder="in percent"  class="form-control form-control-sm" style="border-top: 0px; border-right:0px; border-left:0px;" id="new_purchase_discount" name="" value="0">
+          </div>
+        </div>
+         <div class="form-inline">
+          <div class="form-group">
+            <label for="text" style="font-size:14px;"><b>DISC in Val :&nbsp;&nbsp;&nbsp;&nbsp;</b></label>
+            <input type="text" required placeholder="in percent"  class="form-control form-control-sm" style="border-top: 0px; border-right:0px; border-left:0px;" id="new_purchase_dicsount_in_val" name="" value="0">
+          </div>
+        </div>
+        <div class="form-inline">
+          <div class="form-group">
+            <label for="text" style="font-size:14px;"><b>Grand Total:&nbsp;&nbsp;&nbsp;</b></label>
             <input type="text" class="form-control form-control-sm" style="border-top: 0px; border-right:0px; border-left:0px;" id="grand_total" value="" readonly>
           </div>
         </div>
       </div>
-      <div class="form-inline">
+      
+      {% comment %} <div class="form-inline">
         <div class="form-group">
           <label for="text" style="font-size:14px;"><b>GST in % :&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></label>
           <input type="text" required placeholder="in percent"  class="form-control form-control-sm" style="border-top: 0px; border-right:0px; border-left:0px;" id="gst" name="gst" value="0">
         </div>
-      </div>
+      </div> {% endcomment %}
       <br>
       <br>
       <br>

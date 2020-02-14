@@ -24,6 +24,7 @@ class PurchaseHeader(models.Model):
     footer_description = models.TextField()
     follow_up = models.DateField(default = datetime.date.today)
     payment_method = models.CharField(max_length = 100)
+    discount = models.FloatField()
     account_id = models.ForeignKey(ChartOfAccount, models.SET_NULL, blank=True, null=True,)
     user = models.ForeignKey(User, models.SET_NULL, blank=True, null=True)
 

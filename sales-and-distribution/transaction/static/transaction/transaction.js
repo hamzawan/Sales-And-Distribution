@@ -139,12 +139,150 @@ $(document).ready(function(){
 							if (!isNaN(total) && total.length !== 0) {
 									sum += parseFloat(total);
 							}
-							
-							$('#grand_total').val(sum.toFixed(2));
+							discount_amount = $("#new_purchase_dicsount_in_val").val()
+							$('#grand_total').val(sum.toFixed(2) - discount_amount);
 						});
 						$(this).parents('tr').find('#measurment').text("pieces");
 					});
 
+					// PURCHASE DISCOUNT FOR NEW PURCHASE
+
+					$("#new_purchase_dicsount_in_val").on('keyup', function(){
+						var sum = 0;
+						$('#new-purchase-table tbody tr').each(function() {
+							var tdObject = $(this).find('td:eq(10)');
+							var total = tdObject.text()
+							if (!isNaN(total) && total.length !== 0) {
+									sum += parseFloat(total);
+							}
+						})
+						var v = this.value;
+						if(v)
+						{
+							var amount_before_discount = parseFloat(sum);
+							var discount_amount = parseFloat(v);							
+							var discount_in_percentage = ((((Math.abs(v) + amount_before_discount) / amount_before_discount) * 100) - 100)
+							$("#new_purchase_discount").val(discount_in_percentage);
+							if (!isNaN(v) && v.length != 0){
+							$("#grand_total").val(parseFloat(sum) - discount_amount);
+							}
+						}
+						else{
+							v = 0
+							var amount_before_discount = parseFloat(sum);
+							var discount_amount = parseFloat(v);
+							var discount_in_percentage = 0
+							$("#new_purchase_discount").val(discount_in_percentage.toFixed(2));
+							if (!isNaN(v) && v.length != 0){
+							$("#grand_total").val(parseFloat(sum) - discount_amount);
+							}
+						}
+					})
+
+
+					$("#new_purchase_discount").on('keyup', function(){
+						var sum = 0;
+						$('#new-purchase-table tbody tr').each(function() {
+							var tdObject = $(this).find('td:eq(10)');
+							var total = tdObject.text()
+							if (!isNaN(total) && total.length !== 0) {
+									sum += parseFloat(total);
+							}
+						})
+						var v = this.value;
+						if(v)
+						{	
+							var amount_before_discount = parseFloat(sum);
+							var discount_amount = parseFloat(v);
+							var discount_amount_in_per = discount_amount * amount_before_discount / 100
+							$("#new_purchase_dicsount_in_val").val(discount_amount_in_per);
+							if (!isNaN(v) && v.length != 0){
+							$("#grand_total").val(parseFloat(sum) - discount_amount_in_per);
+							}
+						}
+						else{
+							v = 0
+							var amount_before_discount = parseFloat(sum);
+							var discount_amount = parseFloat(v);
+							var discount_in_percentage = ((((Math.abs(v) + amount_before_discount) / amount_before_discount) * 100) - 100)
+							$("#purchase_discount").val(0);
+							if (!isNaN(v) && v.length != 0){
+							$("#grand_total").val(parseFloat(sum) - discount_amount);
+							}
+						}
+					})
+
+					// END NEW PURCHASE DISCOUNT
+
+					// PURCHASE DISCOUNT FOR EDIT
+
+					$("#purchase_dicsount_in_val").on('keyup', function(){
+						var sum = 0;
+						$('#edit-purchase-table tbody tr').each(function() {
+							var tdObject = $(this).find('td:eq(11)');
+							var total = tdObject.text()
+							if (!isNaN(total) && total.length !== 0) {
+									sum += parseFloat(total);
+							}
+						})
+						var v = this.value;
+						if(v)
+						{
+							var amount_before_discount = parseFloat(sum);
+							var discount_amount = parseFloat(v);
+							var discount_in_percentage = ((((Math.abs(v) + amount_before_discount) / amount_before_discount) * 100) - 100)
+							$("#purchase_discount").val(discount_in_percentage);
+							if (!isNaN(v) && v.length != 0){
+							$("#grand_total").val(parseFloat(sum) - discount_amount);
+							}
+						}
+						else{
+							v = 0
+							var amount_before_discount = parseFloat(sum);
+							var discount_amount = parseFloat(v);
+							var discount_in_percentage = ((((Math.abs(v) + amount_before_discount) / amount_before_discount) * 100) - 100)
+							$("#purchase_discount").val(discount_in_percentage.toFixed(2));
+							if (!isNaN(v) && v.length != 0){
+							$("#grand_total").val(parseFloat(sum) - discount_amount);
+							}
+						}
+					})
+
+
+					$("#purchase_discount").on('keyup', function(){
+						var sum = 0;
+						$('#edit-purchase-table tbody tr').each(function() {
+							var tdObject = $(this).find('td:eq(11)');
+							var total = tdObject.text()
+							if (!isNaN(total) && total.length !== 0) {
+									sum += parseFloat(total);
+							}
+						})
+						var v = this.value;
+						if(v)
+						{	
+							var amount_before_discount = parseFloat(sum);
+							var discount_amount = parseFloat(v);
+							var discount_amount_in_per = discount_amount * amount_before_discount / 100
+							$("#purchase_dicsount_in_val").val(discount_amount_in_per.toFixed(2));
+							if (!isNaN(v) && v.length != 0){
+							$("#grand_total").val(parseFloat(sum) - discount_amount_in_per);
+							}
+						}
+						else{
+							v = 0
+							var amount_before_discount = parseFloat(sum);
+							var discount_amount = parseFloat(v);
+							var discount_in_percentage = ((((Math.abs(v) + amount_before_discount) / amount_before_discount) * 100) - 100)
+							$("#purchase_discount").val(discount_in_percentage.toFixed(2));
+							if (!isNaN(v) && v.length != 0){
+							$("#grand_total").val(parseFloat(sum) - discount_amount);
+							}
+						}
+					})
+
+
+					// END PURCHASE EDIT DISCOUNT
 
 					$("#new-purchase-table").on('keyup','.input_x_rate', function(){
 						var input_x_rate = $(this).val();								
@@ -155,6 +293,7 @@ $(document).ready(function(){
 						var total = input_x_quantity * input_x_rate;						
 						var sum = $(this).parents('tr').find('td.sum').text(total.toFixed(2));
 						var sum = 0;
+						discount_in_val = $("#new_purchase_dicsount_in_val").val()
 						$('#new-purchase-table tbody tr').each(function()
 						{	
 							var tdObject = $(this).find('td:eq(10)');									
@@ -163,7 +302,7 @@ $(document).ready(function(){
 									sum += parseFloat(total);
 							}
 							
-							$('#grand_total').val(sum.toFixed(2));
+							$('#grand_total').val(sum.toFixed(2) - discount_in_val);
 						});
 						$(this).parents('tr').find('#measurment').text("pieces");
 					});
@@ -296,8 +435,8 @@ $(document).ready(function(){
 									if (!isNaN(total) && total.length !== 0) {
 											sum += parseFloat(total);
 									}
-									
-									$('#grand_total').val(sum.toFixed(2));
+									discount_amount = $("#new_purchase_dicsount_in_val").val()
+									$('#grand_total').val(sum.toFixed(2) - discount_amount);
 								});
 							})
 
@@ -343,8 +482,8 @@ $(document).ready(function(){
 									if (!isNaN(total) && total.length !== 0) {
 											sum += parseFloat(total);
 									}
-									
-									$('#grand_total').val(sum.toFixed(2));
+									discount_amount = $("#new_purchase_dicsount_in_val").val()
+									$('#grand_total').val(sum.toFixed(2) - discount_amount);
 								});
 							})
 
@@ -393,8 +532,8 @@ $(document).ready(function(){
 											
 											sum += parseFloat(total);
 									}
-									
-									$('#grand_total').val(sum.toFixed(2));
+									discount_amount = $("#new_purchase_dicsount_in_val").val()
+									$('#grand_total').val(sum.toFixed(2) - discount_amount);
 								});
 							})
 
@@ -443,8 +582,8 @@ $(document).ready(function(){
 											
 											sum += parseFloat(total);
 									}
-									
-									$('#grand_total').val(sum.toFixed(2));
+									discount_amount = $("#new_purchase_dicsount_in_val").val()
+									$('#grand_total').val(sum.toFixed(2) - discount_amount);
 								});							})
 
 							$("#new-purchase-table").on('change', '.input_select', function(){
@@ -496,7 +635,8 @@ $(document).ready(function(){
 									if (!isNaN(total) && total.length !== 0) {
 											sum += parseFloat(total);
 									}
-								$('#grand_total').val(sum.toFixed(2));
+								discount_amount = $("#new_purchase_dicsount_in_val").val()
+								$('#grand_total').val(sum.toFixed(2)  -discount_amount);
 								});
 							});
 
@@ -679,8 +819,10 @@ $(document).ready(function(){
 	 	 				var table = $('#new-purchase-table');
 	 	 				var data = [];
 	 	 				var purchase_id = $('#purchase_id').val();
-	 	 				var follow_up = $('#follow_up').val();
-	 	 				var vendor = $('#vendor').val();
+						var follow_up = $('#follow_up').val();
+						var vendor = $('#vendor').val();
+						var purchase_discount = $('#new_purchase_discount').val();
+						var new_purchase_dicsount_in_val = $('#new_purchase_dicsount_in_val').val();
 	 	 				var payment_method = $('#payment_method').val();
 	 	 				var footer_desc = $('#footer_desc').val();
 
@@ -748,7 +890,9 @@ $(document).ready(function(){
 	 	 								'vendor': vendor,
 	 	 								'follow_up': follow_up,
 	 	 								'payment_method': payment_method,
-	 	 								'footer_desc': footer_desc,
+										'footer_desc': footer_desc,
+										'purchase_discount': purchase_discount, 
+										'new_purchase_dicsount_in_val':new_purchase_dicsount_in_val, 
 	 	 								'items': JSON.stringify(data),
 	 	 							},
 	 	 							dataType: 'json'
@@ -768,16 +912,20 @@ $(document).ready(function(){
 	 	 			});
 
 // =================================================================================
-
+			sum = 0
+			discount_amount = 0
 			$('#edit-purchase-table tbody tr').each(function() {
 					var tdObject = $(this).find('td:eq(11)'); //locate the <td> holding select;
 					var total = tdObject.text() //grab the <select> tag assuming that there will be only single select box within that <td>
 					if (!isNaN(total) && total.length !== 0) {
 							sum += parseFloat(total);
 					}
-					$('#grand_total').val(sum.toFixed(2));
+					discount_amount_in_per = $("#purchase_discount").val();
+					discount_amount = sum * discount_amount_in_per / 100
+					$("#purchase_dicsount_in_val").val(discount_amount.toFixed(2))
+					
 			});
-
+			$('#grand_total').val((sum - discount_amount).toFixed(2));
 			$('#item_code_purchase_edit').keypress(function(e){
 				e.preventDefault();
 				edit_id = $(this).attr("data-id")
@@ -975,11 +1123,13 @@ $(document).ready(function(){
 							if (!isNaN(total) && total.length !== 0) {
 									sum += parseFloat(total);
 							}
-							$('#grand_total').val(sum.toFixed(2));
+							discount_amount = $("#purchase_dicsount_in_val").val()
+							$('#grand_total').val(sum.toFixed(2) - discount_amount);
 						});
 					})
 
 					$("#edit-purchase-table").on('keyup','.input_height_edit', function(){
+					
 						var input_height = $(this).val();
 						var input_select = $(this).parents('tr').find('select.input_select_edit').val();
 						var input_width = $(this).parents('tr').find('input.input_width_edit').val();
@@ -1013,15 +1163,18 @@ $(document).ready(function(){
 							$(this).parents('tr').find('#square_fit').text(total_square_fit.toFixed(2))
 						}
 						var sum = 0;
-						$('#new-purchase-table tbody tr').each(function()
-						{	
+						$('#edit-purchase-table tbody tr').each(function()
+						{
 							var tdObject = $(this).find('td:eq(11)');									
 							var total = tdObject.text()
 							if (!isNaN(total) && total.length !== 0) {
 									sum += parseFloat(total);
 							}
-							
-							$('#grand_total').val(sum.toFixed(2));
+
+						discount_amount = $("#purchase_dicsount_in_val").val();
+						
+						$('#grand_total').val(sum.toFixed(2));
+
 						});
 					})
 
@@ -1068,7 +1221,8 @@ $(document).ready(function(){
 							if (!isNaN(total) && total.length !== 0) {
 									sum += parseFloat(total);
 							}
-							$('#grand_total').val(sum.toFixed(2));
+							discount_amount = $("#purchase_dicsount_in_val").val()
+							$('#grand_total').val(sum.toFixed(2) - discount_amount);
 						});
 					})
 
@@ -1114,8 +1268,8 @@ $(document).ready(function(){
 							if (!isNaN(total) && total.length !== 0) {
 									sum += parseFloat(total);
 							}
-							
-							$('#grand_total').val(sum.toFixed(2));
+							discount_amount = $("#purchase_dicsount_in_val").val()
+							$('#grand_total').val(sum.toFixed(2) - discount_amount);
 						});							})
 
 					$("#edit-purchase-table").on('change', '.input_select_edit', function(){
@@ -1167,7 +1321,8 @@ $(document).ready(function(){
 							if (!isNaN(total) && total.length !== 0) {
 									sum += parseFloat(total);
 							}
-							$('#grand_total').val(sum.toFixed(2));
+							discount_amount = $("#purchase_dicsount_in_val").val();
+							$('#grand_total').val(sum.toFixed(2) - discount_amount);
 						});
 					});
 
@@ -1426,6 +1581,8 @@ $(document).ready(function(){
 		var supplier = $('#supplier_name_purchase').val();
 		var payment_method = $('#payment_method').val();
 		var follow_up = $('#follow_up').val();
+		var purchase_discount = $('#purchase_discount').val();
+		var purchase_dicsount_in_val = $('#purchase_dicsount_in_val').val();
 		var footer_desc = $('#footer_desc').val();
 
 
@@ -1496,6 +1653,8 @@ $(document).ready(function(){
 						'supplier': supplier,
 						'payment_method': payment_method,
 						'follow_up': follow_up,
+						'purchase_discount':purchase_discount,
+						'purchase_dicsount_in_val':purchase_dicsount_in_val,
 						'footer_desc': footer_desc,
 						'items': JSON.stringify(data),
 					},
@@ -4890,81 +5049,81 @@ $('#tree1').treed();
 					 })
 				});
 
-				$('#new-jv-form-crv').on('submit',function(e){
-						e.preventDefault();
-						var account_id = 0
-						var table = $('#new-crv-table');
-						var data = [];
-						var debit = 0;
-						var credit = 0;
-						var invoice_no = $('#invoice_no').val();
-						var doc_date = $('#doc_date').val();
-						var date = $('#date').val();
-						var customer = $('#account_title').find(":selected").text();
-						var description = $('#description').val();
+				// $('#new-jv-form-crv').on('submit',function(e){
+				// 		e.preventDefault();
+				// 		var account_id = 0
+				// 		var table = $('#new-crv-table');
+				// 		var data = [];
+				// 		var debit = 0;
+				// 		var credit = 0;
+				// 		var invoice_no = $('#invoice_no').val();
+				// 		var doc_date = $('#doc_date').val();
+				// 		var date = $('#date').val();
+				// 		var customer = $('#account_title').find(":selected").text();
+				// 		var description = $('#description').val();
 
-						table.find('tr').each(function (i, el){
-							if(i != 0)
-							{
-								var $tds = $(this).find('td');
-								var row = {
-									'account_id' : "",
-									'account_title' : "",
-									'invoice_no' : "",
-									'debit' : "",
-									'credit' : "",
-									'balance' : "",
-								};
-								$tds.each(function(i, el){
-									if (i === 0) {
-											row["account_id"] = ($(this).text());
-									}
-									if (i === 1) {
-											row["account_title"] = ($(this).text());
-									}
-									else if (i === 2) {
-											row["invoice_no"] = ($(this).text());
-											debit = debit + parseFloat(($(this).text()));
-									}
-									else if (i === 3) {
-											row["debit"] = ($(this).text());
-											debit = debit + parseFloat(($(this).text()));
-									}
-									else if (i === 4) {
-											row["credit"] = ($(this).text());
-											credit = credit + parseFloat(($(this).text()));
-									}
-									else if (i === 5) {
-											row["balance"] = ($(this).text());
-											credit = credit + parseFloat(($(this).text()));
-									}
-								});
-								data.push(row);
-							}
-						});
+				// 		table.find('tr').each(function (i, el){
+				// 			if(i != 0)
+				// 			{
+				// 				var $tds = $(this).find('td');
+				// 				var row = {
+				// 					'account_id' : "",
+				// 					'account_title' : "",
+				// 					'invoice_no' : "",
+				// 					'debit' : "",
+				// 					'credit' : "",
+				// 					'balance' : "",
+				// 				};
+				// 				$tds.each(function(i, el){
+				// 					if (i === 0) {
+				// 							row["account_id"] = ($(this).text());
+				// 					}
+				// 					if (i === 1) {
+				// 							row["account_title"] = ($(this).text());
+				// 					}
+				// 					else if (i === 2) {
+				// 							row["invoice_no"] = ($(this).text());
+				// 							debit = debit + parseFloat(($(this).text()));
+				// 					}
+				// 					else if (i === 3) {
+				// 							row["debit"] = ($(this).text());
+				// 							debit = debit + parseFloat(($(this).text()));
+				// 					}
+				// 					else if (i === 4) {
+				// 							row["credit"] = ($(this).text());
+				// 							credit = credit + parseFloat(($(this).text()));
+				// 					}
+				// 					else if (i === 5) {
+				// 							row["balance"] = ($(this).text());
+				// 							credit = credit + parseFloat(($(this).text()));
+				// 					}
+				// 				});
+				// 				data.push(row);
+				// 			}
+				// 		});
 
-							req =	$.ajax({
-								 headers: { "X-CSRFToken": getCookie("csrftoken") },
-								 type: 'POST',
-								 url : '/transaction/cash_receiving_voucher/new/',
-								 data:{
-									 'account_id':account_id,
-									 'invoice_no': invoice_no,
-									 'doc_date': doc_date,
-									 'description': description,
-									 'date':date,
-									 'customer':customer,
-									 'items': JSON.stringify(data),
-								 },
-								 dataType: 'json'
-							 })
-							 .done(function done(data){
-								 alert("CR Voucher Submitted");
-								 location.reload();
-							 })
+				// 			req =	$.ajax({
+				// 				 headers: { "X-CSRFToken": getCookie("csrftoken") },
+				// 				 type: 'POST',
+				// 				 url : '/transaction/cash_receiving_voucher/new/',
+				// 				 data:{
+				// 					 'account_id':account_id,
+				// 					 'invoice_no': invoice_no,
+				// 					 'doc_date': doc_date,
+				// 					 'description': description,
+				// 					 'date':date,
+				// 					 'customer':customer,
+				// 					 'items': JSON.stringify(data),
+				// 				 },
+				// 				 dataType: 'json'
+				// 			 })
+				// 			 .done(function done(data){
+				// 				 alert("CR Voucher Submitted");
+				// 				 location.reload();
+				// 			 })
 
 
-					});
+				// 	});
 
 
 

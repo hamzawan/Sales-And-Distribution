@@ -110,19 +110,20 @@ def new_purchase(request):
     if request.method == "POST":
         current_user = request.user
         purchase_id = request.POST.get('purchase_id',False)
+        purchase_discount = request.POST.get('purchase_discount',False)
+        new_purchase_dicsount_in_val = request.POST.get('new_purchase_dicsount_in_val',False)
         vendor = request.POST.get('vendor',False)
         follow_up = request.POST.get('follow_up',False)
         payment_method = request.POST.get('payment_method',False)
         footer_desc = request.POST.get('footer_desc',False)
         account_id = ChartOfAccount.objects.get(account_title = vendor)
         date = datetime.date.today()
-
         if follow_up:
             follow_up = follow_up
         else:
             follow_up = '2010-06-10'
 
-        purchase_header = PurchaseHeader(purchase_no = purchase_id, date = date, footer_description = footer_desc, payment_method = payment_method, account_id = account_id, follow_up = follow_up, user = current_user)
+        purchase_header = PurchaseHeader(purchase_no = purchase_id, date = date, footer_description = footer_desc, payment_method = payment_method, account_id = account_id, follow_up = follow_up, user = current_user, discount = purchase_discount)
         items = json.loads(request.POST.get('items'))
         purchase_header.save()
         header_id = PurchaseHeader.objects.get(purchase_no = purchase_id)
@@ -139,6 +140,7 @@ def new_purchase(request):
                 purchase_detail = PurchaseDetail(item_id = item_id, item_description = "", width = value["width"], height = value["height"], quantity = value["quantity"], meas = value["measurment"], rate = value["rate"], purchase_id = header_id, total_amount = amount,total_square_fit=total_square_fit ,total_pcs=0)
             purchase_detail.save()
             net += total_amount
+        total_amount = total_amount - float(new_purchase_dicsount_in_val)
         header_id = header_id.id
         cash_in_hand = ChartOfAccount.objects.get(account_title = 'Cash')
         if payment_method == 'Cash':
@@ -254,10 +256,13 @@ def edit_purchase(request, pk):
         supplier = request.POST.get('supplier', False)
         follow_up = request.POST.get('follow_up', False)
         payment_method = request.POST.get('payment_method', False)
+        purchase_discount = request.POST.get('purchase_discount', False)
+        purchase_dicsount_in_val = request.POST.get('purchase_dicsount_in_val', False)
         footer_desc = request.POST.get('footer_desc', False)
         account_id = ChartOfAccount.objects.get(account_title=supplier)
         date = datetime.date.today()
         purchase_header.follow_up = follow_up
+        purchase_header.discount = purchase_discount
         purchase_header.payment_method = payment_method
         purchase_header.footer_description = footer_desc
         purchase_header.account_id = account_id
@@ -280,7 +285,7 @@ def edit_purchase(request, pk):
                 purchase_detail = PurchaseDetail(item_id = item_id, item_description = "", width = value["width"], height = value["height"], quantity = value["quantity"], meas = value["measurment"], rate = value["rate"], purchase_id = header_id, total_amount = amount, total_square_fit = total_square_fit, total_pcs = 0)
                 net = net + total_amount
             purchase_detail.save()
-
+        total_amount = total_amount - float(purchase_dicsount_in_val)
         cash_in_hand = ChartOfAccount.objects.get(account_title = 'Cash')
         if payment_method == 'Cash':
             detail_remarks = f"Purchase invoice {total_amount} RS, against invoice no {purchase_header.footer_description} on Cash."
