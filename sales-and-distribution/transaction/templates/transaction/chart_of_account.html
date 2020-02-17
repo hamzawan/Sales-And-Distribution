@@ -1,180 +1,275 @@
 {% extends "transaction/base.html" %}
 {% load crispy_forms_tags %}
+{% load child_account_tags %}
 {% block body %}
 
 <div class="card" style="width: 100%;">
-<div class="card-header">
-  <h4>Chart Of Account</h4>
-</div>
-<ul class="list-group list-group-flush">
-  <ul style="list-style-type:none;" class="messages">
-    {% if messages %}
+  <div class="card-header">
+    <h4>Chart Of Account</h4>
+  </div>
+  <ul class="list-group list-group-flush">
+    <ul style="list-style-type:none;" class="messages">
+      {% if messages %}
       {% for msg in messages %}
-        <li>
-          <div class="alert {{msg.level_tag}}">
-            {{msg.message}}
-          </div>
-        </li>
+      <li>
+        <div class="alert {{msg.level_tag}}">
+          {{msg.message}}
+        </div>
+      </li>
       {% endfor %}
-    {% endif %}
-  </ul>
-  <li class="list-group-item">
+      {% endif %}
+    </ul>
+    <li class="list-group-item">
       {% csrf_token %}
-    <div class="card">
-      <div class="card-body">
-        <div class="row">
-          <div class="col-md-6">
-            <div class="card">
-              <div class="card-body">
-                <div class="row">
+      <div class="card">
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="card">
+                <div class="card-body">
+                  <div class="row">
                     <div class="col-md-12">
-                        <div class="table table-responsive content-loader">
-                          <table class="table table-bordered" id="dataTable">
-                              <thead>
-                                  <tr>
-                                      <th>S No.</th>
-                                      <th width="150px">Account Title</th>
-                                      <th width="100px">Action</th>
-                                  </tr>
-                              </thead>
-                              <tbody>
-                                {% for value in all_accounts %}
-                                <tr>
-                                    <td>{{ forloop.counter }}</td>
-                                    <td style="display:none;" >{{ value.id }}</td>
-                                    <td>{{ value.account_title }}</td>
-                                    <td style="display:none;" >{{ value.parent_id }}</td>
-                                    <td style="display:none;" >{{ value.opening_balance }}</td>
-                                    <td style="display:none;" >{{ value.phone_no }}</td>
-                                    <td style="display:none;" >{{ value.email_address }}</td>
-                                    <td style="display:none;" >{{ value.ntn }}</td>
-                                    <td style="display:none;" >{{ value.stn }}</td>
-                                    <td style="display:none;" >{{ value.cnic }}</td>
-                                    <td style="display:none;" >{{ value.Address }}</td>
-                                    <td style="display:none;" >{{ value.remarks }}</td>
-                                    <td style="display:none;" >{{ value.credit_limit }}</td>
-                                    <td>
-                                      {% if allow_edit.0.0 == 1 %}
-                                        <a class="edit_list has_id" href="#" data-toggle="modal" data-target="#editCoaModal" id="{{value.id}}"><i class="material-icons">&#xE254;</i></a>
-                                      {% else %}
-                                        <a class="edit_list disableClick" ><i class="material-icons">&#xE254;</i></a>
-                                      {% endif %}
-                                      {% if allow_delete.0.0 == 1 %}
-                                        <a class="delete-chart-of-account" href="#" data-toggle="modal" data-target="#deleteCoaModal" id="{{value.id}}"><i class="material-icons">&#xE872;</i></a>
-                                      {% else %}
-                                        <a class="delete-chart-of-account disableClick" ><i class="material-icons">&#xE872;</i></a>
-                                      {% endif %}
-                                    </td>
-                                </tr>
+                      <div class="table table-responsive content-loader">
+                        <table class="table table-bordered" id="dataTable">
+                          <thead>
+                            <tr>
+                              <th>S No.</th>
+                              <th width="150px">Account Title</th>
+                              <th width="100px">Action</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {% for value in all_accounts %}
+                            <tr>
+                              <td>{{ forloop.counter }}</td>
+                              <td style="display:none;">{{ value.id }}</td>
+                              <td>{{ value.account_title }}</td>
+                              <td style="display:none;">{{ value.parent_id }}</td>
+                              <td style="display:none;">{{ value.opening_balance }}</td>
+                              <td style="display:none;">{{ value.phone_no }}</td>
+                              <td style="display:none;">{{ value.email_address }}</td>
+                              <td style="display:none;">{{ value.ntn }}</td>
+                              <td style="display:none;">{{ value.stn }}</td>
+                              <td style="display:none;">{{ value.cnic }}</td>
+                              <td style="display:none;">{{ value.Address }}</td>
+                              <td style="display:none;">{{ value.remarks }}</td>
+                              <td style="display:none;">{{ value.credit_limit }}</td>
+                              <td>
+                                {% if allow_edit.0.0 == 1 %}
+                                <a class="edit_list has_id" href="#" data-toggle="modal" data-target="#editCoaModal"
+                                  id="{{value.id}}"><i class="material-icons">&#xE254;</i></a>
+                                {% else %}
+                                <a class="edit_list disableClick"><i class="material-icons">&#xE254;</i></a>
+                                {% endif %}
+                                {% if allow_delete.0.0 == 1 %}
+                                <a class="delete-chart-of-account" href="#" data-toggle="modal"
+                                  data-target="#deleteCoaModal" id="{{value.id}}"><i
+                                    class="material-icons">&#xE872;</i></a>
+                                {% else %}
+                                <a class="delete-chart-of-account disableClick"><i
+                                    class="material-icons">&#xE872;</i></a>
+                                {% endif %}
+                              </td>
+                            </tr>
+                            {% endfor %}
+                          </tbody>
+                        </table>
+                        {% comment %} <div class="tree ">
+                          <ul>
+
+                            <li><span><a style="color:#000; text-decoration:none;" data-toggle="collapse" href="#Web"
+                                  aria-expanded="true" aria-controls="Web"><i class="collapsed"><i
+                                      class="fas fa-folder"></i></i>
+                                  <i class="expanded"><i class="far fa-folder-open"></i></i> Marketing 247 Services</a></span>
+                              <div id="Web" class="collapse show">
+                                <ul>
+                                {% for value in all_accounts_null %}
+                                {% child_account_custom_tag value.id as parent_child%}
+                                  {% if childs %}
+                                  {{parent_child}}
+                                    {% for ch in parent_child %}
+                                      {{ch}}
+                                    {% endfor %}
+                                  {% endif %}
+                                  <li><span><a style="color:#000; text-decoration:none;" data-toggle="collapse"
+                                        href="#a{{value.id}}" aria-expanded="false" aria-controls="a{{value.id}}"><i
+                                          class="collapsed"><i class="fas fa-folder"></i></i>
+                                        <i class="expanded"><i class="far fa-folder-open"></i></i> {{value.account_title}}</a></span>
+                                    <ul>
+                                      <div id="a{{value.id}}" class="collapse">
+                                        <li><span><a style="color:#000; text-decoration:none;" data-toggle="collapse"
+                                              href="#folder1" aria-expanded="false" aria-controls="folder1"><i
+                                                class="collapsed"><i class="fas fa-folder"></i></i>
+                                              <i class="expanded"><i class="far fa-folder-open"></i></i> Folder
+                                              1</a></span>
+                                          <ul>
+                                            <div id="folder1" class="collapse">
+                                              <li><span><i class="far fa-file"></i><a href="#!"> Link 1</a></span></li>
+                                              <li><span><i class="far fa-file"></i><a href="#!"> Link 2</a></span></li>
+                                              <li><span><i class="far fa-file"></i><a href="#!"> Link 3</a></span> <a
+                                                  href="#!">& More Link</a></li>
+                                            </div>
+                                          </ul>
+                                        </li>
+
+                                        <li><span><a style="color:#000; text-decoration:none;" data-toggle="collapse"
+                                              href="#folder2" aria-expanded="false" aria-controls="folder2"><i
+                                                class="collapsed"><i class="fas fa-folder"></i></i>
+                                              <i class="expanded"><i class="far fa-folder-open"></i></i> Folder
+                                              2</a></span>
+                                          <ul>
+                                            <div id="folder2" class="collapse">
+                                              <li><span><i class="far fa-file"></i><a href="#!"> Link 1</a></span></li>
+                                              <li><span><i class="far fa-file"></i><a href="#!"> Link 2</a></span></li>
+                                              <li><span><i class="far fa-file"></i><a href="#!"> Link 3</a></span> <a
+                                                  href="#!">& More Link</a></li>
+                                            </div>
+                                          </ul>
+                                        </li>
+
+                                        <li><span><a style="color:#000; text-decoration:none;" data-toggle="collapse"
+                                              href="#folder3" aria-expanded="false" aria-controls="folder3"><i
+                                                class="collapsed"><i class="fas fa-folder"></i></i>
+                                              <i class="expanded"><i class="far fa-folder-open"></i></i> Folder
+                                              3</a></span>
+                                          <ul>
+                                            <div id="folder3" class="collapse">
+                                              <li><span><i class="far fa-file"></i><a href="#!"> Link</a></span> <a
+                                                  href="#!">& More Link</a></li>
+                                            </div>
+                                          </ul>
+                                        </li>
+
+                                        <li><span><i class="far fa-file"></i><a href="#!"> Link</a></span></li>
+
+                                      </div>
+                                    </ul>
+                                  </li>
                                 {% endfor %}
-                              </tbody>
-                          </table>
-                        </div>
+                                </ul>
+                              </div>
+                            </li>
+                          </ul>
+
+                        </div> {% endcomment %}
+
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-          <div class="col-md-6">
-            <div class="card">
-              <div class="card-body">
-          <div class="float-right">
-            {% if allow_add.0.0 == 1 %}
-        <form id="assign" class="" action="{% url 'chart-of-account' %}" method="post" autocomplete="off">
-          {% csrf_token %}
-              <div class="form-group row">
-                <label for="" class="col-sm-4 form-control-sm col-form-label">Account Title:</label>
-                <div class="col-sm-8">
-                  <input type="hidden" name="" value="" id="account_id_edit">
-                  <input type="select" class="form-control form-control-sm" name="account_title" placeholder="" id="account_title_edit">
+            <div class="col-md-6">
+              <div class="card">
+                <div class="card-body">
+                  <div class="float-right">
+                    {% if allow_add.0.0 == 1 %}
+                    <form id="assign" class="" action="{% url 'chart-of-account' %}" method="post" autocomplete="off">
+                      {% csrf_token %}
+                      <div class="form-group row">
+                        <label for="" class="col-sm-4 form-control-sm col-form-label">Account Title:</label>
+                        <div class="col-sm-8">
+                          <input type="hidden" name="" value="" id="account_id_edit">
+                          <input type="select" class="form-control form-control-sm" name="account_title" placeholder=""
+                            id="account_title_edit">
+                        </div>
+                      </div>
+                      <div class="form-group row">
+                        <label for="" class="col-sm-4 form-control-sm col-form-label">Account Type:</label>
+                        <div class="col-sm-8">
+                          <select class="form-control" name="account_type" id="account_type_edit">
+                            <option value="7">Customer</option>
+                            <option value="16">Vendor</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div class="form-group row">
+                        <label for="" class="col-sm-4 form-control-sm col-form-label">Opening Balance:</label>
+                        <div class="col-sm-4">
+                          <input type="text" class="form-control form-control-sm" name="opening_balance"
+                            id="opening_balance_edit" placeholder="">
+                        </div>
+                        <div class="col-md-4">
+                          <label><input type="radio" name="optradio" value="debit" id="debit">Dr.</label>&nbsp;
+                          <label><input type="radio" name="optradio" value="credit" id="credit">Cr.</label>
+                        </div>
+                      </div>
+                      <div class="form-group row">
+                        <label for="" class="col-sm-4 form-control-sm col-form-label">Phone No:</label>
+                        <div class="col-sm-8">
+                          <input type="text" class="form-control form-control-sm" name="phone_no" id="phone_no_edit"
+                            placeholder="">
+                        </div>
+                      </div>
+                      <div class="form-group row">
+                        <label for="" class="col-sm-4 form-control-sm col-form-label">Email Address:</label>
+                        <div class="col-sm-8">
+                          <input type="text" class="form-control form-control-sm" name="email_address"
+                            id="email_address_edit" placeholder="">
+                        </div>
+                      </div>
+                      <div class="form-group row">
+                        <label for="" class="col-sm-4 form-control-sm col-form-label">NTN:</label>
+                        <div class="col-sm-8">
+                          <input type="text" class="form-control form-control-sm" name="ntn" id="ntn_edit"
+                            placeholder="">
+                        </div>
+                      </div>
+                      <div class="form-group row">
+                        <label for="" class="col-sm-4 form-control-sm col-form-label">STN:</label>
+                        <div class="col-sm-8">
+                          <input type="text" class="form-control form-control-sm" name="stn" id="stn_edit"
+                            placeholder="">
+                        </div>
+                      </div>
+                      <div class="form-group row">
+                        <label for="" class="col-sm-4 form-control-sm col-form-label">CNIC:</label>
+                        <div class="col-sm-8">
+                          <input type="text" class="form-control form-control-sm" name="cnic" id="cnin_edit"
+                            placeholder="">
+                        </div>
+                      </div>
+                      <div class="form-group row">
+                        <label for="" class="col-sm-4 form-control-sm col-form-label">Address:</label>
+                        <div class="col-sm-8">
+                          <input type="text" class="form-control form-control-sm" name="address" id="address_edit"
+                            placeholder="">
+                        </div>
+                      </div>
+                      <div class="form-group row">
+                        <label for="" class="col-sm-4 form-control-sm col-form-label">Remarks:</label>
+                        <div class="col-sm-8">
+                          <input type="text" class="form-control form-control-sm" name="remarks" id="remarks_edit"
+                            placeholder="">
+                        </div>
+                      </div>
+                      <div class="form-group row">
+                        <label for="" class="col-sm-4 form-control-sm col-form-label">Credit Limits:</label>
+                        <div class="col-sm-8">
+                          <input type="text" class="form-control form-control-sm" name="credit_limits"
+                            id="credit_limit_edit" placeholder="">
+                        </div>
+                      </div>
+                      <div class="form-group row">
+                        <label for="" class="col-sm-4 form-control-sm col-form-label"></label>
+                        <div class="col-sm-8">
+                          <input type="submit" id="coa" class="btn btn-outline-primary form-control" placeholder=""
+                            value="Submit">
+                          <br>
+                        </div>
+                      </div>
+                    </form>
+                    {% else %}
+                    {% endif %}
+                  </div>
                 </div>
-              </div>
-              <div class="form-group row">
-                <label for="" class="col-sm-4 form-control-sm col-form-label">Account Type:</label>
-                <div class="col-sm-8">
-                  <select class="form-control" name="account_type" id="account_type_edit">
-                    <option value="7">Customer</option>
-                    <option value="16">Vendor</option>
-                  </select>
-                </div>
-              </div>
-              <div class="form-group row">
-                <label for="" class="col-sm-4 form-control-sm col-form-label" >Opening Balance:</label>
-                <div class="col-sm-4">
-                  <input type="text" class="form-control form-control-sm" name="opening_balance"id="opening_balance_edit" placeholder="">
-                </div>
-                <div class="col-md-4">
-                  <label><input type="radio" name="optradio" value="debit" id="debit">Dr.</label>&nbsp;
-                  <label><input type="radio" name="optradio" value="credit" id="credit">Cr.</label>
-                </div>
-              </div>
-              <div class="form-group row">
-                <label for="" class="col-sm-4 form-control-sm col-form-label" >Phone No:</label>
-                <div class="col-sm-8">
-                  <input type="text" class="form-control form-control-sm" name="phone_no" id="phone_no_edit" placeholder="">
-                </div>
-              </div>
-              <div class="form-group row">
-                <label for="" class="col-sm-4 form-control-sm col-form-label">Email Address:</label>
-                <div class="col-sm-8">
-                  <input type="text" class="form-control form-control-sm" name="email_address" id="email_address_edit" placeholder="">
-                </div>
-              </div>
-              <div class="form-group row">
-                <label for="" class="col-sm-4 form-control-sm col-form-label">NTN:</label>
-                <div class="col-sm-8">
-                  <input type="text" class="form-control form-control-sm" name="ntn" id="ntn_edit" placeholder="">
-                </div>
-              </div>
-              <div class="form-group row">
-                <label for="" class="col-sm-4 form-control-sm col-form-label">STN:</label>
-                <div class="col-sm-8">
-                  <input type="text" class="form-control form-control-sm" name="stn" id="stn_edit" placeholder="">
-                </div>
-              </div>
-              <div class="form-group row">
-                <label for="" class="col-sm-4 form-control-sm col-form-label">CNIC:</label>
-                <div class="col-sm-8">
-                  <input type="text" class="form-control form-control-sm" name="cnic" id="cnin_edit" placeholder="">
-                </div>
-              </div>
-              <div class="form-group row">
-                <label for="" class="col-sm-4 form-control-sm col-form-label">Address:</label>
-                <div class="col-sm-8">
-                  <input type="text" class="form-control form-control-sm" name="address" id="address_edit" placeholder="">
-                </div>
-              </div>
-              <div class="form-group row">
-                <label for="" class="col-sm-4 form-control-sm col-form-label">Remarks:</label>
-                <div class="col-sm-8">
-                  <input type="text" class="form-control form-control-sm" name="remarks" id="remarks_edit" placeholder="">
-                </div>
-              </div>
-              <div class="form-group row">
-                <label for="" class="col-sm-4 form-control-sm col-form-label">Credit Limits:</label>
-                <div class="col-sm-8">
-                  <input type="text" class="form-control form-control-sm" name="credit_limits" id="credit_limit_edit" placeholder="">
-                </div>
-              </div>
-              <div class="form-group row">
-                <label for="" class="col-sm-4 form-control-sm col-form-label"></label>
-                <div class="col-sm-8">
-                  <input type="submit" id="coa" class="btn btn-outline-primary form-control" placeholder="" value="Submit">
-                  <br>
-                </div>
-              </div>
-            </form>
-            {% else %}
-            {% endif %}
-              </div>
-              </div>
               </div>
             </div>
           </div>
         </div>
-    </div>
-  </li>
+      </div>
+    </li>
   </ul>
 </div>
 
@@ -189,14 +284,15 @@
       </div>
 
       <!-- Modal body -->
-     <form action="{% url 'edit-chart-of-account' %}" method="post"  autocomplete="off">
-       {% csrf_token %}
-      <div class="modal-body">
+      <form action="{% url 'edit-chart-of-account' %}" method="post" autocomplete="off">
+        {% csrf_token %}
+        <div class="modal-body">
           <div class="form-group row">
             <label for="" class="col-sm-4 form-control-sm col-form-label">Account Title:</label>
             <div class="col-sm-8">
               <input type="text" style="display:none;" name="id" id="id" value="">
-              <input type="select" class="form-control form-control-sm" required name="account_title" id="account_title" placeholder="">
+              <input type="select" class="form-control form-control-sm" required name="account_title" id="account_title"
+                placeholder="">
             </div>
           </div>
           <div class="form-group row">
@@ -206,16 +302,17 @@
                 <option value="13">Customer</option>
                 <option value="12">Supplier</option>
                 <option value="26">Cash at Bank</option>
-              {% for account in all_accounts %}
+                {% for account in all_accounts %}
                 <option value="{{account.id}}">{{account.account_title}}</option>
-              {% endfor %}
+                {% endfor %}
               </select>
             </div>
           </div>
           <div class="form-group row">
-            <label for="" class="col-sm-4 form-control-sm col-form-label" >Opening Balance:</label>
+            <label for="" class="col-sm-4 form-control-sm col-form-label">Opening Balance:</label>
             <div class="col-sm-4">
-              <input type="text" class="form-control form-control-sm" name="opening_balance" id="opening_balance" placeholder="">
+              <input type="text" class="form-control form-control-sm" name="opening_balance" id="opening_balance"
+                placeholder="">
             </div>
             <div class="col-md-4">
               <label><input type="radio" name="optradio" id="debit_edit" value="debit">Dr.</label>&nbsp;
@@ -231,7 +328,8 @@
           <div class="form-group row">
             <label for="" class="col-sm-4 form-control-sm col-form-label">Email Address:</label>
             <div class="col-sm-8">
-              <input type="text" class="form-control form-control-sm" name="email_address" id="email_address" placeholder="">
+              <input type="text" class="form-control form-control-sm" name="email_address" id="email_address"
+                placeholder="">
             </div>
           </div>
           <div class="form-group row">
@@ -267,43 +365,45 @@
           <div class="form-group row">
             <label for="" class="col-sm-4 form-control-sm col-form-label">Credit Limits:</label>
             <div class="col-sm-8">
-              <input type="text" class="form-control form-control-sm" name="credit_limits" id="credit_limits" placeholder="">
+              <input type="text" class="form-control form-control-sm" name="credit_limits" id="credit_limits"
+                placeholder="">
             </div>
           </div>
-      </div>
-      <!-- Modal footer -->
-      <div class="modal-footer">
-        <div class="form-group row">
-          <label for="" class="col-sm-12 form-control-sm col-form-label"></label>
-          <div class="col-sm-12">
-            <input type="submit" class="btn btn-outline-primary form-control" placeholder="" value="Update">
+        </div>
+        <!-- Modal footer -->
+        <div class="modal-footer">
+          <div class="form-group row">
+            <label for="" class="col-sm-12 form-control-sm col-form-label"></label>
+            <div class="col-sm-12">
+              <input type="submit" class="btn btn-outline-primary form-control" placeholder="" value="Update">
+            </div>
           </div>
         </div>
-      </div>
       </form>
     </div>
   </div>
 </div>
 
-  <!-- Delete Modal-->
-  <div class="modal fade" id="deleteCoaModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="exampleModalLabel">Delete Account</h5>
-          <button class="close" type="button" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">×</span>
-          </button>
-        </div>
-        <div class="modal-body">Are you sure you want to delete?</div>
-        <div class="modal-footer">
-          <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
-          <a class="btn btn-danger" href="" id="modal_delete_button">Delete</a>
-        </div>
+<!-- Delete Modal-->
+<div class="modal fade" id="deleteCoaModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+  aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Delete Account</h5>
+        <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+      <div class="modal-body">Are you sure you want to delete?</div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
+        <a class="btn btn-danger" href="" id="modal_delete_button">Delete</a>
       </div>
     </div>
   </div>
-    <!-- Modal -->
+</div>
+<!-- Modal -->
 
 
 {% endblock body %}
