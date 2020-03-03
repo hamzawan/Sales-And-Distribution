@@ -100,22 +100,25 @@ class SaleReturnHeader(models.Model):
     sale_return_no = models.CharField(max_length = 100, unique = True)
     date = models.DateField(default = datetime.date.today)
     footer_description = models.TextField()
-    follow_up = models.DateField(default = datetime.date.today)
     payment_method = models.CharField(max_length = 100)
-    account_id = models.ForeignKey(ChartOfAccount, models.SET_NULL,blank=True,null=True,)
+    account_holder = models.CharField(max_length = 100)
+    discount = models.DecimalField(max_digits = 14, decimal_places = 2)
+    account_id = models.ForeignKey(ChartOfAccount, models.SET_NULL,blank=True,null=True)
+    user = models.ForeignKey(User, models.SET_NULL, blank=True, null=True)
 
 
 class SaleReturnDetail(models.Model):
     item_id = models.ForeignKey(Add_item, models.SET_NULL, blank=True, null=True)
     item_description = models.TextField()
-    width = models.DecimalField(max_digits = 8, decimal_places = 2)
-    height = models.DecimalField(max_digits = 8, decimal_places = 2)
-    quantity = models.DecimalField(max_digits = 8, decimal_places = 2)
+    width = models.DecimalField(max_digits = 14, decimal_places = 2)
+    height = models.DecimalField(max_digits = 14, decimal_places = 2)
+    quantity = models.DecimalField(max_digits = 14, decimal_places = 2)
     meas = models.CharField(max_length = 100)
-    rate = models.DecimalField(max_digits = 8, decimal_places = 2)
-    total_square_fit = models.DecimalField(max_digits = 8, decimal_places = 2)
-    total_pcs = models.DecimalField(max_digits = 8, decimal_places = 2)
+    rate = models.DecimalField(max_digits = 14, decimal_places = 2)
     sale_return_id = models.ForeignKey(SaleReturnHeader, on_delete = models.CASCADE)
+    total_square_fit = models.DecimalField(max_digits = 14, decimal_places = 2)
+    total_pcs = models.DecimalField(max_digits = 14, decimal_places = 2)
+    total_amount = models.DecimalField(max_digits = 14, decimal_places = 2)
 
 
 class Company_info(models.Model):

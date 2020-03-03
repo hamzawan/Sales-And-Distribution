@@ -30,7 +30,7 @@
 <div class="modal fade" id="trialBalanceModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
-      <form class="" action="{% url 'trial-balance' %}" method="post">
+      <form class="" action="" method="post">
         {% csrf_token %}
       <div class="modal-header">
         <h5 class="modal-title" id="exampleModalLongTitle">Trial Balance</h5>
@@ -42,17 +42,17 @@
         <div class="form-row">
           <div class="form-group col-md-6">
             <label for="">From:</label>
-            <input type="date" class="form-control form-control-sm" name="from_date" required id="">
+            <input type="date" class="form-control form-control-sm" id="from_date_trial_balance" required id="">
           </div>
           <div class="form-group col-md-6">
             <label for="">To:</label>
-            <input type="date" class="form-control form-control-sm" name="to_date" required id="">
+            <input type="date" class="form-control form-control-sm" id="to_date_trial_balance" required id="">
           </div>
         </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-        <button type="submit" target="_blank" class="btn btn-primary">Generate</button>
+        <button type="button" id="generate_trial_balance" class="btn btn-primary">Generate</button>
       </div>
       </form>
     </div>
@@ -62,7 +62,7 @@
 <div class="modal fade" id="accountLedgerModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
-      <form action="{% url 'account-ledger' %}" method="post">
+      <form action="" method="post">
         {% csrf_token %}
       <div class="modal-header">
         <h5 class="modal-title" id="exampleModalLongTitle">Account Ledger</h5>
@@ -74,18 +74,18 @@
         <div class="form-row">
           <div class="form-row col-md-6">
             <label for="">From:</label>
-            <input type="date" class="form-control form-control-sm" name="from_date" required id="">
+            <input type="date" class="form-control form-control-sm" id="from_date_ledger" required id="">
           </div>
           <span>&nbsp;&nbsp;</span>
           <div class="form-row col-md-6">
             <label for="">To:</label>
-            <input type="date" class="form-control form-control-sm" name="to_date" required id="">
+            <input type="date" class="form-control form-control-sm" id="to_date_ledger" required id="">
           </div>
         </div>
         <div class="form-row">
           <div class="form-group col-md-12">
             <label for="">Select Account</label>
-            <select name="account_title" class="form-control">
+            <select name="account_title" class="form-control" id="ledger_account">
               {% for account in all_accounts %}
               <option value="{{ account.id }}">{{ account.account_title }}</option>
               {% endfor %}
@@ -95,7 +95,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-        <button type="submit" target="_blank" class="btn btn-primary">Generate</button>
+        <button type="button" id="generate_account_ledger" target="_blank" class="btn btn-primary">Generate</button>
       </div>
       </form>
     </div>
@@ -106,7 +106,7 @@
 <div class="modal fade" id="accountLedgerCreditDaysModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
-      <form action="{% url 'account-ledger-credit-days' %}" method="post">
+      <form action="" method="post">
         {% csrf_token %}
       <div class="modal-header">
         <h5 class="modal-title" id="exampleModalLongTitle">Account Ledger</h5>
@@ -118,12 +118,12 @@
         <div class="form-row">
           <div class="form-row col-md-6">
             <label for="">From:</label>
-            <input type="date" class="form-control form-control-sm" name="from_date" required id="">
+            <input type="date" class="form-control form-control-sm" id="from_date_cr_l" required id="">
           </div>
           <span>&nbsp;&nbsp;</span>
           <div class="form-row col-md-6">
             <label for="">To:</label>
-            <input type="date" class="form-control form-control-sm" name="to_date" required id="">
+            <input type="date" class="form-control form-control-sm" id="to_date_cr_l" required id="">
           </div>
         </div>
         <div class="form-row">
@@ -139,7 +139,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-        <button type="submit" target="_blank" class="btn btn-primary">Generate</button>
+        <button type="button" id="generate_cr_ledger" class="btn btn-primary">Generate</button>
       </div>
       </form>
     </div>
@@ -150,7 +150,7 @@
 <div class="modal fade" id="receivableLedgerModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
-      <form action="{% url 'receivable-ledger' %}" method="post">
+      <form action="" method="post">
         {% csrf_token %}
       <div class="modal-header">
         <h5 class="modal-title" id="exampleModalLongTitle">Receivable Ledger</h5>
@@ -162,7 +162,7 @@
         <div class="form-row">
           <div class="form-group col-md-12">
             <label for="">Select Customer</label>
-            <select name="account_title" class="form-control">
+            <select name="account_title" class="form-control" id="r_ledger">
               {% for account in all_accounts %}
               <option value="{{ account.id }}">{{ account.account_title }}</option>
               {% endfor %}
@@ -172,7 +172,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-        <button type="submit" target="_blank" class="btn btn-primary">Generate</button>
+        <button type="button" id="generate_receivable_ledger" class="btn btn-primary">Generate</button>
       </div>
       </form>
     </div>
@@ -183,7 +183,7 @@
 <div class="modal fade" id="payableLedgerModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
-      <form action="{% url 'payable-ledger' %}" method="post">
+      <form action="" method="post">
         {% csrf_token %}
       <div class="modal-header">
         <h5 class="modal-title" id="exampleModalLongTitle">Payable Ledger</h5>
@@ -195,7 +195,7 @@
         <div class="form-row">
           <div class="form-group col-md-12">
             <label for="">Select Customer</label>
-            <select name="account_title" class="form-control">
+            <select name="account_title" class="form-control" id="p_ledger">
               {% for account in all_accounts %}
               <option value="{{ account.id }}">{{ account.account_title }}</option>
               {% endfor %}
@@ -205,7 +205,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-        <button type="submit" target="_blank" class="btn btn-primary">Generate</button>
+        <button type="button" id="generate_payable_ledger" class="btn btn-primary">Generate</button>
       </div>
       </form>
     </div>
@@ -216,7 +216,7 @@
 <div class="modal fade" id="saleDetailModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
-      <form class="" action="{% url 'sale-detail' %}" method="post">
+      <form class="" action="" method="post">
         {% csrf_token %}
       <div class="modal-header">
         <h5 class="modal-title" id="exampleModalLongTitle">Sale Detail</h5>
@@ -228,17 +228,17 @@
         <div class="form-row">
           <div class="form-group col-md-6">
             <label for="">From:</label>
-            <input type="date" class="form-control form-control-sm" name="from_date" required id="">
+            <input type="date" class="form-control form-control-sm" id="from_date_s_d" required id="">
           </div>
           <div class="form-group col-md-6">
             <label for="">To:</label>
-            <input type="date" class="form-control form-control-sm" name="to_date" required id="">
+            <input type="date" class="form-control form-control-sm" id="to_date_s_d" required id="">
           </div>
         </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-        <button type="button" target="_blank" class="btn btn-primary ">Generate</button>
+        <button type="button" id="generate_sale_detail" class="btn btn-primary ">Generate</button>
       </div>
       </form>
     </div>
@@ -250,7 +250,7 @@
 <div class="modal fade" id="dailyReportModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
-      <form class="" action="{% url 'daily-report' %}" id="daily-report-modal" method="post">
+      <form class="" action="" id="daily-report-modal" method="post">
         {% csrf_token %}
       <div class="modal-header">
         <h5 class="modal-title" id="exampleModalLongTitle">Daily Report</h5>
@@ -262,21 +262,22 @@
         <div class="form-row">
           <div class="form-group col-md-6">
             <label for="">From:</label>
-            <input type="date" class="form-control form-control-sm" name="from_date" required id="">
+            <input type="date" class="form-control form-control-sm" id="from_date_d_r" required id="">
           </div>
           <div class="form-group col-md-6">
             <label for="">To:</label>
-            <input type="date" class="form-control form-control-sm" name="to_date" required id="">
+            <input type="date" class="form-control form-control-sm" id="to_date_d_r" required id="">
           </div>
         </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-        <button type="submit" class="btn btn-primary">Generate</button>
+        <button type="button" id="generate_daily_report" class="btn btn-primary">Generate</button>
       </div>
       </form>
     </div>
   </div>
 </div>
+
 
 {% endblock body %}

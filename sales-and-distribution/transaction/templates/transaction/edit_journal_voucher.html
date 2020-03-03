@@ -22,7 +22,7 @@
         </div>
         <div class="form-group col-md-2">
           <label for="">Document Date</label>
-          <input type="date"  class="form-control form-control-sm" required value="{{ voucher_header.doc_date }}" id="doc_date">
+          <input type="date"  class="form-control form-control-sm" required value="{{ voucher_header.doc_date|date:"Y-m-d" }}" id="doc_date">
         </div>
         <div class="form-group col-md-2">
           <label for="">Description</label>
@@ -63,7 +63,6 @@
                     <td>{{ value.account_id.account_title }}</td>
                     <td>{{ value.debit }}</td>
                     <td>{{ value.credit|abs }}</td>
-                    <td>{{ value.credit }}</td>
                     <td><a class="add-jv-edit" title="Add" data-toggle="tooltip"><i class="material-icons">&#xE03B;</i></a><a class="edit-jv-edit" title="Edit" data-toggle="tooltip"><i class="material-icons">&#xE254;</i></a> <a class="delete-jv-edit" title="Delete" data-toggle="tooltip"><i class="material-icons">&#xE872;</i></a></td>
                 </tr>
                 {% endfor %}
@@ -73,7 +72,7 @@
     </li>
       <br>
     <div class="text-center">
-      <button type="submit" class="btn btn-outline-primary has_id" id="{{pk}}">Update <small>(Journal Voucher)</small></button>
+      <button type="submit" class="btn btn-outline-primary has_id disable_on_submit" id="{{pk}}">Update <small>(Journal Voucher)</small></button>
     </div>
     <br>
 </form>

@@ -8,6 +8,14 @@ font-family: 'Open Sans', sans-serif;
   }
 table.active {background: #ccc;}
 
+.modal-full {
+    min-width: 80%;
+    margin-right: 100px;
+}
+
+.modal-full .modal-content {
+    min-height: 80vh;
+}
 
 .disableClick{
     pointer-events: none;

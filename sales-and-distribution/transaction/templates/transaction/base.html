@@ -15,7 +15,8 @@
 
   <!-- Custom fonts for this template-->
   <link href="{% static 'transaction/vendor/fontawesome-free/css/all.min.css' %}" rel="stylesheet" type="text/css">
-
+  {% comment %} Toastr CSS {% endcomment %}
+  <link href="{% static 'transaction/css/jquery.toast.css' %}" rel="stylesheet" type="text/css" />
   <!-- Page level plugin CSS-->
   <link href="{% static 'transaction/vendor/datatables/dataTables.bootstrap4.css' %}" rel="stylesheet">
 
@@ -148,14 +149,19 @@
   <script src="{% static 'transaction/vendor/chart.js/Chart.min.js' %}"></script>
   <script src="{% static 'transaction/vendor/datatables/jquery.dataTables.js' %}"></script>
   <script src="{% static 'transaction/vendor/datatables/dataTables.bootstrap4.js' %}"></script>
-
+  <script src="https://cdn.datatables.net/1.10.20/css/dataTables.bootstrap.min.css"></script>
+  <script src="https://cdn.datatables.net/responsive/2.2.3/css/responsive.bootstrap.min.css"></script>
   <!-- Custom scripts for all pages-->
   <script src="{% static 'transaction/js/sb-admin.min.js' %}"></script>
 
-  <!-- Demo scripts for this page-->
+  <!-- Custom scripts -->
   <script type="text/javascript" src="{% static 'transaction/inventory.js' %}"></script>
   <script type="text/javascript" src="{% static 'transaction/script.js' %}"></script>
   <script type="text/javascript" src="{% static 'transaction/transaction.js' %}"></script>
+
+  <!-- Custom scripts -->
+  <script src="{% static 'transaction/js/jquery.toast.js' %}"></script>
+  {% comment %} <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script> {% endcomment %}
 
 </body>
 

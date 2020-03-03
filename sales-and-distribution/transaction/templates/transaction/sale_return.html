@@ -1,86 +1,218 @@
-{% extends 'transaction/base.html' %}
+{% extends "transaction/base.html" %}
 {% load crispy_forms_tags %}
+{% load mathfilters %}
 {% block body %}
+
 <div class="card" style="width: 100%;">
-<div class="card-header">
-  <h4>Sale Return</h4>
-</div>
-<ul class="list-group list-group-flush">
-<form  action="" id="new-sale-return-submit" autocomplete="off" method="post">
-  {% csrf_token %}
-  <li class="list-group-item">
-      <div class="form-row">
-        <div class="form-group col-md-2">
-          <label>Sale Return ID</label>
-          <input list="account"  class="form-control form-control-sm" required id="" value="{{sale_header.account_id.account_title}}" readonly>
-          <datalist id="account">
-            {% for value in all_accounts %}
-            <option value="{{value.account_title}}">{{value.account_title}}</option>
-            {% endfor %}
-        </datalist>
+  <div class="card-header">
+    <h4>Sale Return Invoice</h4>
+  </div>
+  <ul class="list-group list-group-flush">
+    <form action="" id="sale-return-submit" autocomplete="off" method="post">
+      <input type="text" id="form_id" value="{% if form_id %}{{form_id}}{% else %}0{% endif %}" style="display:none;" />
+      {% csrf_token %}
+      <li class="list-group-item">
+        <div class="form-row">
+          <div class="form-group col-md-2">
+            <label for="">Sale Return ID</label>
+            <input type="text" readonly class="form-control form-control-sm" required
+              value="{% if form_id %}{{header.sale_return_no}}{% else %}{{last_sale_no}}{% endif %}" id="sale_id">
+          </div>
+          <div class="form-group col-md-2">
+            <label>Account Name</label>
+            <input list="account" id="customer" name="customer_name" class="form-control form-control-sm" required
+              value="{% if form_id %}{{header.account_id.account_title}}{% else %}{% endif %}">
+            <datalist id="account">
+              {% for value in all_accounts %}
+              <option value="{{value.account_title}}">{{value.account_title}}</option>
+              {% endfor %}
+            </datalist>
+          </div>
+          <div class="form-group col-md-2">
+            <label for="">Account Holder</label>
+            <input type="text" class="form-control form-control-sm"
+              value="{% if form_id %}{{header.account_holder}}{% else %}{% endif %}" id="account_holder">
+          </div>
+          <div class="form-group col-md-2">
+            <label for="">Date</label>
+            <input type="date" class="form-control form-control-sm"
+              value="{% if form_id %}{{header.date|date:'Y-m-d'}}{% else %}{% endif %}" id="date" required>
+          </div>
+          {% comment %} <div class="form-group col-md-2"> {% endcomment %}
+            {% comment %} <label for="sel1">Payment Term:</label> {% endcomment %}
+            <select class="form-control form-control-sm" id="payment_method" style="display:none;"> 
+              <option>Credit</option>
+            </select>
+          {% comment %} </div> {% endcomment %}
+          <div class="form-group">
+            <label for="exampleFormControlTextarea2">Description</label>
+            <textarea class="form-control form-control-sm" rows="3"
+              id="footer_desc">{% if form_id %}{{header.footer_description}}{% else %}{% endif %}</textarea>
+          </div>
         </div>
-        <div class="form-group col-md-2">
-          <label>Customer Name</label>
-          <input list="account"  class="form-control form-control-sm" required id="" value="" >
-          <datalist id="account">
-            {% for value in all_accounts %}
-            <option value="{{value.account_title}}">{{value.account_title}}</option>
-            {% endfor %}
-        </datalist>
+      </li>
+      <li class="list-group-item">
+        <div class="table-title">
+          <div class="row">
+            <div class="form-group col-md-3">
+              <input type="text" list="item" placeholder="Enter Job No here..." class="form-control form-control-sm"
+                id="job_no_sale_return">
+            </div>
+            <datalist id="item">
+              {% for value in all_job_order %}
+              <option value="{{value.job_no}}">{{value.job_no}} | {{value.account_id.account_title}} |
+                {{value.file_name}}</option>
+              {% endfor %}
+            </datalist>
+            <div style="margin-left:20px;">
+              <button type="button" class="btn btn-info add-item-sale-return"><i class="fa fa-plus"></i>Insert Job No</button>
+            </div>
+          </div>
         </div>
-        <div class="form-group col-md-2">
-            <label for="">Follow Up</label>
-            <input type="date"  class="form-control form-control-sm" required value="" id="">
+        <div class="table-title">
+          <div class="row">
+            <div class="form-group col-md-3">
+              <input type="text" list="item_x" placeholder="Enter Item Code here..."
+                class="form-control form-control-sm" id="x_stand_return">
+            </div>
+            <datalist id="item_x">
+              {% for value in all_pcs %}
+              <option value="{{value.item_code}}">{{value.item_code}} | {{value.item_name}}</option>
+              {% endfor %}
+            </datalist>
+            <div style="margin-left:20px;">
+              <button type="button" class="btn btn-warning add-item-x-return"><i class="fa fa-plus"></i>Insert General
+                Item</button>
+            </div>
+          </div>
         </div>
-        <div class="form-group col-md-2">
-         <label for="sel1">Payment Term:</label>
-         <select class="form-control form-control-sm" id="payment_sale_return">
-           <option>Cash</option>
-           <option>Credit</option>
-         </select>
-        </div>
-        <div class="form-group">
-          <label for="exampleFormControlTextarea2">Description</label>
-          <textarea class="form-control rounded-0" rows="3" id="footer_desc"></textarea>
-        </div>
-      </div>
-    </li>
-    <li class="list-group-item">
-    <table class="table table-bordered" id="new-sale-return-table">
-        <thead>
-            <tr>
+        <div class="table table-responsive">
+          <table class="table table-bordered" id="sale-return-table">
+            <thead>
+              <tr>
                 <th width="40px" style="font-size:10px;">S No.</th>
-                <th width="100px">Item Code</th>
-                <th width="70px">Item Name</th>
-                <th width="70px">Desc.</th>
-                <th width="60px">Qty</th>
-                <th width="60px">Unit</th>
-                <th width="70px">Price</th>
+                <th width="80px">Item Code</th>
+                <th width="120px">Item Name</th>
+                <th width="180px">Description</th>
+                <th width="80px">Unit</th>
+                <th width="80px">Width</th>
+                <th width="80px">Height</th>
+                <th width="80px">Qty</th>
+                <th width="80px">Sq.ft</th>
+                <th width="100px">Rate</th>
+                <th width="80px">Amount</th>
                 <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-          {% for value in sale_detail %}
-          <tr>
-            <td>{{ forloop.counter }}</td>
-            <td>{{ value.item_code }}</td>
-            <td>{{ value.item_name }}</td>
-            <td>{{ value.item_description }}</td>
-            <td>{{ value.quantity }}</td>
-            <td>{{ value.unit }}</td>
-            <td>{{ value.cost_price }}</td>
-            <td><a class="add-sale-return" title="Add" data-toggle="tooltip"><i class="material-icons">&#xE03B;</i></a><a class="edit-sale-return" title="Edit" data-toggle="tooltip"><i class="material-icons">&#xE254;</i></a><a class="delete-sale-return" title="Delete" data-toggle="tooltip"><i class="material-icons">&#xE872;</i></a></td>
-          </tr>
-          {% endfor %}
-        </tbody>
-    </table>
-    </li>
+              </tr>
+            </thead>
+            <tbody>
+              {% if form_id %}
+              {% for value in sale_return_detail %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td style="display:none;">{{value.item_id.id}}</td>
+                <td>{{value.item_id.item_code}}</td>
+                <td>{{value.item_id.item_name}}</td>
+                <td><input type="text" style="width:300px;" class="form-control" value="{{value.item_description}}">
+                </td>
+                <td id="quantity_edit"> {{value.item_id.unit}} </td>
+                {% if value.meas == "sq.ft" %}
+                <td id="width">{{value.width}}</td>
+                <td id="height">{{value.height}}</td>
+                <td id="quantity">{{value.quantity}}</td>
+                <td id="sqft">{{value.width|mul:value.height|mul:value.quantity|floatformat:2}}</td>
+                <td id="rate"><input class="form-control from-control-sm input_rate_sale" value="{{value.rate}}" />
+                </td>
+                <td id="total" class="sum">
+                  <b>{{value.width|mul:value.height|mul:value.quantity|mul:value.rate|floatformat:2}}</b></td>
+                {% elif value.meas == "sq.inches" %}
+                <td id="width">{{value.width}}</td>
+                <td id="height">{{value.height}}</td>
+                <td id="quantity">{{value.quantity}}</td>
+                <td id="sqft">{{value.width|mul:value.height|div:144|mul:value.quantity|floatformat:2}}</td>
+                <td id="rate"><input class="form-control from-control-sm input_rate_sale" value="{{value.rate}}" />
+                </td>
+                <td id="total" class="sum">
+                  <b>{{value.width|mul:value.height|div:144|mul:value.quantity|mul:value.rate|floatformat:2}}</b></td>
+                {% elif value.meas == "pieces" %}
+                <td id="width">0.00</td>
+                <td id="height">0.00</td>
+                <td id="quantity"><input class="form-control from-control-sm input_x_quantity_sale"
+                    value="{{value.total_pcs}}" /></td>
+                <td id="sqft">0.00</td>
+                <td id="rate"><input class="form-control from-control-sm input_x_rate_sale"
+                    value="{{value.rate}}" /></td>
+                <td id="total" class="sum"><b>{{value.total_pcs|mul:value.rate|floatformat:2}}</b></td>
+                {% endif %}
+                <td style="display:none;">{{value.meas}}</td>
+                <td><a class="delete-transaction-sale-edit" title="Delete" data-toggle="tooltip"><i
+                      class="material-icons">&#xE872;</i></a></td>
+              </tr>
+              {% endfor %}
+              {% else %}
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </li>
+      <li class="list-group-item">
+        <input type="hidden" name="" value="" id="hidden">
+        <div class="float-right">
+          <div class="form-inline">
+            <div class="form-group">
+              <label for="text" style="font-size:14px;"><b>DISC in
+                  %:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></label>
+              <input type="text" required readonly class="form-control form-control-sm"
+                style="border-top: 0px; border-right:0px; border-left:0px;" id="discount" name="discount" value="{% if form_id %}{{header.discount|floatformat:2}}{% else %}{% endif %}">
+            </div>
+          </div>
+          <div class="form-inline">
+            <div class="form-group">
+              <label for="text" style="font-size:14px;"><b>DISC in val.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></label>
+              <input type="text" required class="form-control form-control-sm"
+                style="border-top: 0px; border-right:0px; border-left:0px;" id="discount_in_val" name="discount"
+                value="{% if form_id %}{{discount_amount|floatformat:2}}{% else %}0.00{% endif %}">
+            </div>
+          </div>
+          <div class="form-inline">
+            <div class="form-group">
+              <label for="text" style="font-size:14px;"><b>Grand Total:&nbsp;&nbsp;</b></label>
+              <input type="text" class="form-control form-control-sm"
+                style="border-top: 0px; border-right:0px; border-left:0px;" readonly id="grand_total" value="{% if form_id %}{{grand_total}}{% else %}{% endif %}">
+            </div>
+          </div>
+          <div class="form-inline">
+            <div class="form-group">
+              {% comment %} <label for="text" style="font-size:14px;"><b>Credit Bal
+                  :&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></label> {% endcomment %}
+              <input type="text" class="form-control form-control-sm"
+                style="border-top: 0px; border-right:0px; border-left:0px; display:none;" readonly id="credit_balance"
+                value="0">
+              <input type="hidden" class="form-control form-control-sm"
+                style="border-top: 0px; border-right:0px; border-left:0px;" readonly id="credit_balance_hidden"
+                value="0">
+            </div>
+          </div>
+          <input type="text" required placeholder="in percent" class="form-control form-control-sm"
+            style="border-top: 0px; border-right:0px; border-left:0px; display:none;" id="gst" name="gst" value="0">
+          <input type="text" required class="form-control form-control-sm"
+            style="border-top: 0px; border-right:0px; border-left:0px; display:none;" id="srb" name="srb" value="0">
+        </div>
+        <br>
+        <br>
+        <br>
+        <br>
+        <br>
+        <br>
+        <br>
+      </li>
       <br>
-    <div class="text-center">
-      <button type="submit" class="btn btn-outline-primary has_id" id="{{pk}}">Submit <small>(Sales Return)</small></button>
-    </div>
-    <br>
-</form>
-</ul>
+      <div class="text-center">
+        <button type="submit" class="btn btn-outline-primary">Submit <small>(Sale)</small></button>
+      </div>
+      <br>
+    </form>
+  </ul>
 </div>
-{% endblock %}
+
+
+{% endblock body %}
