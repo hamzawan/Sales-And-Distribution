@@ -49,6 +49,9 @@ urlpatterns = [
     path('payable_ledger/pdf/<pk>', views.payable_ledger, name='payable-ledger'),
     path('sale_detail_report/pdf/<from_date>/<to_date>', views.sale_detail_report, name='sale-detail'),
     path('daily_report/pdf/<from_date>/<to_date>', views.daily_report, name='daily-report'),
+    path('reports/report_sales_tax_print/<pk>', views.report_print_sale_tax, name='report-sale-tax-print'),
+    path('reports/reports_all_sales_tax_inv/', views.reports_all_sales_tax_inv, name='report-all-sale-tax-inv'),
+
 
     path('cash_receiving_voucher', views.cash_receiving_voucher, name='cash-receiving-voucher'),
     path('cash_receiving_voucher/new/', views.new_cash_receiving_voucher, name='new-cash-receiving-voucher'),

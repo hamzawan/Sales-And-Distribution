@@ -3,281 +3,334 @@
 {% block body %}
 
 <div class="card" style="width: 100%;">
-<div class="card-header">
-  <h4>Reports</h4>
-</div>
-<ul class="list-group list-group-flush">
+  <div class="card-header">
+    <h4>Reports</h4>
+  </div>
+  <ul class="list-group list-group-flush">
     <li class="list-group-item">
       <div class="row">
-        <div class="col-md-4 col-sm-12"><button type="button" data-toggle="modal" data-target="#trialBalanceModal" class="btn btn-primary btn-block"  name="button">Trial Balance</button></div>
-        <div class="col-md-4 col-sm-12"><button type="button" data-toggle="modal" data-target="#accountLedgerModal" class="btn btn-primary btn-block"  name="button">Account Ledger</button></div>
-        <div class="col-md-4 col-sm-12"><button type="button" data-toggle="modal" data-target="#receivableLedgerModal" class="btn btn-primary btn-block"  name="button">Receivable Ledger <small>(Outstanding)</small> </button></div>
+        <div class="col-md-4 col-sm-12"><button type="button" data-toggle="modal" data-target="#trialBalanceModal"
+            class="btn btn-primary btn-block" name="button">Trial Balance</button></div>
+        <div class="col-md-4 col-sm-12"><button type="button" data-toggle="modal" data-target="#accountLedgerModal"
+            class="btn btn-primary btn-block" name="button">Account Ledger</button></div>
+        <div class="col-md-4 col-sm-12"><button type="button" data-toggle="modal" data-target="#receivableLedgerModal"
+            class="btn btn-primary btn-block" name="button">Receivable Ledger <small>(Outstanding)</small> </button>
+        </div>
       </div>
       <br>
       <div class="row">
-        <div class="col-md-4 col-sm-12"><button type="button" data-toggle="modal" data-target="#payableLedgerModal" class="btn btn-primary btn-block"  name="button">Payable Ledger <small>(Bad debts)</small></button></div>
-        <div class="col-md-4 col-sm-12"><button type="button" data-toggle="modal" data-target="#accountLedgerCreditDaysModal" class="btn btn-primary btn-block"  name="button">Account Ledger <small>(Credit days)</small> </button></div>
-        <div class="col-md-4 col-sm-12"><button type="button" data-toggle="modal" data-target="#saleDetailModal" class="btn btn-primary btn-block"  name="button">Sale Detail</button></div>
+        <div class="col-md-4 col-sm-12"><button type="button" data-toggle="modal" data-target="#payableLedgerModal"
+            class="btn btn-primary btn-block" name="button">Payable Ledger <small>(Bad debts)</small></button></div>
+        <div class="col-md-4 col-sm-12"><button type="button" data-toggle="modal"
+            data-target="#accountLedgerCreditDaysModal" class="btn btn-primary btn-block" name="button">Account Ledger
+            <small>(Credit days)</small> </button></div>
+        <div class="col-md-4 col-sm-12"><button type="button" data-toggle="modal" data-target="#saleDetailModal"
+            class="btn btn-primary btn-block" name="button">Sale Detail</button></div>
       </div>
       <br>
       <div class="row">
-        <div class="col-md-4 col-sm-12"><button type="button" data-toggle="modal" data-target="#dailyReportModal" class="btn btn-primary btn-block btn_report"  name="button">Daily Report</button></div>
+        <div class="col-md-4 col-sm-12"><button type="button" data-toggle="modal" data-target="#dailyReportModal"
+            class="btn btn-primary btn-block btn_report" name="button">Daily Report</button></div>
+        <div class="col-md-4 col-sm-12"><button type="button" data-toggle="modal" data-target="#salesTaxInvoicesModal"
+            class="btn btn-primary btn-block btn_report" name="button">Sales Tax Invoices</button></div>
       </div>
-  </li>
-</ul>
+    </li>
+  </ul>
 
-<!-- Modal Trial Balance -->
-<div class="modal fade" id="trialBalanceModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered" role="document">
-    <div class="modal-content">
-      <form class="" action="" method="post">
-        {% csrf_token %}
-      <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLongTitle">Trial Balance</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <div class="form-row">
-          <div class="form-group col-md-6">
-            <label for="">From:</label>
-            <input type="date" class="form-control form-control-sm" id="from_date_trial_balance" required id="">
+  <!-- Modal Trial Balance -->
+  <div class="modal fade" id="trialBalanceModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <form class="" action="" method="post">
+          {% csrf_token %}
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLongTitle">Trial Balance</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
           </div>
-          <div class="form-group col-md-6">
-            <label for="">To:</label>
-            <input type="date" class="form-control form-control-sm" id="to_date_trial_balance" required id="">
+          <div class="modal-body">
+            <div class="form-row">
+              <div class="form-group col-md-6">
+                <label for="">From:</label>
+                <input type="date" class="form-control form-control-sm" id="from_date_trial_balance" required id="">
+              </div>
+              <div class="form-group col-md-6">
+                <label for="">To:</label>
+                <input type="date" class="form-control form-control-sm" id="to_date_trial_balance" required id="">
+              </div>
+            </div>
           </div>
-        </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button type="button" id="generate_trial_balance" class="btn btn-primary">Generate</button>
+          </div>
+        </form>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-        <button type="button" id="generate_trial_balance" class="btn btn-primary">Generate</button>
-      </div>
-      </form>
     </div>
   </div>
-</div>
 
-<div class="modal fade" id="accountLedgerModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered" role="document">
-    <div class="modal-content">
-      <form action="" method="post">
-        {% csrf_token %}
-      <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLongTitle">Account Ledger</h5>
-        <button class="close" type="button" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <div class="form-row">
-          <div class="form-row col-md-6">
-            <label for="">From:</label>
-            <input type="date" class="form-control form-control-sm" id="from_date_ledger" required id="">
+  <div class="modal fade" id="accountLedgerModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <form action="" method="post">
+          {% csrf_token %}
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLongTitle">Account Ledger</h5>
+            <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
           </div>
-          <span>&nbsp;&nbsp;</span>
-          <div class="form-row col-md-6">
-            <label for="">To:</label>
-            <input type="date" class="form-control form-control-sm" id="to_date_ledger" required id="">
+          <div class="modal-body">
+            <div class="form-row">
+              <div class="form-row col-md-6">
+                <label for="">From:</label>
+                <input type="date" class="form-control form-control-sm" id="from_date_ledger" required id="">
+              </div>
+              <span>&nbsp;&nbsp;</span>
+              <div class="form-row col-md-6">
+                <label for="">To:</label>
+                <input type="date" class="form-control form-control-sm" id="to_date_ledger" required id="">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group col-md-12">
+                <label for="">Select Account</label>
+                <select name="account_title" class="form-control" id="ledger_account">
+                  {% for account in all_accounts %}
+                  <option value="{{ account.id }}">{{ account.account_title }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
           </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group col-md-12">
-            <label for="">Select Account</label>
-            <select name="account_title" class="form-control" id="ledger_account">
-              {% for account in all_accounts %}
-              <option value="{{ account.id }}">{{ account.account_title }}</option>
-              {% endfor %}
-            </select>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button type="button" id="generate_account_ledger" target="_blank" class="btn btn-primary">Generate</button>
           </div>
-        </div>
+        </form>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-        <button type="button" id="generate_account_ledger" target="_blank" class="btn btn-primary">Generate</button>
-      </div>
-      </form>
     </div>
   </div>
-</div>
 
 
-<div class="modal fade" id="accountLedgerCreditDaysModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered" role="document">
-    <div class="modal-content">
-      <form action="" method="post">
-        {% csrf_token %}
-      <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLongTitle">Account Ledger</h5>
-        <button class="close" type="button" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <div class="form-row">
-          <div class="form-row col-md-6">
-            <label for="">From:</label>
-            <input type="date" class="form-control form-control-sm" id="from_date_cr_l" required id="">
+  <div class="modal fade" id="accountLedgerCreditDaysModal" tabindex="-1" role="dialog"
+    aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <form action="" method="post">
+          {% csrf_token %}
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLongTitle">Account Ledger</h5>
+            <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
           </div>
-          <span>&nbsp;&nbsp;</span>
-          <div class="form-row col-md-6">
-            <label for="">To:</label>
-            <input type="date" class="form-control form-control-sm" id="to_date_cr_l" required id="">
+          <div class="modal-body">
+            <div class="form-row">
+              <div class="form-row col-md-6">
+                <label for="">From:</label>
+                <input type="date" class="form-control form-control-sm" id="from_date_cr_l" required id="">
+              </div>
+              <span>&nbsp;&nbsp;</span>
+              <div class="form-row col-md-6">
+                <label for="">To:</label>
+                <input type="date" class="form-control form-control-sm" id="to_date_cr_l" required id="">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group col-md-12">
+                <label for="">Select Account</label>
+                <select name="account_title" class="form-control">
+                  {% for account in all_accounts %}
+                  <option value="{{ account.id }}">{{ account.account_title }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
           </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group col-md-12">
-            <label for="">Select Account</label>
-            <select name="account_title" class="form-control">
-              {% for account in all_accounts %}
-              <option value="{{ account.id }}">{{ account.account_title }}</option>
-              {% endfor %}
-            </select>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button type="button" id="generate_cr_ledger" class="btn btn-primary">Generate</button>
           </div>
-        </div>
+        </form>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-        <button type="button" id="generate_cr_ledger" class="btn btn-primary">Generate</button>
-      </div>
-      </form>
     </div>
   </div>
-</div>
 
-<!-- Modal Receivable Ledger -->
-<div class="modal fade" id="receivableLedgerModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered" role="document">
-    <div class="modal-content">
-      <form action="" method="post">
-        {% csrf_token %}
-      <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLongTitle">Receivable Ledger</h5>
-        <button class="close" type="button" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <div class="form-row">
-          <div class="form-group col-md-12">
-            <label for="">Select Customer</label>
-            <select name="account_title" class="form-control" id="r_ledger">
-              {% for account in all_accounts %}
-              <option value="{{ account.id }}">{{ account.account_title }}</option>
-              {% endfor %}
-            </select>
+  <!-- Modal Receivable Ledger -->
+  <div class="modal fade" id="receivableLedgerModal" tabindex="-1" role="dialog"
+    aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <form action="" method="post">
+          {% csrf_token %}
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLongTitle">Receivable Ledger</h5>
+            <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
           </div>
-        </div>
+          <div class="modal-body">
+            <div class="form-row">
+              <div class="form-group col-md-12">
+                <label for="">Select Customer</label>
+                <select name="account_title" class="form-control" id="r_ledger">
+                  {% for account in all_accounts %}
+                  <option value="{{ account.id }}">{{ account.account_title }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button type="button" id="generate_receivable_ledger" class="btn btn-primary">Generate</button>
+          </div>
+        </form>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-        <button type="button" id="generate_receivable_ledger" class="btn btn-primary">Generate</button>
-      </div>
-      </form>
     </div>
   </div>
-</div>
 
-<!-- Modal Payable Ledger -->
-<div class="modal fade" id="payableLedgerModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered" role="document">
-    <div class="modal-content">
-      <form action="" method="post">
-        {% csrf_token %}
-      <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLongTitle">Payable Ledger</h5>
-        <button class="close" type="button" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <div class="form-row">
-          <div class="form-group col-md-12">
-            <label for="">Select Customer</label>
-            <select name="account_title" class="form-control" id="p_ledger">
-              {% for account in all_accounts %}
-              <option value="{{ account.id }}">{{ account.account_title }}</option>
-              {% endfor %}
-            </select>
+  <!-- Modal Payable Ledger -->
+  <div class="modal fade" id="payableLedgerModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <form action="" method="post">
+          {% csrf_token %}
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLongTitle">Payable Ledger</h5>
+            <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
           </div>
-        </div>
+          <div class="modal-body">
+            <div class="form-row">
+              <div class="form-group col-md-12">
+                <label for="">Select Customer</label>
+                <select name="account_title" class="form-control" id="p_ledger">
+                  {% for account in all_accounts %}
+                  <option value="{{ account.id }}">{{ account.account_title }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button type="button" id="generate_payable_ledger" class="btn btn-primary">Generate</button>
+          </div>
+        </form>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-        <button type="button" id="generate_payable_ledger" class="btn btn-primary">Generate</button>
-      </div>
-      </form>
     </div>
   </div>
-</div>
 
-<!-- Modal Trial Balance -->
-<div class="modal fade" id="saleDetailModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered" role="document">
-    <div class="modal-content">
-      <form class="" action="" method="post">
-        {% csrf_token %}
-      <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLongTitle">Sale Detail</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <div class="form-row">
-          <div class="form-group col-md-6">
-            <label for="">From:</label>
-            <input type="date" class="form-control form-control-sm" id="from_date_s_d" required id="">
+  <!-- Modal Trial Balance -->
+  <div class="modal fade" id="saleDetailModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <form class="" action="" method="post">
+          {% csrf_token %}
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLongTitle">Sale Detail</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
           </div>
-          <div class="form-group col-md-6">
-            <label for="">To:</label>
-            <input type="date" class="form-control form-control-sm" id="to_date_s_d" required id="">
+          <div class="modal-body">
+            <div class="form-row">
+              <div class="form-group col-md-6">
+                <label for="">From:</label>
+                <input type="date" class="form-control form-control-sm" id="from_date_s_d" required id="">
+              </div>
+              <div class="form-group col-md-6">
+                <label for="">To:</label>
+                <input type="date" class="form-control form-control-sm" id="to_date_s_d" required id="">
+              </div>
+            </div>
           </div>
-        </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button type="button" id="generate_sale_detail" class="btn btn-primary ">Generate</button>
+          </div>
+        </form>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-        <button type="button" id="generate_sale_detail" class="btn btn-primary ">Generate</button>
-      </div>
-      </form>
     </div>
   </div>
-</div>
 
 
-<!-- Modal Daily Report -->
-<div class="modal fade" id="dailyReportModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered" role="document">
-    <div class="modal-content">
-      <form class="" action="" id="daily-report-modal" method="post">
-        {% csrf_token %}
-      <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLongTitle">Daily Report</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <div class="form-row">
-          <div class="form-group col-md-6">
-            <label for="">From:</label>
-            <input type="date" class="form-control form-control-sm" id="from_date_d_r" required id="">
+  <!-- Modal Daily Report -->
+  <div class="modal fade" id="dailyReportModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <form class="" action="" id="daily-report-modal" method="post">
+          {% csrf_token %}
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLongTitle">Daily Report</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
           </div>
-          <div class="form-group col-md-6">
-            <label for="">To:</label>
-            <input type="date" class="form-control form-control-sm" id="to_date_d_r" required id="">
+          <div class="modal-body">
+            <div class="form-row">
+              <div class="form-group col-md-6">
+                <label for="">From:</label>
+                <input type="date" class="form-control form-control-sm" id="from_date_d_r" required id="">
+              </div>
+              <div class="form-group col-md-6">
+                <label for="">To:</label>
+                <input type="date" class="form-control form-control-sm" id="to_date_d_r" required id="">
+              </div>
+            </div>
           </div>
-        </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button type="button" id="generate_daily_report" class="btn btn-primary">Generate</button>
+          </div>
+        </form>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-        <button type="button" id="generate_daily_report" class="btn btn-primary">Generate</button>
-      </div>
-      </form>
     </div>
   </div>
-</div>
 
 
-{% endblock body %}
+    <!-- Modal Sales Tax Invoices Report -->
+  <div class="modal fade" id="salesTaxInvoicesModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <form class="" action="" id="daily-report-modal" method="post">
+          {% csrf_token %}
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLongTitle">Sales Tax Invoices</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="form-row">
+              <div class="form-group col-md-6">
+                <label for="">From:</label>
+                <input type="date" class="form-control form-control-sm" id="from_date_st_r" required id="">
+              </div>
+              <div class="form-group col-md-6">
+                <label for="">To:</label>
+                <input type="date" class="form-control form-control-sm" id="to_date_st_r" required id="">
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button type="button" id="generate_sales_taxt_reports" class="btn btn-primary">Generate</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+
+  {% endblock body %}

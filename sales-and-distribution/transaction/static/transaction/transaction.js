@@ -4620,7 +4620,7 @@ $(document).ready(function () {
 				})
 				.done(function done(data) {
 					if (data.result) {
-						
+
 						$.toast().reset('all');
 						$.toast({
 							heading: 'Submitted Successfully',
@@ -4791,7 +4791,7 @@ $(document).ready(function () {
 				})
 				.done(function done(data) {
 					if (data.result) {
-						
+
 						$.toast().reset('all');
 						$.toast({
 							heading: 'Submitted Successfully',
@@ -6109,7 +6109,7 @@ $(document).ready(function () {
 					var index = $("table tbody tr:last-child").index();
 					for (var i = 0; i < data.pi.length; i++) {
 						console.log(data.pi);
-						
+
 						balance_amount = parseFloat(data.pi[i][5]) - Math.abs(parseFloat(data.pi[i][6]))
 						var row = '<tr>' +
 							'<td>' + count++ + '</td>' +
@@ -6222,7 +6222,7 @@ $(document).ready(function () {
 					dataType: 'json'
 				})
 				.done(function done(data) {
-					if (data.result) {						
+					if (data.result) {
 						$.toast().reset('all');
 						$.toast({
 							heading: 'Submitted Successfully',
@@ -6261,8 +6261,7 @@ $(document).ready(function () {
 								row["account_id"] = vendor;
 							} else if (i === 1) {
 								row["invoice_no"] = $(this).text();
-							}
-							 else if (i === 4) {
+							} else if (i === 4) {
 								row["invoice_amount"] = ($(this).find('input').val());
 								data.push(row);
 							}
@@ -6286,8 +6285,8 @@ $(document).ready(function () {
 					dataType: 'json'
 				})
 				.done(function done(data) {
-					
-					if (data.result) {						
+
+					if (data.result) {
 						$.toast().reset('all');
 						$.toast({
 							heading: 'Submitted Successfully',
@@ -6450,7 +6449,7 @@ $(document).ready(function () {
 					dataType: 'json'
 				})
 				.done(function done(data) {
-					if (data.result) {						
+					if (data.result) {
 						$.toast().reset('all');
 						$.toast({
 							heading: 'Submitted Successfully',
@@ -6513,7 +6512,7 @@ $(document).ready(function () {
 					dataType: 'json'
 				})
 				.done(function done(data) {
-					if (data.result) {						
+					if (data.result) {
 						$.toast().reset('all');
 						$.toast({
 							heading: 'Submitted Successfully',
@@ -7428,85 +7427,113 @@ $(document).ready(function () {
 				$('#item_code_sale').val("");
 			});
 	});
-	
-	$("#generate_trial_balance").on('click', function(){
+
+	$("#generate_trial_balance").on('click', function () {
 		from_date = $("#from_date_trial_balance").val()
 		to_date = $("#to_date_trial_balance").val()
 		url = `/transaction/trial_balance/pdf/${from_date}/${to_date}`
 		var win = window.open(url, '_blank');
-			if (win) {
-				//Browser has allowed it to be opened
-				win.focus();
-			} else {
-				//Browser has blocked it
-				alert('Please allow popups for this website');
-			}
+		if (win) {
+			//Browser has allowed it to be opened
+			win.focus();
+		} else {
+			//Browser has blocked it
+			alert('Please allow popups for this website');
+		}
 	})
 
-	$("#generate_account_ledger").on('click', function(){
+	$("#generate_account_ledger").on('click', function () {
 		from_date = $("#from_date_ledger").val()
 		to_date = $("#to_date_ledger").val()
 		var ledger_account = $('#ledger_account').find(":selected").val();
 		url = `/transaction/account_ledger/pdf/${ledger_account}/${from_date}/${to_date}`
 		var win = window.open(url, '_blank');
-			if (win) {
-				//Browser has allowed it to be opened
-				win.focus();
-			} else {
-				//Browser has blocked it
-				alert('Please allow popups for this website');
-			}
+		if (win) {
+			//Browser has allowed it to be opened
+			win.focus();
+		} else {
+			//Browser has blocked it
+			alert('Please allow popups for this website');
+		}
 	})
 
 
-	$("#generate_receivable_ledger").on('click', function(){
+	$("#generate_receivable_ledger").on('click', function () {
 		var ledger_account = $('#r_ledger').find(":selected").val();
 		url = `/transaction/receivable_ledger/pdf/${ledger_account}`
 		var win = window.open(url, '_blank');
-			if (win) {
-				//Browser has allowed it to be opened
-				win.focus();
-			} else {
-				//Browser has blocked it
-				alert('Please allow popups for this website');
-			}
+		if (win) {
+			//Browser has allowed it to be opened
+			win.focus();
+		} else {
+			//Browser has blocked it
+			alert('Please allow popups for this website');
+		}
 	})
 
 
-	$("#generate_payable_ledger").on('click', function(){
+	$("#generate_payable_ledger").on('click', function () {
 		var ledger_account = $('#p_ledger').find(":selected").val();
 		url = `/transaction/payable_ledger/pdf/${ledger_account}`
 		var win = window.open(url, '_blank');
-			if (win) {
-				//Browser has allowed it to be opened
-				win.focus();
-			} else {
-				//Browser has blocked it
-				alert('Please allow popups for this website');
-			}
+		if (win) {
+			//Browser has allowed it to be opened
+			win.focus();
+		} else {
+			//Browser has blocked it
+			alert('Please allow popups for this website');
+		}
 	})
 
 
-	$("#generate_sale_detail").on('click', function(){
+	$("#generate_sale_detail").on('click', function () {
 		from_date = $("#from_date_s_d").val()
 		to_date = $("#to_date_s_d").val()
-		url = `/transaction/sale_detail_report/pdf/${from_date}/${to_date}`		
+		url = `/transaction/sale_detail_report/pdf/${from_date}/${to_date}`
 		var win = window.open(url, '_blank');
-			if (win) {
-				//Browser has allowed it to be opened
-				win.focus();
-			} else {
-				//Browser has blocked it
-				alert('Please allow popups for this website');
-			}
+		if (win) {
+			//Browser has allowed it to be opened
+			win.focus();
+		} else {
+			//Browser has blocked it
+			alert('Please allow popups for this website');
+		}
 	})
 
 
-	$("#generate_daily_report").on('click', function(){
+	$("#generate_daily_report").on('click', function () {
 		from_date = $("#from_date_d_r").val()
 		to_date = $("#to_date_d_r").val()
-		url = `/transaction/daily_report/pdf/${from_date}/${to_date}`		
+		url = `/transaction/daily_report/pdf/${from_date}/${to_date}`
 		var win = window.open(url, '_blank');
+		if (win) {
+			//Browser has allowed it to be opened
+			win.focus();
+		} else {
+			//Browser has blocked it
+			alert('Please allow popups for this website');
+		}
+	})
+
+	$("#generate_sales_taxt_reports").on('click', function () {
+		from_date = $("#from_date_st_r").val()
+		to_date = $("#to_date_st_r").val()
+		req = $.ajax({
+			headers: {
+				"X-CSRFToken": getCookie("csrftoken")
+			},
+			type: 'POST',
+			url: 'reports_all_sales_tax_inv/',
+			data: {
+				'from_date': from_date,
+				'to_date':to_date,
+			},
+			dataType: 'json'
+		})
+		.done(function(data){
+		for (let i = 0; i < data.inv.length; i++) {
+			url = `report_sales_tax_print/${data.inv[i]}`		
+			var win = window.open(url, '_blank');
 			if (win) {
 				//Browser has allowed it to be opened
 				win.focus();
@@ -7514,6 +7541,8 @@ $(document).ready(function () {
 				//Browser has blocked it
 				alert('Please allow popups for this website');
 			}
+		}			
+		})
 	})
 
 });

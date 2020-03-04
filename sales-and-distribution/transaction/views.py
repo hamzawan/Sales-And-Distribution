@@ -1678,6 +1678,75 @@ def print_sale_tax(request, pk):
     return HttpResponse("Not found")
 
 
+@login_required
+def reports_all_sales_tax_inv(request):
+    inv = []
+    try:
+        from_date = request.POST.get("from_date")
+        to_date = request.POST.get("to_date")
+        if from_date and to_date:
+            cursor = connection.cursor()
+            row = cursor.execute('''select id from transaction_saleheader
+                                    where transaction_saleheader.follow_up BETWEEN %s AND %s AND
+                                     transaction_saleheader.gst > 0 or srb > 0''',[from_date, to_date])
+            row = row.fetchall()
+            for i in row:
+                inv.append(i[0])
+            return JsonResponse({"result":"success","inv":inv})
+    except Exception as e:
+        return JsonResponse({"e":e})
+
+@login_required()
+@user_passes_test(allow_sale_print)
+def report_print_sale_tax(request, pk):
+    lines = 0
+    total_amount = 0
+    total_quantity = 0
+    total_square_fit = 0
+    square_fit = 0
+    header = SaleHeader.objects.filter(id = pk).first()
+    detail = SaleDetail.objects.filter(sale_id = pk).all()
+    image = Company_info.objects.first()
+    for value in detail:
+        if value.meas == "sq.ft":
+            square_fit = float(value.width * value.height)
+            gross = square_fit * float(value.rate)
+            amount = gross * float(value.quantity)
+            total_amount = total_amount + amount
+            total_quantity = (total_quantity + value.quantity)
+            square_fit = value.height * value.width * value.quantity
+            total_square_fit = total_square_fit + square_fit
+        elif value.meas == "sq.inches":
+            square_fit = float(value.width * value.height) / 144
+            gross = square_fit * float(value.rate)
+            amount = gross * float(value.quantity)
+            total_amount = total_amount + amount
+            total_quantity = (total_quantity + value.quantity)
+            square_fit = value.height * value.width * value.quantity / 144
+            total_square_fit = total_square_fit + square_fit
+        elif value.meas == "pieces":
+            amount = float(value.rate) * float(value.total_pcs)
+            total_amount = total_amount + amount
+    srb_amount = float(total_amount / 100) * float(header.srb)
+    gst_amount = float(total_amount / 100) * float(header.gst)
+    srb_percent = header.srb
+    gst_percent = header.gst
+    gst_srb = gst_amount + srb_amount
+    amount_before_discount = gst_srb + total_amount
+    discount = header.discount
+    discount_amount = float(amount_before_discount / 100) * float(discount)
+    gross_amount = amount_before_discount-discount_amount
+    pdf = render_to_pdf('transaction/sales_tax_invoice.html', {'header':header, 'detail':detail,'image':image, 'total_lines':12, 'total_amount':total_amount, 'total_quantity':total_quantity,'total_square_fit':total_square_fit,"srb_amount":srb_amount,"gst_amount":gst_amount,"discount":discount,"gross_amount":gross_amount,"srb_percent":srb_percent,"gst_percent":gst_percent})
+    if pdf:
+        response = HttpResponse(pdf, content_type='application/pdf')
+        filename = "Sale_%s.pdf" % (header.sale_no)
+        content = "inline; filename='%s'" % (filename)
+        response['Content-Disposition'] = content
+        return response
+    return HttpResponse("Not found")
+
+
+
 def allow_journal_voucher_new(user):
     user_id = Q(UserID = user.id)
     object_id = Q(ObjectID = 12)
