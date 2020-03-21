@@ -2582,6 +2582,8 @@ $(document).ready(function () {
 
 	$("#discount_in_val").on('keyup', function () {
 		var sum = 0;
+		console.log("Hamza");
+			
 		$('#new-sale-table tbody tr').each(function () {
 			var tdObject = $(this).find('td:eq(10)');
 			var total = tdObject.text()
@@ -2589,6 +2591,8 @@ $(document).ready(function () {
 				sum += parseFloat(total);
 			}
 		})
+		console.log(sum);
+		
 		var v = this.value;
 		var srb = $("#srb").val();
 		var srb_amount = (sum / 100) * srb;
@@ -2598,7 +2602,11 @@ $(document).ready(function () {
 		var discount_amount = parseFloat(v);
 		var discount_in_percentage = ((((Math.abs(v) + amount_before_discount) / amount_before_discount) * 100) - 100)
 		$("#discount").val(discount_in_percentage.toFixed(2));
+		console.log(discount_amount);
+		
 		if (!isNaN(v) && v.length != 0) {
+			console.log(parseFloat(sum) + srb_amount + gst_amount - discount_amount);
+			
 			$("#grand_total").val(parseFloat(sum) + srb_amount + gst_amount - discount_amount);
 			credit_balance_hidden = parseFloat($("#credit_balance_hidden").val());
 			grand_total_for_balance = parseFloat($("#grand_total").val());
@@ -2606,7 +2614,7 @@ $(document).ready(function () {
 		}
 	})
 
-	$("#discount_in_val").on('keyup', function () {
+	$("#discount_in_val_return").on('keyup', function () {
 		var sum = 0;
 		$('#sale-return-table tbody tr').each(function () {
 			var tdObject = $(this).find('td:eq(11)');
@@ -2633,7 +2641,7 @@ $(document).ready(function () {
 	})
 
 
-	$("#discount_in_val").on('keyup', function () {
+	$("#discount_in_val_return").on('keyup', function () {
 		var sum = 0;
 		$('#purchase-return-table tbody tr').each(function () {
 			var tdObject = $(this).find('td:eq(11)');
@@ -2816,7 +2824,7 @@ $(document).ready(function () {
 		// })
 
 		$("#discount_in_val").on('keyup', function () {
-
+			
 			var v = this.value;
 			var srb = $("#srb").val();
 			var srb_amount = (sum / 100) * srb;
@@ -7531,15 +7539,24 @@ $(document).ready(function () {
 			dataType: 'json'
 		})
 		.done(function(data){
-		for (let i = 0; i < data.inv.length; i++) {
-			url = `report_sales_tax_print/${data.inv[i]}`		
-			var win = window.open(url, '_blank');
-			if (win) {
-				//Browser has allowed it to be opened
-				win.focus();
-			} else {
-				//Browser has blocked it
-				alert('Please allow popups for this website');
+		if (data.inv.length <= 0) {
+			$.toast({
+				heading: 'No GST and SRB invoice found!',
+				hideAfter: true,
+				icon: 'warning',
+				'position': 'bottom-left'
+			})		
+		} else {
+			for (let i = 0; i < data.inv.length; i++) {
+				url = `report_sales_tax_print/${data.inv[i]}`		
+				var win = window.open(url, '_blank');
+				if (win) {
+					//Browser has allowed it to be opened
+					win.focus();
+				} else {
+					//Browser has blocked it
+					alert('Please allow popups for this website');
+				}
 			}
 		}			
 		})
