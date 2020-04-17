@@ -1282,7 +1282,8 @@ def chart_of_account(request):
     vendor = Q(parent_id = 7)
     customer = Q(parent_id = 16)
     expenses = Q(parent_id = 4)
-    all_accounts = ChartOfAccount.objects.filter(vendor | customer | expenses).order_by('account_title').all()
+    # all_accounts = ChartOfAccount.objects.filter(vendor | customer | expenses).order_by('account_title').all()
+    all_accounts = ChartOfAccount.objects.order_by('account_title').all()
     tree_id = request.POST.get('tree_id')
     if tree_id:
         child_list = []
@@ -1380,7 +1381,7 @@ def edit_chart_of_account(request):
             opening_balance = -abs(Decimal(opening_balance))
         coa = ChartOfAccount.objects.filter(id = id).first()
         coa.account_title = account_title
-        coa.account_type = account_type
+        coa.parent_id = account_type
         coa.opening_balance = opening_balance
         coa.phone_no = phone_no
         coa.email_address = email_address
@@ -2016,101 +2017,103 @@ def reports(request):
     all_accounts = ChartOfAccount.objects.order_by('account_title').all()
     return render(request, 'transaction/reports.html', {'all_accounts': all_accounts})
 
-def trial_balance_fun(request, from_date, to_date):
-    coa = ChartOfAccount.objects.all()
-    for c in coa:
-        from_date = request.POST.get('from_date')
-        to_date = request.POST.get('to_date')
-        pk  = c.id
-        cursor = connection.cursor()
-        cursor.execute('''select tran_type,refrence_id,refrence_date,remarks,ref_inv_tran_id,ref_inv_tran_type,Debit as Debit,Credit as Credit, detail_remarks, voucher_id_id from
-                        (select '' as refrence_id,'Opening' as tran_type,'' as refrence_date,'' as ref_inv_tran_id,
-                        '' as ref_inv_tran_type,'Opening Balance' as remarks,id,'' as detail_remarks,'' as voucher_id_id,
-                        Case When opening_balance > 0 then opening_balance else 0 End as Debit,
-                        Case When opening_balance < 0 then opening_balance else 0 End as Credit
-                        from transaction_chartofaccount Where id = %s
-                        Union All
-                        Select * From (
-                        Select refrence_id,tran_type,refrence_date,ref_inv_tran_id,ref_inv_tran_type,
-                        remarks,account_id_id,detail_remarks,voucher_id_id,
-                        Case When amount > 0 then amount else 0 End as Debit,
-                        Case When amount < 0 then amount else 0 End as Credit
-                        from transaction_transactions
-                        Where
-                        DATE(date) Between %s And %s and is_partialy = 0
-                        Order by date asc) As tblLedger
-                        Where account_id_id = %s
-                        union all
-                        Select refrence_id,tran_type,refrence_date,'merge' as ref_inv_tran_id,ref_inv_tran_type,
-                        remarks,account_id_id,'Partialy Receiving' as detail_remarks,voucher_id_id,
-                        Case When amount > 0 then sum(amount) else 0 End as Debit,
-                        Case When amount < 0 then sum(amount) else 0 End as Credit
-                        from transaction_transactions
-                        Where
-                        DATE(date) Between %s And %s
-                        and is_partialy = 1 and account_id_id = %s
-                        group by refrence_id,tran_type,refrence_date,ref_inv_tran_type,
-                        remarks,account_id_id
-                        )
-                        tbl order by refrence_date''',[pk,from_date,to_date,pk,from_date,to_date,pk])
-        row = cursor.fetchall()
-        debit_list = []
-        credit_list = []
-        total_balance_of_ledger = 0
-        for i,value in enumerate(row):
-            if value[0] == 'Sale Invoice' and value[7] > 0:
-                total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
-            elif value[0] == 'Sale Invoice' and value[6] > 0:
-                total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
-            elif value[0] == 'JV' and value[7] < 0:
-                total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
-            elif value[5] == 'Sale CRV' and value[7] < 0:
-                total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
-            elif value[5] == 'Purchase CPV' and value[7] > 0:
-                total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
-            elif value[5] == 'Purchase CPV' and value[6] > 0:
-                total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
-            elif value[0] == 'Opening' and value[7] < 0:
-                total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
-            elif value[0] == 'Opening' and value[7] > 0:
-                total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
-            elif value[0] == 'Purchase Invoice' and value[7] < 0:
-                total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
-            elif value[0] == 'Opening Balance' and value[7] < 0:
-                total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
-            elif value[0] == 'Opening Balance' and value[7] > 0:
-                total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
-            elif value[0] == 'Sale Return Invoice' and value[6] > 0:
-                total_balance_of_ledger = total_balance_of_ledger - float(value[6]) + float(value[7])
-            else:
-                total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + 0
-        if total_balance_of_ledger < 0:
-            # print("IN MINUS",total_balance_of_ledger)
-            debit_info = {
-            "account_title": c.account_title,
-            "Debit":0.00,
-            "Credit":total_balance_of_ledger
-            }
-            debit_list.append(debbit_info)
-        else:
-            credit_info = {
-            "account_title": c.account_title,
-            "Debit":total_balance_of_ledger,
-            "Credit":0.00
-            }
-            credit_list.append(credit_info)
-    return ledger_list
+# def trial_balance_fun(request, from_date, to_date):
+#     coa = ChartOfAccount.objects.all()
+#     for c in coa:
+#         from_date = request.POST.get('from_date')
+#         to_date = request.POST.get('to_date')
+#         pk  = c.id
+#         cursor = connection.cursor()
+#         cursor.execute('''select tran_type,refrence_id,refrence_date,remarks,ref_inv_tran_id,ref_inv_tran_type,Debit as Debit,Credit as Credit, detail_remarks, voucher_id_id from
+#                         (select '' as refrence_id,'Opening' as tran_type,'' as refrence_date,'' as ref_inv_tran_id,
+#                         '' as ref_inv_tran_type,'Opening Balance' as remarks,id,'' as detail_remarks,'' as voucher_id_id,
+#                         Case When opening_balance > 0 then opening_balance else 0 End as Debit,
+#                         Case When opening_balance < 0 then opening_balance else 0 End as Credit
+#                         from transaction_chartofaccount Where id = %s
+#                         Union All
+#                         Select * From (
+#                         Select refrence_id,tran_type,refrence_date,ref_inv_tran_id,ref_inv_tran_type,
+#                         remarks,account_id_id,detail_remarks,voucher_id_id,
+#                         Case When amount > 0 then amount else 0 End as Debit,
+#                         Case When amount < 0 then amount else 0 End as Credit
+#                         from transaction_transactions
+#                         Where
+#                         DATE(date) Between %s And %s and is_partialy = 0
+#                         Order by date asc) As tblLedger
+#                         Where account_id_id = %s
+#                         union all
+#                         Select refrence_id,tran_type,refrence_date,'merge' as ref_inv_tran_id,ref_inv_tran_type,
+#                         remarks,account_id_id,'Partialy Receiving' as detail_remarks,voucher_id_id,
+#                         Case When amount > 0 then sum(amount) else 0 End as Debit,
+#                         Case When amount < 0 then sum(amount) else 0 End as Credit
+#                         from transaction_transactions
+#                         Where
+#                         DATE(date) Between %s And %s
+#                         and is_partialy = 1 and account_id_id = %s
+#                         group by refrence_id,tran_type,refrence_date,ref_inv_tran_type,
+#                         remarks,account_id_id
+#                         )
+#                         tbl order by refrence_date''',[pk,from_date,to_date,pk,from_date,to_date,pk])
+#         row = cursor.fetchall()
+#         debit_list = []
+#         credit_list = []
+#         total_balance_of_ledger = 0
+#         for i,value in enumerate(row):
+#             if value[0] == 'Sale Invoice' and value[7] > 0:
+#                 total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
+#             elif value[0] == 'Sale Invoice' and value[6] > 0:
+#                 total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
+#             elif value[0] == 'JV' and value[7] < 0:
+#                 total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
+#             elif value[5] == 'Sale CRV' and value[7] < 0:
+#                 total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
+#             elif value[5] == 'Purchase CPV' and value[7] > 0:
+#                 total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
+#             elif value[5] == 'Purchase CPV' and value[6] > 0:
+#                 total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
+#             elif value[0] == 'Opening' and value[7] < 0:
+#                 total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
+#             elif value[0] == 'Opening' and value[7] > 0:
+#                 total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
+#             elif value[0] == 'Purchase Invoice' and value[7] < 0:
+#                 total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
+#             elif value[0] == 'Opening Balance' and value[7] < 0:
+#                 total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
+#             elif value[0] == 'Opening Balance' and value[7] > 0:
+#                 total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
+#             elif value[0] == 'Sale Return Invoice' and value[6] > 0:
+#                 total_balance_of_ledger = total_balance_of_ledger - float(value[6]) + float(value[7])
+#             else:
+#                 total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + 0
+#         if total_balance_of_ledger < 0:
+#             # print("IN MINUS",total_balance_of_ledger)
+#             debit_info = {
+#             "account_title": c.account_title,
+#             "Debit":0.00,
+#             "Credit":total_balance_of_ledger
+#             }
+#             debit_list.append(debbit_info)
+#         else:
+#             credit_info = {
+#             "account_title": c.account_title,
+#             "Debit":total_balance_of_ledger,
+#             "Credit":0.00
+#             }
+#             credit_list.append(credit_info)
+#     return ledger_list
 
 @login_required()
 @user_passes_test(allow_reports)
 def trial_balance(request, from_date, to_date):
     debit_amount = 0
     credit_amount = 0
+    total_credit = 0
+    total_debit = 0
     from_date = from_date
     to_date = to_date
     # ledger_list = trial_balance_fun(request, from_date, to_date)
     company_info = Company_info.objects.all()
-    coa = ChartOfAccount.objects.all()
+    coa = ChartOfAccount.objects.order_by('parent_id').all()
     debit_list = []
     credit_list = []
     for c in coa:
@@ -2176,21 +2179,24 @@ def trial_balance(request, from_date, to_date):
             else:
                 total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + 0
         if total_balance_of_ledger < 0:
-            # print("IN MINUS",total_balance_of_ledger)
+            total_credit += abs(total_balance_of_ledger)
+            print("TOTAL CREDIT", total_credit)
             credit_info = {
             "account_title": c.account_title,
             "Debit":0.00,
-            "Credit":abs(total_balance_of_ledger)
+            "Credit":abs(total_balance_of_ledger),
             }
             credit_list.append(credit_info)
         else:
+            total_debit += total_balance_of_ledger
+            print("TOTAL DEBIT", total_debit)
             debit_info = {
             "account_title": c.account_title,
             "Debit":total_balance_of_ledger,
-            "Credit":0.00
+            "Credit":0.00,
             }
             debit_list.append(debit_info)
-    pdf = render_to_pdf('transaction/trial_balance_pdf.html', {'company_info':company_info, 'debit_list': debit_list,'credit_list':credit_list ,'from_date':from_date,'to_date':to_date, 'debit_amount':debit_amount, 'credit_amount':credit_amount})
+    pdf = render_to_pdf('transaction/trial_balance_pdf.html', {'company_info':company_info, 'debit_list': debit_list,'credit_list':credit_list ,'from_date':from_date,'to_date':to_date, 'debit_amount':debit_amount, 'credit_amount':credit_amount, 'total_credit' : total_credit, 'total_debit':total_debit})
     if pdf:
         response = HttpResponse(pdf, content_type='application/pdf')
         filename = 'TrialBalance%s.pdf' %('000')

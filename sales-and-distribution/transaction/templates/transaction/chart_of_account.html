@@ -300,12 +300,9 @@
             <label for="" class="col-sm-4 form-control-sm col-form-label">Account Type:</label>
             <div class="col-sm-4">
               <select class="form-control" name="account_type" id="account_type">
-                <option value="13">Customer</option>
-                <option value="12">Supplier</option>
-                <option value="26">Cash at Bank</option>
-                {% for account in all_accounts %}
-                <option value="{{account.id}}">{{account.account_title}}</option>
-                {% endfor %}
+                <option value="7">Customer</option>
+                <option value="16">Vendor</option>
+                <option value="4">Expense</option>
               </select>
             </div>
           </div>
