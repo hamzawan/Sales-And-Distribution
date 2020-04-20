@@ -5983,7 +5983,6 @@ $(document).ready(function () {
 
 	});
 	$('#dataTable tbody').on('click', '.edit_list', function () {
-		console.log("edit is cl");
 		var currrow = $(this).closest('tr');
 		var id = currrow.find('td:eq(1)').text();
 		var account_title = currrow.find('td:eq(2)').text();
@@ -5997,7 +5996,6 @@ $(document).ready(function () {
 		var address = currrow.find('td:eq(10)').text();
 		var remarks = currrow.find('td:eq(11)').text();
 		var credit_limit = currrow.find('td:eq(12)').text();
-		console.log(opening_balance);
 		if (opening_balance > 0) {
 			$('#debit_edit').prop("checked", true);
 		} else {
@@ -6005,6 +6003,21 @@ $(document).ready(function () {
 		}
 		opening_balance = Math.abs(opening_balance);
 		$('#id').val(id);
+		if(parent_type === '7'){
+			$('#account_type option[value=7]').attr('selected','selected');
+		}
+		else if(parent_type === '16'){
+			val = '16'
+			$('#account_type option[value=16]').attr('selected','selected');
+		}
+		else if(parent_type === '4'){
+			val = '4'
+			$('#account_type option[value=4]').attr('selected','selected');
+		}
+		else if(parent_type === '74'){
+			val = '74'
+			$('#account_type option[value=74]').attr('selected','selected');
+		}
 		$('#account_title').val(account_title);
 		$('#opening_balance').val(opening_balance);
 		$('#phone_no').val(phone_no);
@@ -6116,13 +6129,13 @@ $(document).ready(function () {
 					var parent_amount = $('#amount').val();
 					var index = $("table tbody tr:last-child").index();
 					for (var i = 0; i < data.pi.length; i++) {
-						console.log(data.pi);
-
-						balance_amount = parseFloat(data.pi[i][5]) - Math.abs(parseFloat(data.pi[i][6]))
+						discount_amount = (parseFloat(data.pi[i][5]) / 100) * parseFloat(data.pi[i][8]).toFixed(2);
+						total_amount = (parseFloat(data.pi[i][5]) - discount_amount).toFixed(2);
+						balance_amount = total_amount - Math.abs(parseFloat(data.pi[i][6]))
 						var row = '<tr>' +
 							'<td>' + count++ + '</td>' +
 							'<td><b>' + data.pi[i][3] + '</b></td>' +
-							'<td align="right">' + data.pi[i][5].toFixed(2) + '</td>' +
+							'<td align="right">' + total_amount + '</td>' +
 							'<td align="right">' + Math.abs(data.pi[i][6].toFixed(2)) + '</td>' +
 							'<td align="right"><input type="text" disabled class="form-control form-control-sm invoice_amount"/></td>' +
 							'<td align="right">' + balance_amount.toFixed(2) + '</td>' +
@@ -6338,6 +6351,7 @@ $(document).ready(function () {
 				dataType: 'json'
 			})
 			.done(function done(data) {
+				console.log(data);
 				$("#new-crv-table tbody tr").empty();
 				if (data.pi.length > 0) {
 					count = 1;
@@ -6346,11 +6360,16 @@ $(document).ready(function () {
 					var parent_amount = $('#amount').val();
 					var index = $("table tbody tr:last-child").index();
 					for (var i = 0; i < data.pi.length; i++) {
-						balance_amount = parseFloat(data.pi[i][5]) - Math.abs(parseFloat(data.pi[i][6]))
+						gst = (parseFloat(data.pi[i][5]) * parseFloat(data.pi[i][8]) / 100)
+						srb = (parseFloat(data.pi[i][5]) * parseFloat(data.pi[i][9]) / 100)
+						total_amount_before_discount = parseFloat(data.pi[i][5].toFixed(2)) + parseFloat(gst) + parseFloat(srb)
+						discount_amount = (total_amount_before_discount / 100) * parseFloat(data.pi[i][10]).toFixed(2)
+						total_amount = total_amount_before_discount - discount_amount
+						balance_amount = total_amount - Math.abs(parseFloat(data.pi[i][6]))
 						var row = '<tr>' +
 							'<td>' + count++ + '</td>' +
 							'<td><b>' + data.pi[i][3] + '</b></td>' +
-							'<td align="right">' + data.pi[i][5].toFixed(2) + '</td>' +
+							'<td align="right">' + total_amount.toFixed(2) + '</td>' +
 							'<td align="right">' + Math.abs(data.pi[i][6].toFixed(2)) + '</td>' +
 							'<td align="right"><input type="text" disabled class="form-control form-control-sm invoice_amount"/></td>' +
 							'<td align="right">' + balance_amount.toFixed(2) + '</td>' +
@@ -6360,7 +6379,6 @@ $(document).ready(function () {
 					}
 
 				} else {
-					console.log("no data");
 					var row = '<tr>' +
 						'<td align="center" colspan="6" >No Data Found</td>' +
 						'</tr>';

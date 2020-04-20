@@ -1509,7 +1509,9 @@ def print_purchase(request,pk):
             total_quantity = float(total_quantity) + float(value.total_pcs)
     lines = lines + len(detail) + len(detail)
     total_lines = 36 - lines
-    pdf = render_to_pdf('transaction/purchase_pdf.html', {'header':header, 'detail':detail,'image':image, 'total_lines':12, 'total_amount':total_amount, 'total_quantity':total_quantity,'total_square_fit':total_square_fit})
+    discount = round(float(header.discount) * float(total_amount) / 100)
+    total_amount_after_discount = round(total_amount  - discount)
+    pdf = render_to_pdf('transaction/purchase_pdf.html', {'header':header, 'detail':detail,'image':image, 'total_lines':12, 'total_amount':total_amount,'total_amount_after_discount':total_amount_after_discount ,'total_quantity':total_quantity,'total_square_fit':total_square_fit,'discount':discount})
     if pdf:
         response = HttpResponse(pdf, content_type='application/pdf')
         filename = "Purchase_%s.pdf" %(header.purchase_no)
@@ -1535,7 +1537,6 @@ def allow_sale_print(user):
 @user_passes_test(allow_sale_print)
 def print_sale(request, pk):
     main_pk = pk
-    lines = 0
     total_amount = 0
     total_quantity = 0
     total_square_fit = 0
@@ -1641,7 +1642,6 @@ def print_sale(request, pk):
 @login_required()
 @user_passes_test(allow_sale_print)
 def print_sale_tax(request, pk):
-    lines = 0
     total_amount = 0
     total_quantity = 0
     total_square_fit = 0
@@ -1676,9 +1676,9 @@ def print_sale_tax(request, pk):
     gst_srb = gst_amount + srb_amount
     amount_before_discount = gst_srb + total_amount
     discount = header.discount
-    discount_amount = float(amount_before_discount / 100) * float(discount)
+    discount_amount = round(float(amount_before_discount / 100) * float(discount))
     gross_amount = amount_before_discount-discount_amount
-    pdf = render_to_pdf('transaction/sales_tax_invoice.html', {'header':header, 'detail':detail,'image':image, 'total_lines':12, 'total_amount':total_amount, 'total_quantity':total_quantity,'total_square_fit':total_square_fit,"srb_amount":srb_amount,"gst_amount":gst_amount,"discount":discount,"gross_amount":gross_amount,"srb_percent":srb_percent,"gst_percent":gst_percent})
+    pdf = render_to_pdf('transaction/sales_tax_invoice.html', {'header':header, 'detail':detail,'image':image, 'total_lines':12, 'total_amount':total_amount, 'total_quantity':total_quantity,'total_square_fit':total_square_fit,"srb_amount":srb_amount,"gst_amount":gst_amount,"discount":discount,"gross_amount":gross_amount,"srb_percent":srb_percent,"gst_percent":gst_percent,'discount_amount':discount_amount})
     if pdf:
         response = HttpResponse(pdf, content_type='application/pdf')
         filename = "Sale_%s.pdf" % (header.sale_no)
@@ -2260,34 +2260,37 @@ def account_ledger(request, from_date, to_date,pk):
             total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
             sale_id = Q(id = value[1])
             client_sale_no = SaleHeader.objects.filter(sale_id).first()
+            user_desc = client_sale_no.footer_description
             if client_sale_no.payment_method == 'Cash':
                 amount_value = abs(value[7])
-                detail_remarks = f'Sale invoice {amount_value} RS, on Cash.'
+                detail_remarks = f'Sale invoice {amount_value} RS, on Cash.[{user_desc}]'
             else:
                 amount_value = abs(value[6])
-                detail_remarks = f'Sale invoice {amount_value} RS, on Credit.'
+                detail_remarks = f'Sale invoice {amount_value} RS, on Credit.[{user_desc}]'
         elif value[0] == 'Sale Invoice' and value[7] < 0:
             # balance = balance + float(value[6]) + float(value[7])
             # total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
             sale_id = Q(id = value[1])
             client_sale_no = SaleHeader.objects.filter(sale_id).first()
+            user_desc = client_sale_no.footer_description
             if client_sale_no.payment_method == 'Cash':
                 amount_value = abs(value[7])
-                detail_remarks = f'Sale invoice {amount_value} RS, on Cash.'
+                detail_remarks = f'Sale invoice {amount_value} RS, on Cash.[{user_desc}]'
             else:
                 amount_value = abs(value[6])
-                detail_remarks = f'Sale invoice {amount_value} RS, on Credit.'
+                detail_remarks = f'Sale invoice {amount_value} RS, on Credit.[{user_desc}]'
         elif value[0] == 'Sale Invoice' and value[6] > 0:
             balance = balance + float(value[6]) + float(value[7])
             total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
             sale_id = Q(id = value[1])
             client_sale_no = SaleHeader.objects.filter(sale_id).first()
+            user_desc = client_sale_no.footer_description
             if client_sale_no.payment_method == 'Cash':
                 amount_value = abs(value[7])
-                detail_remarks = f'Sale invoice {amount_value} RS, on Cash.'
+                detail_remarks = f'Sale invoice {amount_value} RS, on Cash.[{user_desc}]'
             else:
                 amount_value = abs(value[6])
-                detail_remarks = f'Sale invoice {amount_value} RS, on Credit.'
+                detail_remarks = f'Sale invoice {amount_value} RS, on Credit.[{user_desc}]'
         elif value[0] == 'JV' and value[7] < 0:
             balance = balance + float(value[6]) + float(value[7])
             total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
@@ -2400,10 +2403,10 @@ def account_ledger(request, from_date, to_date,pk):
             client_purchase_no = PurchaseHeader.objects.filter(purchase_id).first()
             if client_purchase_no.payment_method == 'Cash':
                 amount_value = abs(value[6])
-                detail_remarks = f'Purchase invoice ,against invoice no {client_sale_no.footer_description} on Cash.'
+                detail_remarks = f'Purchase invoice on Cash.[{client_sale_no.footer_description}]'
             else:
                 amount_value = abs(value[6])
-                detail_remarks = f'Purchase invoice , against invoice no {client_purchase_no.footer_description} on Credit.'
+                detail_remarks = f'Purchase invoice on Credit.[{client_sale_no.footer_description}]'
         elif value[0] == 'Opening Balance' and value[7] < 0:
             balance = balance + float(value[6]) + float(value[7])
             total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
@@ -4068,14 +4071,14 @@ def new_cash_payment_voucher(request):
         pi = cursor.execute('''Select * From (
                                 Select '0' as 'ID', '2000-01-01' as 'refrence_date',COA.id, 'Opening Balance' as 'purchase_no' , COA.account_title, abs(COA.opening_balance) As InvAmount,
                                 abs(ifnull((Select Sum(Amount) * -1 From transaction_transactions
-                                Where ref_inv_tran_id = 0 AND ref_inv_tran_type = "Purchase CPV" AND account_id_id = %s),0)) As RcvAmount, II.tran_type As 'OP'
+                                Where ref_inv_tran_id = 0 AND ref_inv_tran_type = "Purchase CPV" AND account_id_id = %s),0)) As RcvAmount, II.tran_type As 'OP', 0 as 'discount'
                                 from transaction_chartofaccount COA
                                 left join transaction_transactions II on II.refrence_id = COA.id and II.tran_type = "Opening Balance" and II.account_id_id = %s
-                                Where COA.id = %s
+                                Where COA.id = %s AND COA.opening_balance < -1
                                 group by II.tran_type
                                 Having InvAmount > RcvAmount
                                 Union All
-                                Select HD.ID,HD.date as 'refrence_date' ,HD.account_id_id,HD.purchase_no,account_title,abs(Sum(total_amount)) As InvAmount,0 As RcvAmount, 'tran_type' as 'tran_type'
+                                Select HD.ID,HD.date as 'refrence_date' ,HD.account_id_id,HD.purchase_no,account_title,abs(Sum(total_amount)) As InvAmount,0 As RcvAmount, 'tran_type' as 'tran_type', discount as 'discount'
                                 from transaction_purchaseheader HD
                                 Inner join transaction_purchasedetail DT on DT.purchase_id_id = HD.id
                                 Left Join transaction_chartofaccount COA on HD.account_id_id = COA.id
@@ -4086,7 +4089,7 @@ def new_cash_payment_voucher(request):
                                 Union All
                                 Select HD.ID,HD.date as 'refrence_date',HD.account_id_id,HD.purchase_no,account_title,abs(Sum(total_amount)) As InvAmount,
                                 abs(ifnull((Select Sum(Amount) * -1 From transaction_transactions
-                                Where ref_inv_tran_id = HD.ID AND account_id_id = %s),0)) As RcvAmount, 'tran_type' as 'tran_type'
+                                Where ref_inv_tran_id = HD.ID AND account_id_id = %s),0)) As RcvAmount, 'tran_type' as 'tran_type', discount as 'discount'
                                 from transaction_purchaseheader HD
                                 Inner join transaction_purchasedetail DT on DT.purchase_id_id = HD.id
                                 Inner Join transaction_chartofaccount COA on HD.account_id_id = COA.id
@@ -4312,14 +4315,14 @@ def new_cash_receiving_voucher(request):
         pi = cursor.execute('''Select * From (
                                 Select '0' as 'ID', '2000-01-01' as 'refrence_date',COA.id, 'Opening Balance' as 'sale_no' , COA.account_title, abs(COA.opening_balance) As InvAmount,
                                 abs(ifnull((Select Sum(Amount) * -1 From transaction_transactions
-                                Where ref_inv_tran_id = 0 AND ref_inv_tran_type = "Sale CRV" AND account_id_id = %s),0)) As RcvAmount, II.tran_type As 'OP'
+                                Where ref_inv_tran_id = 0 AND ref_inv_tran_type = "Sale CRV" AND account_id_id = %s),0)) As RcvAmount, II.tran_type As 'OP',0 as 'gst', 0 as 'srb', 0 as 'discount'
                                 from transaction_chartofaccount COA
                                 left join transaction_transactions II on II.refrence_id = COA.id and II.tran_type = "Opening Balance" and II.account_id_id = %s
-                                Where COA.id = %s
+                                Where COA.id = %s AND COA.opening_balance > -1
                                 group by II.tran_type
                                 Having InvAmount > RcvAmount
                                 Union All
-                                Select HD.ID,HD.date as 'refrence_date' ,HD.account_id_id,HD.sale_no,account_title,abs(Sum(total_amount)) As InvAmount,0 As RcvAmount, 'tran_type' as 'tran_type'
+                                Select HD.ID,HD.date as 'refrence_date' ,HD.account_id_id,HD.sale_no,account_title,abs(Sum(total_amount)) As InvAmount,0 As RcvAmount ,'tran_type' as 'tran_type', gst, srb,discount as 'discount'
                                 from transaction_saleheader HD
                                 Inner join transaction_saledetail DT on DT.sale_id_id = HD.id
                                 Left Join transaction_chartofaccount COA on HD.account_id_id = COA.id
@@ -4330,7 +4333,7 @@ def new_cash_receiving_voucher(request):
                                 Union All
                                 Select HD.ID,HD.date as 'refrence_date',HD.account_id_id,HD.sale_no,account_title,abs(Sum(total_amount)) As InvAmount,
                                 abs(ifnull((Select Sum(Amount) * -1 From transaction_transactions
-                                Where ref_inv_tran_id = HD.ID AND account_id_id = %s),0)) As RcvAmount, 'tran_type' as 'tran_type'
+                                Where ref_inv_tran_id = HD.ID AND account_id_id = %s),0)) As RcvAmount,'tran_type' as 'tran_type',HD.gst, HD.srb, discount
                                 from transaction_saleheader HD
                                 Inner join transaction_saledetail DT on DT.sale_id_id = HD.id
                                 Inner Join transaction_chartofaccount COA on HD.account_id_id = COA.id
