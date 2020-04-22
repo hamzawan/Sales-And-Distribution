@@ -72,4 +72,8 @@ urlpatterns = [
     path('job_order/edit/<pk>', views.edit_job_order, name='edit-job-order'),
     path('job_order/delete/<pk>', views.delete_job_order, name='delete-job-order'),
 
+    path('test', views.new_test, name='new-test'),
+
+
+
 ]

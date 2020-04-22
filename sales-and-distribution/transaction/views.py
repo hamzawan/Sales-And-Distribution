@@ -4403,3 +4403,7 @@ def new_cash_receiving_voucher(request):
     'all_invoices':all_invoices,
     }
     return render(request, 'transaction/new_cash_receiving_voucher.html', context)
+
+
+def new_test(request):
+    return render(request, 'transaction/test.html')
