@@ -2403,10 +2403,10 @@ def account_ledger(request, from_date, to_date,pk):
             client_purchase_no = PurchaseHeader.objects.filter(purchase_id).first()
             if client_purchase_no.payment_method == 'Cash':
                 amount_value = abs(value[6])
-                detail_remarks = f'Purchase invoice on Cash.[{client_sale_no.footer_description}]'
+                detail_remarks = f'Purchase invoice on Cash.[{client_purchase_no.footer_description}]'
             else:
                 amount_value = abs(value[6])
-                detail_remarks = f'Purchase invoice on Credit.[{client_sale_no.footer_description}]'
+                detail_remarks = f'Purchase invoice on Credit.[{client_purchase_no.footer_description}]'
         elif value[0] == 'Opening Balance' and value[7] < 0:
             balance = balance + float(value[6]) + float(value[7])
             total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
