@@ -8,6 +8,9 @@ urlpatterns = [
     path('chart_of_account/edit', views.edit_chart_of_account, name='edit-chart-of-account'),
     path('chart_of_account/delete/<pk>', views.delete_account, name='delete-account'),
     path('nested_account/<id>', views.nested_account, name='nested-account'),
+    
+    # path('correct_db/', views.correct_DB, name='db-correct'),
+    # path('correct_db_purchase/', views.correct_DB_purchase, name='db-correct-purchase'),
 
     path('reports/', views.reports, name='reports'),
 

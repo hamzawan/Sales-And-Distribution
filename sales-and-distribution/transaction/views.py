@@ -56,13 +56,41 @@ def allow_purchase(user):
 def purchase(request):
     request.session['objectID'] = 11
     cursor = connection.cursor()
-    allow_purchases = cursor.execute('''select PH.id,PH.purchase_no,PH.follow_up, COA.account_title, abs(sum(PD.total_amount))
+    all_purchases = []
+    allow_purchases = cursor.execute('''select PH.id,PH.purchase_no,PH.follow_up, COA.account_title, abs(sum(PD.total_amount)),PH.discount
                                     from transaction_purchaseheader PH
                                     inner join transaction_purchasedetail PD on PD.purchase_id_id = PH.id
                                     inner join transaction_chartofaccount COA on COA.id = PH.account_id_id
                                     group by PH.purchase_no''')
-    all_purchases = allow_purchases.fetchall()
-    return render(request, 'transaction/purchase.html', {'all_purchases': all_purchases})
+    all_purchase = allow_purchases.fetchall()
+    for value in all_purchase:
+        amount_before_discount = float(value[4])
+        discount_amount = amount_before_discount * value[5] / 100
+        total_amount = amount_before_discount - discount_amount
+        info = {
+            'id': value[0],
+            'purchase_no': value[1],
+            'date': value[2],
+            'account_title': value[3],
+            'account_holder': value[4],
+            'total_amount': total_amount
+        }
+        #print(info,"799999999")
+        all_purchases.append(info)    
+    return render(request, 'transaction/purchase.html', {"all_purchases": all_purchases})
+
+# @login_required()
+# @user_passes_test(allow_purchase)
+# def purchase(request):
+#     request.session['objectID'] = 11
+#     cursor = connection.cursor()
+#     allow_purchases = cursor.execute('''select PH.id,PH.purchase_no,PH.follow_up, COA.account_title, abs(sum(PD.total_amount))
+#                                     from transaction_purchaseheader PH
+#                                     inner join transaction_purchasedetail PD on PD.purchase_id_id = PH.id
+#                                     inner join transaction_chartofaccount COA on COA.id = PH.account_id_id
+#                                     group by PH.purchase_no''')
+#     all_purchases = allow_purchases.fetchall()
+#     return render(request, 'transaction/purchase.html', {'all_purchases': all_purchases})
 
 
 def allow_new_purchase(user):
@@ -732,7 +760,7 @@ def edit_sale(request, pk):
                 cash_in_hand = ChartOfAccount.objects.get(account_title = 'Cash')
                 header_id = header_id.id
                 if payment_method == 'Cash':
-                    detail_remarks = f"Sale invoice amount {total_amount} RS, against invoice no {sale_id} on Cash."
+                    detail_remarks = f"Sale invoice amount {net_amount} RS, against invoice no {sale_id} on Cash."
                     refrence_id = Q(refrence_id = pk)
                     tran_type = Q(tran_type = "Sale Invoice")
                     # ref_inv_tran_id = Q(ref_inv_tran_id = pk)
@@ -744,7 +772,7 @@ def edit_sale(request, pk):
                     tran2 = Transactions(refrence_id = header_id, refrence_date = invoice_date, account_id = account_id, tran_type = "Sale Invoice", amount = -abs(net_amount), date = date, remarks = sale_id, ref_inv_tran_id = 0, ref_inv_tran_type = "", detail_remarks = detail_remarks)
                     tran2.save()
                 else:
-                    detail_remarks = f"Sale invoice amount {total_amount} RS, against invoice no {sale_id} on Credit."
+                    detail_remarks = f"Sale invoice amount {net_amount} RS, against invoice no {sale_id} on Credit."
                     refrence_id = Q(refrence_id = pk)
                     tran_type = Q(tran_type = "Sale Invoice")
                     # ref_inv_tran_id = Q(ref_inv_tran_id = pk)
@@ -761,6 +789,120 @@ def edit_sale(request, pk):
             return JsonResponse({'e':str(e)})
     return render(request, 'transaction/edit_sale.html',
         {'job_no': job_no, 'sale_header': sale_header, 'sale_detail': sale_detail,'pk':pk, 'all_pcs':all_pcs,'discount_amount':discount_amount})
+
+
+# def correct_DB(request):
+#     #pk = id, ref_date,date = date,account_id,remarks = sale_no, srb,gst,amount, discount
+
+#     cursor = connection.cursor()
+#     header = cursor.execute('''Select HD.id from transaction_saledetail SD INNER JOIN transaction_saleheader HD on SD.sale_id_id = HD.id WHERE HD.discount!=0 GROUP By HD.id''')
+#     header = header.fetchall()
+#     print(header[0],len(header))
+#     for value in header:
+#         pk = value[0]
+#         data = cursor.execute('''SELECT Sum(SD.total_amount), HD.discount, HD.sale_no, HD.payment_method , HD.date, HD.srb, HD.gst, account_id_id from transaction_saledetail SD INNER JOIN transaction_saleheader HD on SD.sale_id_id = HD.id WHERE HD.id = %s GROUP By HD.id''',[pk])
+        
+#         data = data.fetchall()
+#         data = data[0]
+#         net_srb = (float(data[0]) / 100) * float(data[5])
+#         net_gst = (float(data[0]) / 100) * float(data[6])
+#         discount_amount = (data[0] / 100) * float(data[1])
+#         net_amount = (float(net_srb) + float(net_gst) + float(data[0]) - float(discount_amount))
+#         net_amount = round(net_amount)
+#         try:
+#             with transaction.atomic(): 
+#                 cash_in_hand = ChartOfAccount.objects.get(account_title = 'Cash')
+#                 header_id = pk
+#                 if data[3] == 'Cash':
+#                     detail_remarks = f"Sale invoice amount {net_amount} RS, against invoice no {data[2]} on Cash."
+#                     refrence_id = Q(refrence_id = pk)
+#                     tran_type = Q(tran_type = "Sale Invoice")
+#                     dateTran = Transactions.objects.filter(refrence_id , tran_type).first()
+                    
+#                     date = dateTran.date
+
+#                     Transactions.objects.filter(refrence_id , tran_type).all().delete()
+
+#                     tran1 = Transactions(refrence_id = header_id, refrence_date = data[4],account_id = cash_in_hand, tran_type = "Sale Invoice", amount = net_amount, date = date, remarks = data[2], ref_inv_tran_id = 0, ref_inv_tran_type = "", detail_remarks = detail_remarks)
+#                     tran1.save()
+
+#                     account_id = ChartOfAccount.objects.get(id=data[7])
+
+#                     tran2 = Transactions(refrence_id = header_id, refrence_date = data[4], account_id = account_id, tran_type = "Sale Invoice", amount = -abs(net_amount), date = date, remarks = data[2], ref_inv_tran_id = 0, ref_inv_tran_type = "", detail_remarks = detail_remarks)
+#                     tran2.save()
+#                 else:
+#                     detail_remarks = f"Sale invoice amount {net_amount} RS, against invoice no {data[2]} on Credit."
+#                     refrence_id = Q(refrence_id = pk)
+#                     tran_type = Q(tran_type = "Sale Invoice")
+
+#                     Transactions.objects.filter(refrence_id , tran_type).all().delete()
+#                     sale_account = ChartOfAccount.objects.get(account_title = 'Sales')
+#                     account_id = ChartOfAccount.objects.get(id=data[7])
+
+#                     tran1 = Transactions(refrence_id = header_id, refrence_date = data[4],account_id = account_id, tran_type = "Sale Invoice", amount = net_amount,date = data[4], remarks = data[2], ref_inv_tran_id = 0, ref_inv_tran_type = "", detail_remarks = detail_remarks)
+#                     tran1.save()
+
+#                     tran2 = Transactions(refrence_id = header_id, refrence_date = data[4], account_id = sale_account, tran_type = "Sale Invoice", amount = -abs(net_amount), date = data[4], remarks = data[2], ref_inv_tran_id = 0, ref_inv_tran_type = "", detail_remarks = detail_remarks)
+#                     tran2.save()
+#         except Exception as e:
+#             return JsonResponse({'error':str(e)})
+#     return JsonResponse({'result':'success'})
+
+
+# def correct_DB_purchase(request):
+#     #pk = id, ref_date,date = date,account_id,remarks = sale_no, srb,gst,amount, discount
+#     cursor = connection.cursor()
+#     header = cursor.execute('''Select HD.id from transaction_purchasedetail SD INNER JOIN transaction_purchaseheader HD on SD.purchase_id_id = HD.id where HD.discount!=0 GROUP By HD.id''')
+#     header = header.fetchall()
+#     print(header[0],len(header))
+#     for value in header:
+#         pk = value[0]
+#         data = cursor.execute('''SELECT Sum(SD.total_amount), HD.discount, HD.purchase_no, HD.payment_method , HD.follow_up, HD.footer_description, HD.account_id_id from transaction_purchasedetail SD INNER JOIN transaction_purchaseheader HD on SD.purchase_id_id = HD.id WHERE HD.id = %s GROUP By HD.id''',[pk])
+        
+#         data = data.fetchall()
+#         data = data[0]
+#         print(data[0],data[0] * data[1] / 100,data[1])
+
+#         total_amount = data[0] - float(data[0] * data[1] / 100)
+#         total_amount = round(total_amount,2)
+
+#         try:
+#             with transaction.atomic(): 
+#                 cash_in_hand = ChartOfAccount.objects.get(account_title = 'Cash')
+
+#                 if data[3] == 'Cash':
+#                     detail_remarks = f"Purchase invoice {total_amount} RS, against invoice no {data[5]} on Cash."
+#                     refrence_id = Q(refrence_id = pk)
+#                     tran_type = Q(tran_type = "Purchase Invoice")
+
+#                     dateTran = Transactions.objects.filter(refrence_id , tran_type).first()
+#                     date = dateTran.date 
+                    
+#                     Transactions.objects.filter(refrence_id , tran_type).all().delete()
+
+#                     account_id = ChartOfAccount.objects.get(id=data[6])
+
+#                     tran2 = Transactions(refrence_id = pk, refrence_date = data[4], account_id = account_id, tran_type = "Purchase Invoice", amount = total_amount, date = date, remarks = data[2], ref_inv_tran_id = 0, ref_inv_tran_type = "", detail_remarks = detail_remarks)
+#                     tran2.save()
+
+#                     tran1 = Transactions(refrence_id = pk, refrence_date = data[4], account_id = cash_in_hand, tran_type = "Purchase Invoice", amount = -abs(total_amount), date = date, remarks = data[2], ref_inv_tran_id = 0, ref_inv_tran_type = "", detail_remarks = detail_remarks)
+#                     tran1.save()
+#                 else:
+#                     detail_remarks = f"Purchase invoice {total_amount} RS, against invoice no {data[5]} on Credit."
+#                     refrence_id = Q(refrence_id = pk)
+#                     tran_type = Q(tran_type = "Purchase Invoice")
+#                     Transactions.objects.filter(refrence_id , tran_type).all().delete()
+#                     purchase_account = ChartOfAccount.objects.get(account_title = 'Purchases')
+#                     account_id = ChartOfAccount.objects.get(id=data[6])
+
+#                     tran1 = Transactions(refrence_id = pk, refrence_date = data[4], account_id = account_id, tran_type = "Purchase Invoice", amount = -abs(total_amount), date = data[4], remarks = data[2], ref_inv_tran_id = 0, ref_inv_tran_type = "", detail_remarks = detail_remarks)
+#                     tran1.save()
+
+#                     tran2 = Transactions(refrence_id = pk, refrence_date = data[4], account_id = purchase_account, tran_type = "Purchase Invoice", amount = total_amount, date = data[4], remarks = data[2], ref_inv_tran_id = 0, ref_inv_tran_type = "", detail_remarks = detail_remarks)
+#                     tran2.save()
+#         except Exception as e:
+#             return JsonResponse({'error':str(e)})
+#     return JsonResponse({'result':'success'})
 
 
 @login_required()
@@ -2404,10 +2546,10 @@ def account_ledger(request, from_date, to_date,pk):
             client_purchase_no = PurchaseHeader.objects.filter(purchase_id).first()
             if client_purchase_no.payment_method == 'Cash':
                 amount_value = abs(value[6])
-                detail_remarks = f'Purchase invoice on Cash.[{client_sale_no.footer_description}]'
+                detail_remarks = f'Purchase invoice on Cash.[{client_purchase_no.footer_description}]'
             else:
                 amount_value = abs(value[6])
-                detail_remarks = f'Purchase invoice on Credit.[{client_sale_no.footer_description}]'
+                detail_remarks = f'Purchase invoice on Credit.[{client_purchase_no.footer_description}]'
         elif value[0] == 'Opening Balance' and value[7] < 0:
             balance = balance + float(value[6]) + float(value[7])
             total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
