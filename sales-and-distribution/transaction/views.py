@@ -15,7 +15,7 @@ from django.contrib import messages
 from django.db.models import Q,Count, Sum
 from num2words import num2words
 from decimal import Decimal
-
+import sys
 
 @login_required()
 def home(request):
@@ -2254,6 +2254,7 @@ def account_ledger(request, from_date, to_date,pk):
     partialy_debit = 0
     partialy_credit = 0
     total_balance_of_ledger = 0
+    print(row)
     for i,value in enumerate(row):
         if value[0] == 'Sale Invoice' and value[7] > 0:
             balance = balance + float(value[6]) + float(value[7])
@@ -2421,6 +2422,12 @@ def account_ledger(request, from_date, to_date,pk):
             balance = balance - float(value[6]) + float(value[7])
             total_balance_of_ledger = total_balance_of_ledger - float(value[6]) + float(value[7])
             detail_remarks = f'Sale Return, against invoice no {client_sale_return_no.footer_description}.'
+        elif value[5] == 'Advance Receiving' and value[6] >= 0:
+            sale_return_id = Q(id = value[1])
+            client_sale_return_no = SaleReturnHeader.objects.filter(sale_return_id).first()
+            balance = balance - float(value[6]) + float(value[7])
+            total_balance_of_ledger = total_balance_of_ledger - float(value[6]) + float(value[7])
+            detail_remarks = f'Advance Receiving'
         else:
             balance = balance + float(value[6]) + 0
             total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + 0
@@ -4223,92 +4230,113 @@ def new_cash_receiving_voucher(request):
                 pi_account = pi_account.fetchall()
                 cash_account = ChartOfAccount.objects.filter(account_title = "Cash").first()
                 receiving_amount = float(receiving_amount)
-                for value in pi_account:
-                    balance_amount = 0
-                    if receiving_amount > 0:
-                        if value[7] != "tran_type":
-                            balance_amount = value[5] - value[6]
-                            if balance_amount > 0:
-                                vendor = request.POST.get('vendor', False)
-                                vendor = ChartOfAccount.objects.filter(id = vendor).first()
-                                voucher_id = VoucherHeader.objects.filter(voucher_no = get_last_tran_id).first()
+                if len(pi_account) > 0:
+                    for value in pi_account:
+                        balance_amount = 0
+                        if receiving_amount > 0:
+                            if value[7] != "tran_type":
                                 balance_amount = value[5] - value[6]
                                 if balance_amount > 0:
-                                    if receiving_amount > balance_amount:
-                                        detail_remarks = f"Received amount against opening balance."
-                                        tran1 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = -abs(balance_amount),
-                                                            date = date, remarks = get_last_tran_id, account_id = vendor,ref_inv_tran_id = 0,ref_inv_tran_type = "Sale CRV", voucher_id = voucher_id ,detail_remarks = detail_remarks, is_partialy = 1 )
-                                        tran1.save()
-                                        tran2 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = balance_amount,
-                                                            date = date, remarks = get_last_tran_id, account_id = cash_account,ref_inv_tran_id = 0,ref_inv_tran_type = "Sale CRV", voucher_id = voucher_id ,detail_remarks = detail_remarks, is_partialy = 1 )
-                                        tran2.save()
-                                        header_id = VoucherHeader.objects.get(voucher_no = get_last_tran_id)
-                                        jv_detail1 = VoucherDetail(account_id = cash_account, debit = balance_amount, credit = 0.00, header_id = header_id, invoice_id = 0)
-                                        jv_detail1.save()
-                                        jv_detail2 = VoucherDetail(account_id = vendor,  debit = 0.00, credit = balance_amount,header_id = header_id, invoice_id = 0)
-                                        jv_detail2.save()
-                                        receiving_amount = receiving_amount - balance_amount
-                                    else:
-                                        balance_amount = receiving_amount
-                                        detail_remarks = f"Received amount against opening balance."
-                                        tran1 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = -abs(balance_amount),
-                                                            date = date, remarks = get_last_tran_id, account_id = vendor,ref_inv_tran_id = 0,ref_inv_tran_type = "Sale CRV",voucher_id = voucher_id ,detail_remarks = detail_remarks, is_partialy = 1 )
-                                        tran1.save()
-                                        tran2 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = balance_amount,
-                                                            date = date, remarks = get_last_tran_id, account_id = cash_account,ref_inv_tran_id = 0,ref_inv_tran_type = "Sale CRV",voucher_id = voucher_id, detail_remarks = detail_remarks, is_partialy = 1 )
-                                        tran2.save()
-                                        header_id = VoucherHeader.objects.get(voucher_no = get_last_tran_id)
-                                        jv_detail1 = VoucherDetail(account_id = cash_account, debit = balance_amount, credit = 0.00, header_id = header_id, invoice_id = 0)
-                                        jv_detail1.save()
-                                        jv_detail2 = VoucherDetail(account_id = vendor,  debit = 0.00, credit = balance_amount,header_id = header_id, invoice_id = 0)
-                                        jv_detail2.save()
-                                        receiving_amount = 0
-                        else:
-                            balance_amount = value[5] - value[6]
-                            if receiving_amount > balance_amount:
-                                vendor = request.POST.get('vendor', False)
-                                invoice_no = SaleHeader.objects.get(sale_no = value[3])
-                                vendor = request.POST.get('vendor', False)
-                                vendor = ChartOfAccount.objects.filter(id = vendor).first()
-                                voucher_id = VoucherHeader.objects.filter(voucher_no = get_last_tran_id).first()
-                                detail_remarks = f"Received amount {balance_amount} RS, against invoice no {invoice_no.sale_no}."
-                                tran1 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = -abs(balance_amount),
-                                                    date = date, remarks = get_last_tran_id, account_id = vendor,ref_inv_tran_id = invoice_no.id,ref_inv_tran_type = "Sale CRV", voucher_id = voucher_id, detail_remarks = detail_remarks, is_partialy = 1 )
-                                tran1.save()
-                                tran2 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = balance_amount,
-                                                    date = date, remarks = get_last_tran_id, account_id = cash_account,ref_inv_tran_id = invoice_no.id,ref_inv_tran_type = "Sale CRV", voucher_id = voucher_id,detail_remarks = detail_remarks, is_partialy = 1 )
-                                tran2.save()
-                                header_id = VoucherHeader.objects.get(voucher_no = get_last_tran_id)
-                                jv_detail1 = VoucherDetail(account_id = cash_account, debit = 0.00, credit = -abs(balance_amount), header_id = header_id, invoice_id = invoice_no.id)
-                                jv_detail1.save()
-                                jv_detail2 = VoucherDetail(account_id = vendor,  debit = balance_amount, credit = 0.00,header_id = header_id, invoice_id = invoice_no.id)
-                                jv_detail2.save()
-                                receiving_amount = receiving_amount - balance_amount
+                                    vendor = request.POST.get('vendor', False)
+                                    vendor = ChartOfAccount.objects.filter(id = vendor).first()
+                                    voucher_id = VoucherHeader.objects.filter(voucher_no = get_last_tran_id).first()
+                                    balance_amount = value[5] - value[6]
+                                    if balance_amount > 0:
+                                        if receiving_amount > balance_amount:
+                                            detail_remarks = f"Received amount against opening balance."
+                                            tran1 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = -abs(balance_amount),
+                                                                date = date, remarks = get_last_tran_id, account_id = vendor,ref_inv_tran_id = 0,ref_inv_tran_type = "Sale CRV", voucher_id = voucher_id ,detail_remarks = detail_remarks, is_partialy = 1 )
+                                            tran1.save()
+                                            tran2 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = balance_amount,
+                                                                date = date, remarks = get_last_tran_id, account_id = cash_account,ref_inv_tran_id = 0,ref_inv_tran_type = "Sale CRV", voucher_id = voucher_id ,detail_remarks = detail_remarks, is_partialy = 1 )
+                                            tran2.save()
+                                            header_id = VoucherHeader.objects.get(voucher_no = get_last_tran_id)
+                                            jv_detail1 = VoucherDetail(account_id = cash_account, debit = balance_amount, credit = 0.00, header_id = header_id, invoice_id = 0)
+                                            jv_detail1.save()
+                                            jv_detail2 = VoucherDetail(account_id = vendor,  debit = 0.00, credit = balance_amount,header_id = header_id, invoice_id = 0)
+                                            jv_detail2.save()
+                                            receiving_amount = receiving_amount - balance_amount
+                                        else:
+                                            balance_amount = receiving_amount
+                                            detail_remarks = f"Received amount against opening balance."
+                                            tran1 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = -abs(balance_amount),
+                                                                date = date, remarks = get_last_tran_id, account_id = vendor,ref_inv_tran_id = 0,ref_inv_tran_type = "Sale CRV",voucher_id = voucher_id ,detail_remarks = detail_remarks, is_partialy = 1 )
+                                            tran1.save()
+                                            tran2 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = balance_amount,
+                                                                date = date, remarks = get_last_tran_id, account_id = cash_account,ref_inv_tran_id = 0,ref_inv_tran_type = "Sale CRV",voucher_id = voucher_id, detail_remarks = detail_remarks, is_partialy = 1 )
+                                            tran2.save()
+                                            header_id = VoucherHeader.objects.get(voucher_no = get_last_tran_id)
+                                            jv_detail1 = VoucherDetail(account_id = cash_account, debit = balance_amount, credit = 0.00, header_id = header_id, invoice_id = 0)
+                                            jv_detail1.save()
+                                            jv_detail2 = VoucherDetail(account_id = vendor,  debit = 0.00, credit = balance_amount,header_id = header_id, invoice_id = 0)
+                                            jv_detail2.save()
+                                            receiving_amount = 0
                             else:
-                                voucher_id = VoucherHeader.objects.filter(voucher_no = get_last_tran_id)
-                                invoice_no = SaleHeader.objects.get(sale_no = value[3])
-                                vendor = request.POST.get('vendor', False)
-                                vendor = ChartOfAccount.objects.filter(id = vendor).first()
-                                voucher_id = VoucherHeader.objects.filter(voucher_no = get_last_tran_id).first()
-                                balance_amount = receiving_amount
-                                invoice_id = SaleHeader.objects.get(sale_no = value[3])
-                                detail_remarks = f"Received amount {balance_amount} RS, against invoice no {invoice_id.sale_no}."
-                                tran1 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = -abs(balance_amount),
-                                                    date = date, remarks = get_last_tran_id, account_id = vendor,ref_inv_tran_id = invoice_no.id,ref_inv_tran_type = "Sale CRV",voucher_id = voucher_id ,detail_remarks = detail_remarks,is_partialy = 1)
-                                tran1.save()
-                                tran2 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = balance_amount,
-                                                    date = date, remarks = get_last_tran_id, account_id = cash_account,ref_inv_tran_id = invoice_no.id,ref_inv_tran_type = "Sale CRV", voucher_id = voucher_id ,detail_remarks = detail_remarks,is_partialy = 1 )
-                                tran2.save()
-                                header_id = VoucherHeader.objects.get(voucher_no = get_last_tran_id)
-                                jv_detail1 = VoucherDetail(account_id = cash_account, debit = 0.00, credit = -abs(balance_amount), header_id = header_id, invoice_id = invoice_no.id)
-                                jv_detail1.save()
-                                jv_detail2 = VoucherDetail(account_id = vendor,  debit = balance_amount, credit = 0.00,header_id = header_id, invoice_id = invoice_no.id)
-                                jv_detail2.save()
-                                receiving_amount = 0
-                    else:
-                        return JsonResponse({'result':'success','doc_no':get_last_tran_id,'header_id':header_id.id})
-                return JsonResponse({'result':'success','doc_no':get_last_tran_id,'header_id':header_id.id})
+                                balance_amount = value[5] - value[6]
+                                if receiving_amount > balance_amount:
+                                    vendor = request.POST.get('vendor', False)
+                                    invoice_no = SaleHeader.objects.get(sale_no = value[3])
+                                    vendor = request.POST.get('vendor', False)
+                                    vendor = ChartOfAccount.objects.filter(id = vendor).first()
+                                    voucher_id = VoucherHeader.objects.filter(voucher_no = get_last_tran_id).first()
+                                    detail_remarks = f"Received amount {balance_amount} RS, against invoice no {invoice_no.sale_no}."
+                                    tran1 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = -abs(balance_amount),
+                                                        date = date, remarks = get_last_tran_id, account_id = vendor,ref_inv_tran_id = invoice_no.id,ref_inv_tran_type = "Sale CRV", voucher_id = voucher_id, detail_remarks = detail_remarks, is_partialy = 1 )
+                                    tran1.save()
+                                    tran2 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = balance_amount,
+                                                        date = date, remarks = get_last_tran_id, account_id = cash_account,ref_inv_tran_id = invoice_no.id,ref_inv_tran_type = "Sale CRV", voucher_id = voucher_id,detail_remarks = detail_remarks, is_partialy = 1 )
+                                    tran2.save()
+                                    header_id = VoucherHeader.objects.get(voucher_no = get_last_tran_id)
+                                    jv_detail1 = VoucherDetail(account_id = cash_account, debit = 0.00, credit = -abs(balance_amount), header_id = header_id, invoice_id = invoice_no.id)
+                                    jv_detail1.save()
+                                    jv_detail2 = VoucherDetail(account_id = vendor,  debit = balance_amount, credit = 0.00,header_id = header_id, invoice_id = invoice_no.id)
+                                    jv_detail2.save()
+                                    receiving_amount = receiving_amount - balance_amount
+                                else:
+                                    voucher_id = VoucherHeader.objects.filter(voucher_no = get_last_tran_id)
+                                    invoice_no = SaleHeader.objects.get(sale_no = value[3])
+                                    vendor = request.POST.get('vendor', False)
+                                    vendor = ChartOfAccount.objects.filter(id = vendor).first()
+                                    voucher_id = VoucherHeader.objects.filter(voucher_no = get_last_tran_id).first()
+                                    balance_amount = receiving_amount
+                                    invoice_id = SaleHeader.objects.get(sale_no = value[3])
+                                    detail_remarks = f"Received amount {balance_amount} RS, against invoice no {invoice_id.sale_no}."
+                                    tran1 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = -abs(balance_amount),
+                                                        date = date, remarks = get_last_tran_id, account_id = vendor,ref_inv_tran_id = invoice_no.id,ref_inv_tran_type = "Sale CRV",voucher_id = voucher_id ,detail_remarks = detail_remarks,is_partialy = 1)
+                                    tran1.save()
+                                    tran2 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = balance_amount,
+                                                        date = date, remarks = get_last_tran_id, account_id = cash_account,ref_inv_tran_id = invoice_no.id,ref_inv_tran_type = "Sale CRV", voucher_id = voucher_id ,detail_remarks = detail_remarks,is_partialy = 1 )
+                                    tran2.save()
+                                    header_id = VoucherHeader.objects.get(voucher_no = get_last_tran_id)
+                                    jv_detail1 = VoucherDetail(account_id = cash_account, debit = 0.00, credit = -abs(balance_amount), header_id = header_id, invoice_id = invoice_no.id)
+                                    jv_detail1.save()
+                                    jv_detail2 = VoucherDetail(account_id = vendor,  debit = balance_amount, credit = 0.00,header_id = header_id, invoice_id = invoice_no.id)
+                                    jv_detail2.save()
+                                    receiving_amount = 0
+                        else:
+                            return JsonResponse({'result':'success','doc_no':get_last_tran_id,'header_id':header_id.id})
+                else:
+                    vendor = request.POST.get('vendor', False)
+                    vendor = ChartOfAccount.objects.filter(id = vendor).first()
+                    voucher_id = VoucherHeader.objects.filter(voucher_no = get_last_tran_id).first()
+                    detail_remarks = f"Advance Receiving"
+                    tran1 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = -abs(receiving_amount),
+                                        date = date, remarks = get_last_tran_id, account_id = vendor,ref_inv_tran_id = 0,ref_inv_tran_type = "Advance Receiving", voucher_id = voucher_id, detail_remarks = detail_remarks, is_partialy = 1 )
+                    tran1.save()
+                    tran2 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = receiving_amount,
+                                        date = date, remarks = get_last_tran_id, account_id = cash_account,ref_inv_tran_id = 0,ref_inv_tran_type = "Advance Receiving", voucher_id = voucher_id,detail_remarks = detail_remarks, is_partialy = 1 )
+                    tran2.save()
+                    header_id = VoucherHeader.objects.get(voucher_no = get_last_tran_id)
+                    jv_detail1 = VoucherDetail(account_id = cash_account, debit = 0.00, credit = -abs(receiving_amount), header_id = header_id, invoice_id = 0)
+                    jv_detail1.save()
+                    jv_detail2 = VoucherDetail(account_id = vendor,  debit = receiving_amount, credit = 0.00,header_id = header_id, invoice_id = 0)
+                    jv_detail2.save()
+                    return JsonResponse({'result':'success','doc_no':get_last_tran_id,'header_id':header_id.id})
+                return JsonResponse({'result':'success','doc_no':get_last_tran_id,'header_id':0})
         except Exception as e:
+            trace_back = sys.exc_info()[2]
+            line = trace_back.tb_lineno
+            print("Line no",line)
             return JsonResponse({'e':str(e)})
     if account_crv:
         id = ChartOfAccount.objects.get(id = account_crv)
@@ -4396,6 +4424,9 @@ def new_cash_receiving_voucher(request):
                         jv_detail2.save()
                 return JsonResponse({"result":"success","doc_no":get_last_tran_id,"header_id":header_id.id})
         except Exception as e:
+            trace_back = sys.exc_info()[2]
+            line = trace_back.tb_lineno
+            print("Line No",line)
             return JsonResponse({"e":str(e)})
     context = {
     'all_accounts':all_accounts,
