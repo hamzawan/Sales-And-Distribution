@@ -2378,7 +2378,7 @@ def account_ledger(request, from_date, to_date,pk):
                     Where account_id_id = %s
                     union all
                     Select refrence_id,tran_type,refrence_date,'merge' as ref_inv_tran_id,ref_inv_tran_type,
-                    remarks,account_id_id,'Partialy' as detail_remarks,voucher_id_id,
+                    remarks,account_id_id, detail_remarks,voucher_id_id,
                     Case When amount > 0 then sum(amount) else 0 End as Debit,
                     Case When amount < 0 then sum(amount) else 0 End as Credit
                     from transaction_transactions
@@ -2460,6 +2460,7 @@ def account_ledger(request, from_date, to_date,pk):
                 header_id = Q(header_id = voucher_id)
                 account_id = Q(account_id = pk)
                 invoice_detail = VoucherDetail.objects.filter(header_id,account_id ).all()
+                s_detail = "Partially"
                 try:
                     for i in invoice_detail:
                         sale_no = SaleHeader.objects.filter(id = i.invoice_id).first()
@@ -2467,8 +2468,12 @@ def account_ledger(request, from_date, to_date,pk):
                             sale_no = sale_no.sale_no
                             invoice_sale_no.append(sale_no)
                         else:
-                            sale_no = "Opening Balance"
-                            invoice_sale_no.append(sale_no)
+                            if "Advance Receiving" in value[8]:
+                                sale_no = "Advance"
+                                invoice_sale_no.append(sale_no)
+                            else:
+                                sale_no = "Opening Balance"
+                                invoice_sale_no.append(sale_no)
                 except Exception as e:
                     print("HERE IS EXCEPTION")
                     print(e)
@@ -2488,6 +2493,7 @@ def account_ledger(request, from_date, to_date,pk):
                 header_id = Q(header_id = voucher_id)
                 account_id = Q(account_id = pk)
                 invoice_detail = VoucherDetail.objects.filter(header_id,account_id ).all()
+                s_detail = "Partially"
                 try:
                     for i in invoice_detail:
                         purchase_no = PurchaseHeader.objects.filter(id = i.invoice_id).first()
@@ -2495,8 +2501,12 @@ def account_ledger(request, from_date, to_date,pk):
                             purchase_no = purchase_no.purchase_no
                             invoice_purchase_no.append(purchase_no)
                         else:
-                            purchase_no = "Opening Balance"
-                            invoice_purchase_no.append(purchase_no)
+                            if "Advance Payment" in value[8]:
+                                sale_no = "Advance"
+                                invoice_sale_no.append(sale_no)
+                            else:
+                                purchase_no = "Opening Balance"
+                                invoice_purchase_no.append(purchase_no)
                 except Exception as e:
                     print(e)
             if len(invoice_purchase_no) > 0:
@@ -2516,6 +2526,7 @@ def account_ledger(request, from_date, to_date,pk):
                 header_id = Q(header_id = voucher_id)
                 account_id = Q(account_id = pk)
                 invoice_detail = VoucherDetail.objects.filter(header_id,account_id ).all()
+                s_detail = "Partially"
                 try:
                     for i in invoice_detail:
                         purchase_no = PurchaseHeader.objects.filter(id = i.invoice_id).first()
@@ -2523,8 +2534,12 @@ def account_ledger(request, from_date, to_date,pk):
                             purchase_no = purchase_no.purchase_no
                             invoice_purchase_no.append(purchase_no)
                         else:
-                            purchase_no = "Opening Balance"
-                            invoice_purchase_no.append(purchase_no)
+                            if "Advance Payment" in value[8]:
+                                sale_no = "Advance"
+                                invoice_sale_no.append(sale_no)
+                            else:
+                                purchase_no = "Opening Balance"
+                                invoice_purchase_no.append(purchase_no)
                 except Exception as e:
                     print(e)
             if len(invoice_purchase_no) > 0:
@@ -2564,12 +2579,6 @@ def account_ledger(request, from_date, to_date,pk):
             balance = balance - float(value[6]) + float(value[7])
             total_balance_of_ledger = total_balance_of_ledger - float(value[6]) + float(value[7])
             detail_remarks = f'Sale Return, against invoice no {client_sale_return_no.footer_description}.'
-        elif value[5] == 'Advance Receiving' and value[6] >= 0:
-            sale_return_id = Q(id = value[1])
-            client_sale_return_no = SaleReturnHeader.objects.filter(sale_return_id).first()
-            balance = balance - float(value[6]) + float(value[7])
-            total_balance_of_ledger = total_balance_of_ledger - float(value[6]) + float(value[7])
-            detail_remarks = f'Advance Receiving'
         else:
             balance = balance + float(value[6]) + 0
             total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + 0
@@ -4095,123 +4104,155 @@ def new_cash_payment_voucher(request):
                 paying_amount = request.POST.get('paying_amount')
                 jv_header = VoucherHeader(voucher_no=get_last_tran_id, doc_no="0", doc_date = doc_date, cheque_no = "-",cheque_date = doc_date, description = description)
                 jv_header.save()
-                pi_account = cursor.execute('''Select * From (
-                                            Select '0' as 'ID', '2000-01-01' as 'refrence_date',COA.id, COA.id as 'purchase_no' , COA.account_title, abs(COA.opening_balance) As InvAmount,
-                                            abs(ifnull((Select Sum(Amount) * -1 From transaction_transactions
-                                            Where ref_inv_tran_id = 0 AND ref_inv_tran_type = "Purchase CPV" AND account_id_id = %s),0)) As RcvAmount, II.tran_type As 'OP'
-                                            from transaction_chartofaccount COA
-                                            left join transaction_transactions II on II.refrence_id = COA.id and II.tran_type = "Opening Balance" and II.account_id_id = 115
-                                            Where COA.id = %s
-                                            group by II.tran_type
-                                            Having InvAmount > RcvAmount
-                                            Union All
-                                            Select HD.ID,HD.date as 'refrence_date' ,HD.account_id_id,HD.purchase_no,account_title,abs(Sum(total_amount)) As InvAmount,0 As RcvAmount, 'tran_type' as 'tran_type'
-                                            from transaction_purchaseheader HD
-                                            Inner join transaction_purchasedetail DT on DT.purchase_id_id = HD.id
-                                            Left Join transaction_chartofaccount COA on HD.account_id_id = COA.id
-                                            Where HD.Payment_method = 'Credit' And HD.account_id_id = %s AND HD.ID Not In
-                                            (Select ref_inv_tran_id from transaction_transactions Where ref_inv_tran_type = 'Purchase CPV')
-                                            Group by HD.ID
-                                            Having InvAmount > RcvAmount
-                                            Union All
-                                            Select HD.ID,HD.date as 'refrence_date',HD.account_id_id,HD.purchase_no,account_title,abs(Sum(total_amount)) As InvAmount,
-                                            abs(ifnull((Select Sum(Amount) * -1 From transaction_transactions
-                                            Where ref_inv_tran_id = HD.ID AND account_id_id = %s),0)) As RcvAmount, 'tran_type' as 'tran_type'
-                                            from transaction_purchaseheader HD
-                                            Inner join transaction_purchasedetail DT on DT.purchase_id_id = HD.id
-                                            Inner Join transaction_chartofaccount COA on HD.account_id_id = COA.id
-                                            Where Payment_method = 'Credit' AND HD.account_id_id = %s
-                                            Group By HD.ID
-                                            Having InvAmount > RcvAmount
-                                            ) As tblPendingInvoice
-                                            Group By ID
-                                            Order By refrence_date''',[vendor,vendor,vendor,vendor,vendor])
+
+                pi_account = cursor.execute('''Select * From (Select '0' as 'ID', '2000-01-01' as 'refrence_date',COA.id, COA.id as 'purchase_no' , COA.account_title, abs(COA.opening_balance) As InvAmount,abs(ifnull((Select Sum(Amount) * -1 From transaction_transactions
+                Where ref_inv_tran_id = 0 AND ref_inv_tran_type = "Purchase CPV" AND account_id_id = %s),0)) As RcvAmount, II.tran_type As 'OP',
+                sum(abs(COA.opening_balance) - abs(ifnull((Select Sum(Amount) * -1 From transaction_transactions
+                Where ref_inv_tran_id = 0 AND ref_inv_tran_type = "Purchase CPV" AND account_id_id = %s),0))) as 'Total'
+                from transaction_chartofaccount COA
+                left join transaction_transactions II on II.refrence_id = COA.id and II.tran_type = "Opening Balance" and II.account_id_id = %s
+                Where COA.id = %s
+                group by II.tran_type
+                Having InvAmount > RcvAmount
+                Union All
+                Select HD.ID,HD.date as 'refrence_date' ,HD.account_id_id,HD.purchase_no,account_title,abs(Sum(total_amount)) As InvAmount,0 As RcvAmount, 'tran_type' as 'tran_type',
+                abs(Sum(total_amount)) as 'Total'
+                from transaction_purchaseheader HD
+                Inner join transaction_purchasedetail DT on DT.purchase_id_id = HD.id
+                Left Join transaction_chartofaccount COA on HD.account_id_id = COA.id
+                Where HD.Payment_method = 'Credit' And HD.account_id_id = %s AND HD.ID Not In
+                (Select ref_inv_tran_id from transaction_transactions Where ref_inv_tran_type = 'Purchase CPV')
+                Group by HD.ID
+                Having InvAmount > RcvAmount
+                Union All
+                Select HD.ID,HD.date as 'refrence_date',HD.account_id_id,HD.purchase_no,account_title,abs(Sum(total_amount)) As InvAmount,
+                abs(ifnull((Select Sum(Amount) * -1 From transaction_transactions
+                Where ref_inv_tran_id = HD.ID AND account_id_id = %s),0)) As RcvAmount, 'tran_type' as 'tran_type',
+                sum(total_amount - abs(ifnull((Select Sum(Amount) * -1 From transaction_transactions
+                Where ref_inv_tran_id = HD.ID AND account_id_id = %s),0))) as 'Total'
+                from transaction_purchaseheader HD
+                Inner join transaction_purchasedetail DT on DT.purchase_id_id = HD.id
+                Inner Join transaction_chartofaccount COA on HD.account_id_id = COA.id
+                Where Payment_method = 'Credit' AND HD.account_id_id = %s
+                Group By HD.ID
+                Having InvAmount > RcvAmount
+                ) As tblPendingInvoice
+                Group By ID
+                Order By refrence_date''',[vendor,vendor,vendor,vendor,vendor,vendor,vendor,vendor])
                 pi_account = pi_account.fetchall()
                 cash_account = ChartOfAccount.objects.filter(account_title = "Cash").first()
                 paying_amount = float(paying_amount)
-                for value in pi_account:
-                    balance_amount = 0
-                    if paying_amount > 0:
-                        if value[7] != "tran_type":
-                            balance_amount = value[5] - value[6]
-                            if balance_amount > 0:
-                                vendor = request.POST.get('vendor', False)
-                                vendor = ChartOfAccount.objects.filter(id = vendor).first()
-                                voucher_id = VoucherHeader.objects.filter(voucher_no = get_last_tran_id).first()
+                total_amount = 0
+                if len(pi_account) > 0:
+                    for value in pi_account:
+                        total_amount = total_amount + value[8]
+                        balance_amount = 0
+                        if paying_amount > 0:
+                            if value[7] != "tran_type":
                                 balance_amount = value[5] - value[6]
                                 if balance_amount > 0:
-                                    if paying_amount > balance_amount:
-                                        detail_remarks = f"Paid amount against opening balance."
-                                        tran1 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = balance_amount,
-                                                            date = date, remarks = get_last_tran_id, account_id = vendor,ref_inv_tran_id = 0,ref_inv_tran_type = "Purchase CPV", voucher_id = voucher_id ,detail_remarks = detail_remarks, is_partialy = 1)
-                                        tran1.save()
-                                        tran2 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = -abs(balance_amount),
-                                                            date = date, remarks = get_last_tran_id, account_id = cash_account,ref_inv_tran_id = 0,ref_inv_tran_type = "Purchase CPV", voucher_id = voucher_id ,detail_remarks = detail_remarks, is_partialy = 1)
-                                        tran2.save()
-                                        header_id = VoucherHeader.objects.get(voucher_no = get_last_tran_id)
-                                        jv_detail1 = VoucherDetail(account_id = cash_account, debit = 0.00, credit = -abs(balance_amount), header_id = header_id, invoice_id = 0)
-                                        jv_detail1.save()
-                                        jv_detail2 = VoucherDetail(account_id = vendor,  debit = balance_amount, credit = 0.00,header_id = header_id, invoice_id = 0)
-                                        jv_detail2.save()
-                                        paying_amount = paying_amount - balance_amount
-                                    else:
-                                        balance_amount = paying_amount
-                                        detail_remarks = f"Paid amount against opening balance."
-                                        tran1 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = balance_amount,
-                                                            date = date, remarks = get_last_tran_id, account_id = vendor,ref_inv_tran_id = 0,ref_inv_tran_type = "Purchase CPV",voucher_id = voucher_id ,detail_remarks = detail_remarks, is_partialy = 1)
-                                        tran1.save()
-                                        tran2 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = -abs(balance_amount),
-                                                            date = date, remarks = get_last_tran_id, account_id = cash_account,ref_inv_tran_id = 0,ref_inv_tran_type = "Purchase CPV",voucher_id = voucher_id, detail_remarks = detail_remarks, is_partialy = 1)
-                                        tran2.save()
-                                        header_id = VoucherHeader.objects.get(voucher_no = get_last_tran_id)
-                                        jv_detail1 = VoucherDetail(account_id = cash_account, debit = 0.00, credit = -abs(balance_amount), header_id = header_id, invoice_id = 0)
-                                        jv_detail1.save()
-                                        jv_detail2 = VoucherDetail(account_id = vendor,  debit = balance_amount, credit = 0.00,header_id = header_id, invoice_id = 0)
-                                        jv_detail2.save()
-                                        paying_amount = 0
-                        else:
-                            balance_amount = value[5] - value[6]
-                            if paying_amount > balance_amount:
-                                invoice_no = PurchaseHeader.objects.get(purchase_no = value[3])
-                                vendor = request.POST.get('vendor', False)
-                                vendor = ChartOfAccount.objects.filter(id = vendor).first()
-                                voucher_id = VoucherHeader.objects.filter(voucher_no = get_last_tran_id).first()
-                                detail_remarks = f"Paid amount {balance_amount} RS, against invoice no {invoice_no.purchase_no}."
-                                tran1 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = balance_amount,
-                                                    date = date, remarks = get_last_tran_id, account_id = vendor,ref_inv_tran_id = invoice_no.id,ref_inv_tran_type = "Purchase CPV", voucher_id = voucher_id, detail_remarks = detail_remarks, is_partialy = 1)
-                                tran1.save()
-                                tran2 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = -abs(balance_amount),
-                                                    date = date, remarks = get_last_tran_id, account_id = cash_account,ref_inv_tran_id = invoice_no.id,ref_inv_tran_type = "Purchase CPV", voucher_id = voucher_id,detail_remarks = detail_remarks, is_partialy = 1 )
-                                tran2.save()
-                                header_id = VoucherHeader.objects.get(voucher_no = get_last_tran_id)
-                                jv_detail1 = VoucherDetail(account_id = cash_account, debit = 0.00, credit = -abs(balance_amount), header_id = header_id, invoice_id = invoice_no.id)
-                                jv_detail1.save()
-                                jv_detail2 = VoucherDetail(account_id = vendor,  debit = balance_amount, credit = 0.00,header_id = header_id, invoice_id = invoice_no.id)
-                                jv_detail2.save()
-                                paying_amount = paying_amount - balance_amount
+                                    vendor = request.POST.get('vendor', False)
+                                    vendor = ChartOfAccount.objects.filter(id = vendor).first()
+                                    voucher_id = VoucherHeader.objects.filter(voucher_no = get_last_tran_id).first()
+                                    balance_amount = value[5] - value[6]
+                                    if balance_amount > 0:
+                                        if paying_amount > balance_amount:
+                                            detail_remarks = f"Paid amount against opening balance."
+                                            tran1 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = balance_amount,
+                                                                date = date, remarks = get_last_tran_id, account_id = vendor,ref_inv_tran_id = 0,ref_inv_tran_type = "Purchase CPV", voucher_id = voucher_id ,detail_remarks = detail_remarks, is_partialy = 1)
+                                            tran1.save()
+                                            tran2 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = -abs(balance_amount),
+                                                                date = date, remarks = get_last_tran_id, account_id = cash_account,ref_inv_tran_id = 0,ref_inv_tran_type = "Purchase CPV", voucher_id = voucher_id ,detail_remarks = detail_remarks, is_partialy = 1)
+                                            tran2.save()
+                                            header_id = VoucherHeader.objects.get(voucher_no = get_last_tran_id)
+                                            jv_detail1 = VoucherDetail(account_id = cash_account, debit = 0.00, credit = -abs(balance_amount), header_id = header_id, invoice_id = 0)
+                                            jv_detail1.save()
+                                            jv_detail2 = VoucherDetail(account_id = vendor,  debit = balance_amount, credit = 0.00,header_id = header_id, invoice_id = 0)
+                                            jv_detail2.save()
+                                            paying_amount = paying_amount - balance_amount
+                                        else:
+                                            balance_amount = paying_amount
+                                            detail_remarks = f"Paid amount against opening balance."
+                                            tran1 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = balance_amount,
+                                                                date = date, remarks = get_last_tran_id, account_id = vendor,ref_inv_tran_id = 0,ref_inv_tran_type = "Purchase CPV",voucher_id = voucher_id ,detail_remarks = detail_remarks, is_partialy = 1)
+                                            tran1.save()
+                                            tran2 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = -abs(balance_amount),
+                                                                date = date, remarks = get_last_tran_id, account_id = cash_account,ref_inv_tran_id = 0,ref_inv_tran_type = "Purchase CPV",voucher_id = voucher_id, detail_remarks = detail_remarks, is_partialy = 1)
+                                            tran2.save()
+                                            header_id = VoucherHeader.objects.get(voucher_no = get_last_tran_id)
+                                            jv_detail1 = VoucherDetail(account_id = cash_account, debit = 0.00, credit = -abs(balance_amount), header_id = header_id, invoice_id = 0)
+                                            jv_detail1.save()
+                                            jv_detail2 = VoucherDetail(account_id = vendor,  debit = balance_amount, credit = 0.00,header_id = header_id, invoice_id = 0)
+                                            jv_detail2.save()
+                                            paying_amount = 0
                             else:
-                                voucher_id = VoucherHeader.objects.filter(voucher_no = get_last_tran_id)
-                                invoice_no = PurchaseHeader.objects.get(purchase_no = value[3])
-                                vendor = request.POST.get('vendor', False)
-                                vendor = ChartOfAccount.objects.filter(id = vendor).first()
-                                voucher_id = VoucherHeader.objects.filter(voucher_no = get_last_tran_id).first()
-                                balance_amount = paying_amount
-                                invoice_id = PurchaseHeader.objects.get(purchase_no = value[3])
-                                detail_remarks = f"Paid amount {balance_amount} RS, against invoice no {invoice_id.purchase_no}."
-                                tran1 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = balance_amount,
-                                                    date = date, remarks = get_last_tran_id, account_id = vendor,ref_inv_tran_id = invoice_no.id,ref_inv_tran_type = "Purchase CPV",voucher_id = voucher_id ,detail_remarks = detail_remarks, is_partialy = 1)
-                                tran1.save()
-                                tran2 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = -abs(balance_amount),
-                                                    date = date, remarks = get_last_tran_id, account_id = cash_account,ref_inv_tran_id = invoice_no.id,ref_inv_tran_type = "Purchase CPV", voucher_id = voucher_id ,detail_remarks = detail_remarks, is_partialy = 1)
-                                tran2.save()
-                                header_id = VoucherHeader.objects.get(voucher_no = get_last_tran_id)
-                                jv_detail1 = VoucherDetail(account_id = cash_account, debit = 0.00, credit = -abs(balance_amount), header_id = header_id, invoice_id = invoice_no.id)
-                                jv_detail1.save()
-                                jv_detail2 = VoucherDetail(account_id = vendor,  debit = balance_amount, credit = 0.00,header_id = header_id, invoice_id = invoice_no.id)
-                                jv_detail2.save()
-                                paying_amount = 0
-                    else:
-                        return JsonResponse({"result":"success","doc_no":get_last_tran_id,"header_id":header_id.id})
+                                balance_amount = value[5] - value[6]
+                                if paying_amount > balance_amount:
+                                    invoice_no = PurchaseHeader.objects.get(purchase_no = value[3])
+                                    vendor = request.POST.get('vendor', False)
+                                    vendor = ChartOfAccount.objects.filter(id = vendor).first()
+                                    voucher_id = VoucherHeader.objects.filter(voucher_no = get_last_tran_id).first()
+                                    detail_remarks = f"Paid amount {balance_amount} RS, against invoice no {invoice_no.purchase_no}."
+                                    tran1 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = balance_amount,
+                                                        date = date, remarks = get_last_tran_id, account_id = vendor,ref_inv_tran_id = invoice_no.id,ref_inv_tran_type = "Purchase CPV", voucher_id = voucher_id, detail_remarks = detail_remarks, is_partialy = 1)
+                                    tran1.save()
+                                    tran2 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = -abs(balance_amount),
+                                                        date = date, remarks = get_last_tran_id, account_id = cash_account,ref_inv_tran_id = invoice_no.id,ref_inv_tran_type = "Purchase CPV", voucher_id = voucher_id,detail_remarks = detail_remarks, is_partialy = 1 )
+                                    tran2.save()
+                                    header_id = VoucherHeader.objects.get(voucher_no = get_last_tran_id)
+                                    jv_detail1 = VoucherDetail(account_id = cash_account, debit = 0.00, credit = -abs(balance_amount), header_id = header_id, invoice_id = invoice_no.id)
+                                    jv_detail1.save()
+                                    jv_detail2 = VoucherDetail(account_id = vendor,  debit = balance_amount, credit = 0.00,header_id = header_id, invoice_id = invoice_no.id)
+                                    jv_detail2.save()
+                                    paying_amount = paying_amount - balance_amount
+                                else:
+                                    voucher_id = VoucherHeader.objects.filter(voucher_no = get_last_tran_id)
+                                    invoice_no = PurchaseHeader.objects.get(purchase_no = value[3])
+                                    vendor = request.POST.get('vendor', False)
+                                    vendor = ChartOfAccount.objects.filter(id = vendor).first()
+                                    voucher_id = VoucherHeader.objects.filter(voucher_no = get_last_tran_id).first()
+                                    balance_amount = paying_amount
+                                    invoice_id = PurchaseHeader.objects.get(purchase_no = value[3])
+                                    detail_remarks = f"Paid amount {balance_amount} RS, against invoice no {invoice_id.purchase_no}."
+                                    tran1 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = balance_amount,
+                                                        date = date, remarks = get_last_tran_id, account_id = vendor,ref_inv_tran_id = invoice_no.id,ref_inv_tran_type = "Purchase CPV",voucher_id = voucher_id ,detail_remarks = detail_remarks, is_partialy = 1)
+                                    tran1.save()
+                                    tran2 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = -abs(balance_amount),
+                                                        date = date, remarks = get_last_tran_id, account_id = cash_account,ref_inv_tran_id = invoice_no.id,ref_inv_tran_type = "Purchase CPV", voucher_id = voucher_id ,detail_remarks = detail_remarks, is_partialy = 1)
+                                    tran2.save()
+                                    header_id = VoucherHeader.objects.get(voucher_no = get_last_tran_id)
+                                    jv_detail1 = VoucherDetail(account_id = cash_account, debit = 0.00, credit = -abs(balance_amount), header_id = header_id, invoice_id = invoice_no.id)
+                                    jv_detail1.save()
+                                    jv_detail2 = VoucherDetail(account_id = vendor,  debit = balance_amount, credit = 0.00,header_id = header_id, invoice_id = invoice_no.id)
+                                    jv_detail2.save()
+                                    paying_amount = 0
+                        else:
+                            return JsonResponse({"result":"success","doc_no":get_last_tran_id,"header_id":header_id.id})
+
+                paying_amount = request.POST.get('paying_amount')
+                paying_amount = float(paying_amount)
+                if paying_amount > total_amount:
+                    amount = paying_amount - total_amount
+                    voucher_id = VoucherHeader.objects.filter(voucher_no = get_last_tran_id)
+                    invoice_no = PurchaseHeader.objects.get(purchase_no = value[3])
+                    vendor = request.POST.get('vendor', False)
+                    vendor = ChartOfAccount.objects.filter(id = vendor).first()
+                    voucher_id = VoucherHeader.objects.filter(voucher_no = get_last_tran_id).first()
+                    invoice_id = PurchaseHeader.objects.get(purchase_no = value[3])
+                    detail_remarks = f"Advance Payment ({description})."
+                    
+                    tran1 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = amount,date = date, remarks = get_last_tran_id, account_id = vendor,ref_inv_tran_id = invoice_no.id,ref_inv_tran_type = "Purchase CPV",voucher_id = voucher_id ,detail_remarks = detail_remarks, is_partialy = 1)
+                    tran1.save()
+                    
+                    tran2 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = -abs(amount),date = date, remarks = get_last_tran_id, account_id = cash_account,ref_inv_tran_id = invoice_no.id,ref_inv_tran_type = "Purchase CPV", voucher_id = voucher_id ,detail_remarks = detail_remarks, is_partialy = 1)
+                    tran2.save()
+                    
+                    header_id = VoucherHeader.objects.get(voucher_no = get_last_tran_id)
+                    jv_detail1 = VoucherDetail(account_id = cash_account, debit = 0.00, credit = -abs(amount), header_id = header_id, invoice_id = invoice_no.id)
+                    jv_detail1.save()
+                    jv_detail2 = VoucherDetail(account_id = vendor,  debit = amount, credit = 0.00,header_id = header_id, invoice_id = invoice_no.id)
+                    jv_detail2.save()
+                    return JsonResponse({'result':'success','doc_no':get_last_tran_id,'header_id':header_id.id})
                 return JsonResponse({'result':'success'})
         except Exception as e:
             return JsonResponse({'e':str(e)})
@@ -4338,42 +4379,51 @@ def new_cash_receiving_voucher(request):
                 receiving_amount = request.POST.get('receiving_amount')
                 jv_header = VoucherHeader(voucher_no=get_last_tran_id, doc_no="0", doc_date = doc_date, cheque_no = "-",cheque_date = doc_date, description = description)
                 jv_header.save()
+
                 pi_account = cursor.execute('''Select * From (
-                                        Select '0' as 'ID', '2000-01-01' as 'refrence_date',COA.id, COA.id as 'sale_no' , COA.account_title, abs(COA.opening_balance) As InvAmount,
-                                        abs(ifnull((Select Sum(Amount) * -1 From transaction_transactions
-                                        Where ref_inv_tran_id = 0 AND ref_inv_tran_type = "Sale CRV" AND account_id_id = %s),0)) As RcvAmount, II.tran_type As 'OP'
-                                        from transaction_chartofaccount COA
-                                        left join transaction_transactions II on II.refrence_id = COA.id and II.tran_type = "Opening Balance" and II.account_id_id = %s
-                                        Where COA.id = %s
-                                        group by II.tran_type
-                                        Having InvAmount > RcvAmount
-                                        Union All
-                                        Select HD.ID,HD.date as 'refrence_date' ,HD.account_id_id,HD.sale_no,account_title,abs(Sum(total_amount)) As InvAmount,0 As RcvAmount, 'tran_type' as 'tran_type'
-                                        from transaction_saleheader HD
-                                        Inner join transaction_saledetail DT on DT.sale_id_id = HD.id
-                                        Left Join transaction_chartofaccount COA on HD.account_id_id = COA.id
-                                        Where HD.Payment_method = 'Credit' And HD.account_id_id = %s AND HD.ID Not In
-                                        (Select ref_inv_tran_id from transaction_transactions Where ref_inv_tran_type = 'Sale CRV')
-                                        Group by HD.ID
-                                        Having InvAmount > RcvAmount
-                                        Union All
-                                        Select HD.ID,HD.date as 'refrence_date',HD.account_id_id,HD.sale_no,account_title,abs(Sum(total_amount)) As InvAmount,
-                                        abs(ifnull((Select Sum(Amount) * -1 From transaction_transactions
-                                        Where ref_inv_tran_id = HD.ID AND account_id_id = %s),0)) As RcvAmount, 'tran_type' as 'tran_type'
-                                        from transaction_saleheader HD
-                                        Inner join transaction_saledetail DT on DT.sale_id_id = HD.id
-                                        Inner Join transaction_chartofaccount COA on HD.account_id_id = COA.id
-                                        Where Payment_method = 'Credit' AND HD.account_id_id = %s
-                                        Group By HD.ID
-                                        Having InvAmount > RcvAmount
-                                        ) As tblPendingInvoice
-                                        Group By ID
-                                        Order By refrence_date''',[vendor,vendor,vendor,vendor,vendor,vendor])
+                    Select '0' as 'ID', '2000-01-01' as 'refrence_date',COA.id, COA.id as 'sale_no' , COA.account_title, abs(COA.opening_balance) As InvAmount,
+                    abs(ifnull((Select Sum(Amount) * -1 From transaction_transactions
+                    Where ref_inv_tran_id = 0 AND ref_inv_tran_type = "Sale CRV" AND account_id_id = %s),0)) As RcvAmount, II.tran_type As 'OP',
+                    sum(abs(COA.opening_balance) - abs(ifnull((Select Sum(Amount) * -1 From transaction_transactions
+                    Where ref_inv_tran_id = 0 AND ref_inv_tran_type = "Sale CRV" AND account_id_id = %s),0))) as 'Total'
+                    from transaction_chartofaccount COA
+                    left join transaction_transactions II on II.refrence_id = COA.id and II.tran_type = "Opening Balance" and II.account_id_id = %s
+                    Where COA.id = %s
+                    group by II.tran_type
+                    Having InvAmount > RcvAmount
+                    Union All
+                    Select HD.ID,HD.date as 'refrence_date' ,HD.account_id_id,HD.sale_no,account_title,abs(Sum(total_amount)) As InvAmount,0 As RcvAmount, 'tran_type' as 'tran_type',
+                    abs(Sum(total_amount)) as 'Total'
+                    from transaction_saleheader HD
+                    Inner join transaction_saledetail DT on DT.sale_id_id = HD.id
+                    Left Join transaction_chartofaccount COA on HD.account_id_id = COA.id
+                    Where HD.Payment_method = 'Credit' And HD.account_id_id = %s AND HD.ID Not In
+                    (Select ref_inv_tran_id from transaction_transactions Where ref_inv_tran_type = 'Sale CRV')
+                    Group by HD.ID
+                    Having InvAmount > RcvAmount
+                    Union All
+                    Select HD.ID,HD.date as 'refrence_date',HD.account_id_id,HD.sale_no,account_title,abs(Sum(total_amount)) As InvAmount,
+                    abs(ifnull((Select Sum(Amount) * -1 From transaction_transactions
+                    Where ref_inv_tran_id = HD.ID AND account_id_id = %s),0)) As RcvAmount, 'tran_type' as 'tran_type',
+                    sum(total_amount - abs(ifnull((Select Sum(Amount) * -1 From transaction_transactions
+                    Where ref_inv_tran_id = HD.ID AND account_id_id = %s),0))) as 'Total'
+                    from transaction_saleheader HD
+                    Inner join transaction_saledetail DT on DT.sale_id_id = HD.id
+                    Inner Join transaction_chartofaccount COA on HD.account_id_id = COA.id
+                    Where Payment_method = 'Credit' AND HD.account_id_id = %s
+                    Group By HD.ID
+                    Having InvAmount > RcvAmount
+                    ) As tblPendingInvoice
+                    Group By ID
+                    Order By refrence_date
+                    ''',[vendor,vendor,vendor,vendor,vendor,vendor,vendor,vendor])
                 pi_account = pi_account.fetchall()
                 cash_account = ChartOfAccount.objects.filter(account_title = "Cash").first()
+                total_amount = 0
                 receiving_amount = float(receiving_amount)
                 if len(pi_account) > 0:
                     for value in pi_account:
+                        total_amount = total_amount + value[8]
                         balance_amount = 0
                         if receiving_amount > 0:
                             if value[7] != "tran_type":
@@ -4457,22 +4507,27 @@ def new_cash_receiving_voucher(request):
                                     receiving_amount = 0
                         else:
                             return JsonResponse({'result':'success','doc_no':get_last_tran_id,'header_id':header_id.id})
-                else:
+
+                receiving_amount = request.POST.get('receiving_amount')
+                receiving_amount = float(receiving_amount)
+                if receiving_amount > total_amount:
+                    amount = receiving_amount - total_amount
                     vendor = request.POST.get('vendor', False)
                     vendor = ChartOfAccount.objects.filter(id = vendor).first()
                     voucher_id = VoucherHeader.objects.filter(voucher_no = get_last_tran_id).first()
-                    detail_remarks = f"Advance Receiving"
-                    tran1 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = -abs(receiving_amount),
-                                        date = date, remarks = get_last_tran_id, account_id = vendor,ref_inv_tran_id = 0,ref_inv_tran_type = "Advance Receiving", voucher_id = voucher_id, detail_remarks = detail_remarks, is_partialy = 1 )
+                    detail_remarks = f"Advance Receiving ({description})."
+                    tran1 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = -abs(amount),
+                                        date = date, remarks = get_last_tran_id, account_id = vendor,ref_inv_tran_id = 0,ref_inv_tran_type = "Sale CRV", voucher_id = voucher_id ,detail_remarks = detail_remarks, is_partialy = 1 )
                     tran1.save()
-                    tran2 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = receiving_amount,
-                                        date = date, remarks = get_last_tran_id, account_id = cash_account,ref_inv_tran_id = 0,ref_inv_tran_type = "Advance Receiving", voucher_id = voucher_id,detail_remarks = detail_remarks, is_partialy = 1 )
+                    tran2 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = amount,
+                                        date = date, remarks = get_last_tran_id, account_id = cash_account,ref_inv_tran_id = 0,ref_inv_tran_type = "Sale CRV", voucher_id = voucher_id ,detail_remarks = detail_remarks, is_partialy = 1 )
                     tran2.save()
                     header_id = VoucherHeader.objects.get(voucher_no = get_last_tran_id)
-                    jv_detail1 = VoucherDetail(account_id = cash_account, debit = 0.00, credit = -abs(receiving_amount), header_id = header_id, invoice_id = 0)
+                    jv_detail1 = VoucherDetail(account_id = cash_account, debit = amount, credit = 0.00, header_id = header_id, invoice_id = 0)
                     jv_detail1.save()
-                    jv_detail2 = VoucherDetail(account_id = vendor,  debit = receiving_amount, credit = 0.00,header_id = header_id, invoice_id = 0)
+                    jv_detail2 = VoucherDetail(account_id = vendor,  debit = 0.00, credit = amount,header_id = header_id, invoice_id = 0)
                     jv_detail2.save()
+
                     return JsonResponse({'result':'success','doc_no':get_last_tran_id,'header_id':header_id.id})
                 return JsonResponse({'result':'success','doc_no':get_last_tran_id,'header_id':0})
         except Exception as e:
