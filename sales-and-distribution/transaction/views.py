@@ -2502,8 +2502,8 @@ def account_ledger(request, from_date, to_date,pk):
                             invoice_purchase_no.append(purchase_no)
                         else:
                             if "Advance Payment" in value[8]:
-                                sale_no = "Advance"
-                                invoice_sale_no.append(sale_no)
+                                purchase_no = "Advance"
+                                invoice_purchase_no.append(purchase_no)
                             else:
                                 purchase_no = "Opening Balance"
                                 invoice_purchase_no.append(purchase_no)
@@ -2535,8 +2535,8 @@ def account_ledger(request, from_date, to_date,pk):
                             invoice_purchase_no.append(purchase_no)
                         else:
                             if "Advance Payment" in value[8]:
-                                sale_no = "Advance"
-                                invoice_sale_no.append(sale_no)
+                                purchase_no = "Advance"
+                                invoice_purchase_no.append(purchase_no)
                             else:
                                 purchase_no = "Opening Balance"
                                 invoice_purchase_no.append(purchase_no)
@@ -4233,24 +4233,21 @@ def new_cash_payment_voucher(request):
                 paying_amount = float(paying_amount)
                 if paying_amount > total_amount:
                     amount = paying_amount - total_amount
-                    voucher_id = VoucherHeader.objects.filter(voucher_no = get_last_tran_id)
-                    invoice_no = PurchaseHeader.objects.get(purchase_no = value[3])
                     vendor = request.POST.get('vendor', False)
                     vendor = ChartOfAccount.objects.filter(id = vendor).first()
                     voucher_id = VoucherHeader.objects.filter(voucher_no = get_last_tran_id).first()
-                    invoice_id = PurchaseHeader.objects.get(purchase_no = value[3])
                     detail_remarks = f"Advance Payment ({description})."
                     
-                    tran1 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = amount,date = date, remarks = get_last_tran_id, account_id = vendor,ref_inv_tran_id = invoice_no.id,ref_inv_tran_type = "Purchase CPV",voucher_id = voucher_id ,detail_remarks = detail_remarks, is_partialy = 1)
+                    tran1 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = amount,date = date, remarks = get_last_tran_id, account_id = vendor,ref_inv_tran_id = 0,ref_inv_tran_type = "Purchase CPV",voucher_id = voucher_id ,detail_remarks = detail_remarks, is_partialy = 1)
                     tran1.save()
                     
-                    tran2 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = -abs(amount),date = date, remarks = get_last_tran_id, account_id = cash_account,ref_inv_tran_id = invoice_no.id,ref_inv_tran_type = "Purchase CPV", voucher_id = voucher_id ,detail_remarks = detail_remarks, is_partialy = 1)
+                    tran2 = Transactions(refrence_id = 0, refrence_date = doc_date, tran_type = '', amount = -abs(amount),date = date, remarks = get_last_tran_id, account_id = cash_account,ref_inv_tran_id = 0,ref_inv_tran_type = "Purchase CPV", voucher_id = voucher_id ,detail_remarks = detail_remarks, is_partialy = 1)
                     tran2.save()
                     
                     header_id = VoucherHeader.objects.get(voucher_no = get_last_tran_id)
-                    jv_detail1 = VoucherDetail(account_id = cash_account, debit = 0.00, credit = -abs(amount), header_id = header_id, invoice_id = invoice_no.id)
+                    jv_detail1 = VoucherDetail(account_id = cash_account, debit = 0.00, credit = -abs(amount), header_id = header_id, invoice_id = 0)
                     jv_detail1.save()
-                    jv_detail2 = VoucherDetail(account_id = vendor,  debit = amount, credit = 0.00,header_id = header_id, invoice_id = invoice_no.id)
+                    jv_detail2 = VoucherDetail(account_id = vendor,  debit = amount, credit = 0.00,header_id = header_id, invoice_id =0)
                     jv_detail2.save()
                     return JsonResponse({'result':'success','doc_no':get_last_tran_id,'header_id':header_id.id})
                 return JsonResponse({'result':'success'})
