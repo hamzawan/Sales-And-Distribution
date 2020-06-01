@@ -16,6 +16,8 @@ from django.db.models import Q,Count, Sum
 from num2words import num2words
 from decimal import Decimal
 import sys
+import os
+from django.core.files import File
 
 @login_required()
 def home(request):
@@ -4632,3 +4634,33 @@ def new_cash_receiving_voucher(request):
 
 def new_test(request):
     return render(request, 'transaction/test.html')
+
+
+def allow_DB_display(user):
+    user_id = Q(UserID = user.id)
+    object_id = Q(ObjectID = 26)
+    action_id = Q(ActionID = 1)
+    is_allow = Q(IsAllow = 1)
+    allow_role = tblUserRights.objects.filter(user_id, object_id, is_allow, action_id)
+    if allow_role:
+        return True
+    else:
+        return False
+
+
+@login_required
+@user_passes_test(allow_DB_display)
+def back_up_db(request):
+    return render(request,'transaction/back_up_db.html')
+
+
+@login_required
+@user_passes_test(allow_DB_display)
+def back_up_done(request):
+    BaseDir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    db_path = os.path.join(BaseDir, 'db.sqlite3')
+    dbfile = File(open(db_path, "rb"))
+    response = HttpResponse(dbfile, content_type='application/x-sqlite3')
+    response['Content-Disposition'] = 'attachment; filename=%s' % 'backup.sqlite3'
+    response['Content-Length'] = dbfile.size
+    return response
