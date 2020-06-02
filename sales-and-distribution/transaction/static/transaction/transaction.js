@@ -12,6 +12,11 @@ $(document).ready(function () {
 	var total = 0
 	var grand = 0;
 
+	$("#all-accounts").prop({"checked": false, "disabled":false});
+	$("#customers").prop({"checked": false, "disabled":false});
+	$("#vendors").prop({"checked": false, "disabled":false});
+	$("#expenses").prop({"checked": false, "disabled":false});
+	$("#salary").prop({"checked": false, "disabled":false});
 
 	$(".has_id").click(function () {
 		edit_id = this.id;
@@ -7454,10 +7459,37 @@ $(document).ready(function () {
 			});
 	});
 
+	$("#all-accounts").change(function(){
+		if(this.checked){
+			$("#customers").prop({"checked": true, "disabled":true});
+			$("#vendors").prop({"checked": true, "disabled":true});
+			$("#expenses").prop({"checked": true, "disabled":true});
+			$("#salary").prop({"checked": true, "disabled":true});
+
+		}else{
+			$("#customers").prop({"checked": false, "disabled":false});
+			$("#vendors").prop({"checked": false, "disabled":false});
+			$("#expenses").prop({"checked": false, "disabled":false});
+			$("#salary").prop({"checked": false, "disabled":false});
+		}
+	});
+
 	$("#generate_trial_balance").on('click', function () {
 		from_date = $("#from_date_trial_balance").val()
 		to_date = $("#to_date_trial_balance").val()
-		url = `/transaction/trial_balance/pdf/${from_date}/${to_date}`
+		let pk = "";
+		
+		if(!$("#all-accounts").is(":checked")){
+			$('input:checkbox').each(function () {
+				pk += (this.checked ? $(this).val() + "-" : "");
+			});
+		}else{
+			pk = "0-"
+		}
+
+		if(!pk) pk = "0-"
+
+		url = `/transaction/trial_balance/pdf/${from_date}/${to_date}/${pk}`
 		var win = window.open(url, '_blank');
 		if (win) {
 			//Browser has allowed it to be opened

@@ -2248,16 +2248,29 @@ def reports(request):
 
 @login_required()
 @user_passes_test(allow_reports)
-def trial_balance(request, from_date, to_date):
+def trial_balance(request, from_date, to_date,pk):
     debit_amount = 0
     credit_amount = 0
     total_credit = 0
     total_debit = 0
     from_date = from_date
     to_date = to_date
+    pk = pk.split("-")
+    pk = pk[0:len(pk)-1]
     # ledger_list = trial_balance_fun(request, from_date, to_date)
     company_info = Company_info.objects.all()
-    coa = ChartOfAccount.objects.order_by('parent_id').all()
+    coa = []
+    if pk[0] == "0":
+        coa = ChartOfAccount.objects.order_by('parent_id').all()
+    else:
+        for val in pk:
+            if val == "4":
+                purchase_id = Q(id=15)
+                vendor_id = Q(id=16)
+                accounts = ChartOfAccount.objects.filter(parent_id=int(val)).all().exclude(purchase_id|vendor_id)
+            else:
+                accounts = ChartOfAccount.objects.filter(parent_id=int(val)).all()
+            coa = coa + list(accounts)
     debit_list = []
     credit_list = []
     for c in coa:
@@ -2340,7 +2353,7 @@ def trial_balance(request, from_date, to_date):
             "Credit":0.00,
             }
             debit_list.append(debit_info)
-    pdf = render_to_pdf('transaction/trial_balance_pdf.html', {'company_info':company_info, 'debit_list': debit_list,'credit_list':credit_list ,'from_date':from_date,'to_date':to_date, 'debit_amount':debit_amount, 'credit_amount':credit_amount, 'total_credit' : total_credit, 'total_debit':total_debit})
+    pdf = render_to_pdf('transaction/trial_balance_pdf.html', {'company_info':company_info, 'debit_list': debit_list,'credit_list':credit_list ,'from_date':from_date,'to_date':to_date, 'debit_amount':debit_amount, 'credit_amount':credit_amount, 'total_credit' : total_credit, 'total_debit':total_debit,'debit_len':len(debit_list)})
     if pdf:
         response = HttpResponse(pdf, content_type='application/pdf')
         filename = 'TrialBalance%s.pdf' %('000')

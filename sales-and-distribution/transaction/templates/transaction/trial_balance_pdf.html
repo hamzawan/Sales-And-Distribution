@@ -2,7 +2,7 @@
 <html>
 
 <head>
-  <title>{{header.dc_no}}</title>
+  <title>Trial Balance</title>
   <style>
     @page {
       size: a4 portrait;
@@ -129,7 +129,7 @@
           {% endfor %}
           {% for value in credit_list %}
         <tr class="heading_row">
-          <td style="width: 150px; height:30px;">{{forloop.counter}}</td>
+          <td style="width: 150px; height:30px;">{{forloop.counter|add:debit_len}}</td>
           <td style="width: 700px;">
             <font size="12px">{{value.account_title}}</font>
           </td>
