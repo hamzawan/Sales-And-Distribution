@@ -1086,7 +1086,7 @@ $(document).ready(function () {
 					icon: 'success',
 					'position': 'mid-center'
 				})
-				setInterval(function () {
+				setTimeout(function () {
 					location.reload()
 				}, 2000);
 			} else {
@@ -1854,7 +1854,7 @@ $(document).ready(function () {
 						icon: 'success',
 						'position': 'mid-center'
 					})
-					setInterval(function () {
+					setTimeout(function () {
 						location.reload()
 					}, 2000);
 				} else {
@@ -2996,7 +2996,7 @@ $(document).ready(function () {
 						icon: 'success',
 						'position': 'mid-center'
 					})
-					setInterval(function () {
+					setTimeout(function () {
 						location.reload()
 					}, 2000);
 				} else {
@@ -3749,7 +3749,7 @@ $(document).ready(function () {
 						icon: 'success',
 						'position': 'mid-center'
 					})
-					setInterval(function () {
+					setTimeout(function () {
 						location.reload()
 					}, 2000);
 				} else {
@@ -4642,7 +4642,7 @@ $(document).ready(function () {
 							icon: 'success',
 							'position': 'mid-center'
 						})
-						setInterval(function () {
+						setTimeout(function () {
 							location.reload()
 						}, 2000);
 					} else {
@@ -4813,7 +4813,7 @@ $(document).ready(function () {
 							icon: 'success',
 							'position': 'mid-center'
 						})
-						setInterval(function () {
+						setTimeout(function () {
 							location.reload()
 						}, 2000);
 					} else {
@@ -6257,7 +6257,7 @@ $(document).ready(function () {
 							icon: 'success',
 							'position': 'mid-center'
 						})
-						setInterval(function () {
+						setTimeout(function () {
 							location.reload()
 						}, 2000);
 					} else {
@@ -6321,7 +6321,7 @@ $(document).ready(function () {
 							icon: 'success',
 							'position': 'mid-center'
 						})
-						setInterval(function () {
+						setTimeout(function () {
 							location.reload()
 						}, 2000);
 					} else {
@@ -6489,7 +6489,7 @@ $(document).ready(function () {
 							icon: 'success',
 							'position': 'mid-center'
 						})
-						setInterval(function () {
+						setTimeout(function () {
 							location.reload()
 						}, 2000);
 					} else {
@@ -6552,7 +6552,7 @@ $(document).ready(function () {
 							icon: 'success',
 							'position': 'mid-center'
 						})
-						setInterval(function () {
+						setTimeout(function () {
 							location.reload()
 						}, 2000);
 					} else {
