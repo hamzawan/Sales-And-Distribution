@@ -797,7 +797,7 @@ def edit_sale(request, pk):
 #     #pk = id, ref_date,date = date,account_id,remarks = sale_no, srb,gst,amount, discount
 
 #     cursor = connection.cursor()
-#     header = cursor.execute('''Select HD.id from transaction_saledetail SD INNER JOIN transaction_saleheader HD on SD.sale_id_id = HD.id WHERE HD.discount!=0 GROUP By HD.id''')
+#     header = cursor.execute('''Select HD.id from transaction_saledetail SD INNER JOIN transaction_saleheader HD on SD.sale_id_id = HD.id GROUP By HD.id''')
 #     header = header.fetchall()
 #     print(header[0],len(header))
 #     for value in header:
@@ -805,10 +805,11 @@ def edit_sale(request, pk):
 #         data = cursor.execute('''SELECT Sum(SD.total_amount), HD.discount, HD.sale_no, HD.payment_method , HD.date, HD.srb, HD.gst, account_id_id from transaction_saledetail SD INNER JOIN transaction_saleheader HD on SD.sale_id_id = HD.id WHERE HD.id = %s GROUP By HD.id''',[pk])
         
 #         data = data.fetchall()
-#         data = data[0]
-#         net_srb = (float(data[0]) / 100) * float(data[5])
-#         net_gst = (float(data[0]) / 100) * float(data[6])
-#         discount_amount = (data[0] / 100) * float(data[1])
+        # data = data[0]
+        # net_srb = float(data[0]) * (float(data[5]) / 100)
+        # net_gst = float(data[0]) * (float(data[6]) / 100)
+        # amount_before_discount = (float(net_srb) + float(net_gst) + float(data[0])
+        # discount_amount = amount_before_discount * (float(discount) / 100)
 #         net_amount = (float(net_srb) + float(net_gst) + float(data[0]) - float(discount_amount))
 #         net_amount = round(net_amount)
 #         try:
@@ -2363,6 +2364,7 @@ def trial_balance(request, from_date, to_date,pk):
     return HttpResponse("Not Found")
 
 
+# Select refrence_id,tran_type,refrence_date,ref_inv_tran_id,ref_inv_tran_type,remarks,account_id_id,detail_remarks,voucher_id_id,Case When total_amt > 0 then total_amt - (total_amt * discount /100) else 0 End as Debit,Case When total_amt < 0 then total_amt - (total_amt * discount /100) else 0 End as Credit FROM ( Select Sum(SD.total_amount) +  (Sum(SD.total_amount) * SH.gst/100) + (Sum(SD.total_amount) * SH.srb / 100) as total_amt, SH.discount as discount,TT.* from transaction_saledetail SD inner join transaction_saleheader SH on SH.id=SD.sale_id_id inner join transaction_transactions TT on SH.id=TT.refrence_id where TT.tran_type='Sale Invoice' AND TT.account_id_id=100 group by refrence_id Order by date asc)
 @login_required()
 @user_passes_test(allow_reports)
 def account_ledger(request, from_date, to_date,pk):
@@ -2421,10 +2423,10 @@ def account_ledger(request, from_date, to_date,pk):
             user_desc = client_sale_no.footer_description
             if client_sale_no.payment_method == 'Cash':
                 amount_value = abs(value[7])
-                detail_remarks = f'Sale invoice {amount_value} RS, on Cash.[{user_desc}]'
+                detail_remarks = user_desc
             else:
                 amount_value = abs(value[6])
-                detail_remarks = f'Sale invoice {amount_value} RS, on Credit.[{user_desc}]'
+                detail_remarks = user_desc
         elif value[0] == 'Sale Invoice' and value[7] < 0:
             # balance = balance + float(value[6]) + float(value[7])
             # total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
@@ -2433,10 +2435,10 @@ def account_ledger(request, from_date, to_date,pk):
             user_desc = client_sale_no.footer_description
             if client_sale_no.payment_method == 'Cash':
                 amount_value = abs(value[7])
-                detail_remarks = f'Sale invoice {amount_value} RS, on Cash.[{user_desc}]'
+                detail_remarks = user_desc
             else:
                 amount_value = abs(value[6])
-                detail_remarks = f'Sale invoice {amount_value} RS, on Credit.[{user_desc}]'
+                detail_remarks = user_desc
         elif value[0] == 'Sale Invoice' and value[6] > 0:
             balance = balance + float(value[6]) + float(value[7])
             total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
@@ -2445,10 +2447,10 @@ def account_ledger(request, from_date, to_date,pk):
             user_desc = client_sale_no.footer_description
             if client_sale_no.payment_method == 'Cash':
                 amount_value = abs(value[7])
-                detail_remarks = f'Sale invoice {amount_value} RS, on Cash.[{user_desc}]'
+                detail_remarks = user_desc
             else:
                 amount_value = abs(value[6])
-                detail_remarks = f'Sale invoice {amount_value} RS, on Credit.[{user_desc}]'
+                detail_remarks = user_desc
         elif value[0] == 'JV' and value[7] < 0:
             balance = balance + float(value[6]) + float(value[7])
             total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
