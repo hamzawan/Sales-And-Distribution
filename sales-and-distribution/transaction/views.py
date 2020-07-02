@@ -4474,7 +4474,7 @@ def new_cash_receiving_voucher(request):
                                             header_id = VoucherHeader.objects.get(voucher_no = get_last_tran_id)
                                             jv_detail1 = VoucherDetail(account_id = cash_account, debit = balance_amount, credit = 0.00, header_id = header_id, invoice_id = 0)
                                             jv_detail1.save()
-                                            jv_detail2 = VoucherDetail(account_id = vendor,  debit = 0.00, credit = balance_amount,header_id = header_id, invoice_id = 0)
+                                            jv_detail2 = VoucherDetail(account_id = vendor,  debit = 0.00, credit = -abs(balance_amount),header_id = header_id, invoice_id = 0)
                                             jv_detail2.save()
                                             receiving_amount = 0
                             else:
@@ -4493,9 +4493,9 @@ def new_cash_receiving_voucher(request):
                                                         date = date, remarks = get_last_tran_id, account_id = cash_account,ref_inv_tran_id = invoice_no.id,ref_inv_tran_type = "Sale CRV", voucher_id = voucher_id,detail_remarks = detail_remarks, is_partialy = 1 )
                                     tran2.save()
                                     header_id = VoucherHeader.objects.get(voucher_no = get_last_tran_id)
-                                    jv_detail1 = VoucherDetail(account_id = cash_account, debit = 0.00, credit = -abs(balance_amount), header_id = header_id, invoice_id = invoice_no.id)
+                                    jv_detail1 = VoucherDetail(account_id = cash_account, debit = abs(balance_amount), credit = 0.00, header_id = header_id, invoice_id = invoice_no.id)
                                     jv_detail1.save()
-                                    jv_detail2 = VoucherDetail(account_id = vendor,  debit = balance_amount, credit = 0.00,header_id = header_id, invoice_id = invoice_no.id)
+                                    jv_detail2 = VoucherDetail(account_id = vendor,  debit = 0.00, credit = -abs(balance_amount),header_id = header_id, invoice_id = invoice_no.id)
                                     jv_detail2.save()
                                     receiving_amount = receiving_amount - balance_amount
                                 else:
@@ -4514,9 +4514,9 @@ def new_cash_receiving_voucher(request):
                                                         date = date, remarks = get_last_tran_id, account_id = cash_account,ref_inv_tran_id = invoice_no.id,ref_inv_tran_type = "Sale CRV", voucher_id = voucher_id ,detail_remarks = detail_remarks,is_partialy = 1 )
                                     tran2.save()
                                     header_id = VoucherHeader.objects.get(voucher_no = get_last_tran_id)
-                                    jv_detail1 = VoucherDetail(account_id = cash_account, debit = 0.00, credit = -abs(balance_amount), header_id = header_id, invoice_id = invoice_no.id)
+                                    jv_detail1 = VoucherDetail(account_id = cash_account, debit = abs(balance_amount), credit = 0.00, header_id = header_id, invoice_id = invoice_no.id)
                                     jv_detail1.save()
-                                    jv_detail2 = VoucherDetail(account_id = vendor,  debit = balance_amount, credit = 0.00,header_id = header_id, invoice_id = invoice_no.id)
+                                    jv_detail2 = VoucherDetail(account_id = vendor,  debit = 0.00, credit = -abs(balance_amount),header_id = header_id, invoice_id = invoice_no.id)
                                     jv_detail2.save()
                                     receiving_amount = 0
                         else:
@@ -4537,9 +4537,9 @@ def new_cash_receiving_voucher(request):
                                         date = date, remarks = get_last_tran_id, account_id = cash_account,ref_inv_tran_id = 0,ref_inv_tran_type = "Sale CRV", voucher_id = voucher_id ,detail_remarks = detail_remarks, is_partialy = 1 )
                     tran2.save()
                     header_id = VoucherHeader.objects.get(voucher_no = get_last_tran_id)
-                    jv_detail1 = VoucherDetail(account_id = cash_account, debit = amount, credit = 0.00, header_id = header_id, invoice_id = 0)
+                    jv_detail1 = VoucherDetail(account_id = cash_account, debit = abs(amount), credit = 0.00, header_id = header_id, invoice_id = 0)
                     jv_detail1.save()
-                    jv_detail2 = VoucherDetail(account_id = vendor,  debit = 0.00, credit = amount,header_id = header_id, invoice_id = 0)
+                    jv_detail2 = VoucherDetail(account_id = vendor,  debit = 0.00, credit = -abs(amount),header_id = header_id, invoice_id = 0)
                     jv_detail2.save()
 
                     return JsonResponse({'result':'success','doc_no':get_last_tran_id,'header_id':header_id.id})
