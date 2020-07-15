@@ -13,6 +13,7 @@ from django.template.loader import get_template
 from django.db import connection, IntegrityError, transaction
 from django.contrib import messages
 from django.db.models import Q,Count, Sum
+from django.db.models.functions import Lower
 from num2words import num2words
 from decimal import Decimal
 import sys
@@ -183,7 +184,7 @@ def new_purchase(request):
                     tran1.save()
                 else:
                     detail_remarks = f"Purchase invoice {total_amount} RS, against invoice no {purchase_id} on Credit."
-                    purchase_account = ChartOfAccount.objects.get(account_title = 'Purchases')
+                    purchase_account = ChartOfAccount.objects.get(account_title = 'Purchases (Vendor)')
                     tran1 = Transactions(refrence_id = header_id, refrence_date = follow_up, account_id = account_id, tran_type = "Purchase Invoice", amount = -abs(total_amount), date = date, remarks = purchase_id, ref_inv_tran_id = 0, ref_inv_tran_type = "", detail_remarks = detail_remarks)
                     tran1.save()
                     tran2 = Transactions(refrence_id = header_id, refrence_date = follow_up, account_id = purchase_account, tran_type = "Purchase Invoice", amount = total_amount, date = date, remarks = purchase_id, ref_inv_tran_id = 0, ref_inv_tran_type = "", detail_remarks = detail_remarks)
@@ -1428,7 +1429,7 @@ def chart_of_account(request):
     customer = Q(parent_id = 16)
     expenses = Q(parent_id = 4)
     # all_accounts = ChartOfAccount.objects.filter(vendor | customer | expenses).order_by('account_title').all()
-    all_accounts = ChartOfAccount.objects.order_by('account_title').all()
+    all_accounts = ChartOfAccount.objects.order_by(Lower('account_title')).all()
     tree_id = request.POST.get('tree_id')
     if tree_id:
         child_list = []
@@ -1480,7 +1481,6 @@ def chart_of_account(request):
             coa.save()
         except IntegrityError as e:
             print(e)
-
     return render(request, 'transaction/chart_of_account.html',{'all_accounts_null':all_accounts_null,'all_accounts':all_accounts})
 
 
@@ -2395,7 +2395,7 @@ def account_ledger(request, from_date, to_date,pk):
                     Where account_id_id = %s
                     union all
                     Select refrence_id,tran_type,refrence_date,'merge' as ref_inv_tran_id,ref_inv_tran_type,
-                    remarks,account_id_id, detail_remarks,voucher_id_id,
+                    remarks,account_id_id, group_concat(detail_remarks),voucher_id_id,
                     Case When amount > 0 then sum(amount) else 0 End as Debit,
                     Case When amount < 0 then sum(amount) else 0 End as Credit
                     from transaction_transactions
@@ -2484,13 +2484,15 @@ def account_ledger(request, from_date, to_date,pk):
                         if sale_no:
                             sale_no = sale_no.sale_no
                             invoice_sale_no.append(sale_no)
-                        else:
-                            if "Advance Receiving" in value[8]:
-                                sale_no = "Advance"
-                                invoice_sale_no.append(sale_no)
-                            else:
-                                sale_no = "Opening Balance"
-                                invoice_sale_no.append(sale_no)
+
+                    if "opening balance" in value[8]:
+                        sale_no = "Opening Balance"
+                        invoice_sale_no.append(sale_no)
+
+                    if "Advance Receiving" in value[8]:
+                        sale_no = "Advance"
+                        invoice_sale_no.append(sale_no)
+                    
                 except Exception as e:
                     print("HERE IS EXCEPTION")
                     print(e)
@@ -2517,13 +2519,14 @@ def account_ledger(request, from_date, to_date,pk):
                         if purchase_no:
                             purchase_no = purchase_no.purchase_no
                             invoice_purchase_no.append(purchase_no)
-                        else:
-                            if "Advance Payment" in value[8]:
-                                purchase_no = "Advance"
-                                invoice_purchase_no.append(purchase_no)
-                            else:
-                                purchase_no = "Opening Balance"
-                                invoice_purchase_no.append(purchase_no)
+
+                    if "opening balance" in value[8]:
+                        purchase_no = "Opening Balance"
+                        invoice_purchase_no.append(purchase_no)
+
+                    if "Advance Payment" in value[8]:
+                        purchase_no = "Advance"
+                        invoice_purchase_no.append(purchase_no)
                 except Exception as e:
                     print(e)
             if len(invoice_purchase_no) > 0:
@@ -2550,13 +2553,13 @@ def account_ledger(request, from_date, to_date,pk):
                         if purchase_no:
                             purchase_no = purchase_no.purchase_no
                             invoice_purchase_no.append(purchase_no)
-                        else:
-                            if "Advance Payment" in value[8]:
-                                purchase_no = "Advance"
-                                invoice_purchase_no.append(purchase_no)
-                            else:
-                                purchase_no = "Opening Balance"
-                                invoice_purchase_no.append(purchase_no)
+                    if "opening balance" in value[8]:
+                        purchase_no = "Opening Balance"
+                        invoice_purchase_no.append(purchase_no)
+
+                    if "Advance Payment" in value[8]:
+                        purchase_no = "Advance"
+                        invoice_purchase_no.append(purchase_no)
                 except Exception as e:
                     print(e)
             if len(invoice_purchase_no) > 0:
@@ -4124,7 +4127,7 @@ def new_cash_payment_voucher(request):
 
                 pi_account = cursor.execute('''Select * From (Select '0' as 'ID', '2000-01-01' as 'refrence_date',COA.id, COA.id as 'purchase_no' , COA.account_title, abs(COA.opening_balance) As InvAmount,abs(ifnull((Select Sum(Amount) * -1 From transaction_transactions
                 Where ref_inv_tran_id = 0 AND ref_inv_tran_type = "Purchase CPV" AND account_id_id = %s),0)) As RcvAmount, II.tran_type As 'OP',
-                sum(abs(COA.opening_balance) - abs(ifnull((Select Sum(Amount) * -1 From transaction_transactions
+                (abs(COA.opening_balance) - abs(ifnull((Select Sum(Amount) * -1 From transaction_transactions
                 Where ref_inv_tran_id = 0 AND ref_inv_tran_type = "Purchase CPV" AND account_id_id = %s),0))) as 'Total'
                 from transaction_chartofaccount COA
                 left join transaction_transactions II on II.refrence_id = COA.id and II.tran_type = "Opening Balance" and II.account_id_id = %s
@@ -4145,7 +4148,7 @@ def new_cash_payment_voucher(request):
                 Select HD.ID,HD.date as 'refrence_date',HD.account_id_id,HD.purchase_no,account_title,abs(Sum(total_amount)) As InvAmount,
                 abs(ifnull((Select Sum(Amount) * -1 From transaction_transactions
                 Where ref_inv_tran_id = HD.ID AND account_id_id = %s),0)) As RcvAmount, 'tran_type' as 'tran_type',
-                sum(total_amount - abs(ifnull((Select Sum(Amount) * -1 From transaction_transactions
+                (sum(total_amount) - abs(ifnull((Select Sum(Amount) * -1 From transaction_transactions
                 Where ref_inv_tran_id = HD.ID AND account_id_id = %s),0))) as 'Total'
                 from transaction_purchaseheader HD
                 Inner join transaction_purchasedetail DT on DT.purchase_id_id = HD.id
@@ -4398,7 +4401,7 @@ def new_cash_receiving_voucher(request):
                     Select '0' as 'ID', '2000-01-01' as 'refrence_date',COA.id, COA.id as 'sale_no' , COA.account_title, abs(COA.opening_balance) As InvAmount,
                     abs(ifnull((Select Sum(Amount) * -1 From transaction_transactions
                     Where ref_inv_tran_id = 0 AND ref_inv_tran_type = "Sale CRV" AND account_id_id = %s),0)) As RcvAmount, II.tran_type As 'OP',
-                    sum(abs(COA.opening_balance) - abs(ifnull((Select Sum(Amount) * -1 From transaction_transactions
+                    (abs(COA.opening_balance) - abs(ifnull((Select Sum(Amount) * -1 From transaction_transactions
                     Where ref_inv_tran_id = 0 AND ref_inv_tran_type = "Sale CRV" AND account_id_id = %s),0))) as 'Total'
                     from transaction_chartofaccount COA
                     left join transaction_transactions II on II.refrence_id = COA.id and II.tran_type = "Opening Balance" and II.account_id_id = %s
@@ -4419,7 +4422,7 @@ def new_cash_receiving_voucher(request):
                     Select HD.ID,HD.date as 'refrence_date',HD.account_id_id,HD.sale_no,account_title,abs(Sum(total_amount)) As InvAmount,
                     abs(ifnull((Select Sum(Amount) * -1 From transaction_transactions
                     Where ref_inv_tran_id = HD.ID AND account_id_id = %s),0)) As RcvAmount, 'tran_type' as 'tran_type',
-                    sum(total_amount - abs(ifnull((Select Sum(Amount) * -1 From transaction_transactions
+                    (sum(total_amount) - abs(ifnull((Select Sum(Amount) * -1 From transaction_transactions
                     Where ref_inv_tran_id = HD.ID AND account_id_id = %s),0))) as 'Total'
                     from transaction_saleheader HD
                     Inner join transaction_saledetail DT on DT.sale_id_id = HD.id
@@ -4459,7 +4462,7 @@ def new_cash_receiving_voucher(request):
                                             header_id = VoucherHeader.objects.get(voucher_no = get_last_tran_id)
                                             jv_detail1 = VoucherDetail(account_id = cash_account, debit = balance_amount, credit = 0.00, header_id = header_id, invoice_id = 0)
                                             jv_detail1.save()
-                                            jv_detail2 = VoucherDetail(account_id = vendor,  debit = 0.00, credit = balance_amount,header_id = header_id, invoice_id = 0)
+                                            jv_detail2 = VoucherDetail(account_id = vendor,  debit = 0.00, credit = -abs(balance_amount),header_id = header_id, invoice_id = 0)
                                             jv_detail2.save()
                                             receiving_amount = receiving_amount - balance_amount
                                         else:
@@ -4611,9 +4614,9 @@ def new_cash_receiving_voucher(request):
                                             date = date, remarks = get_last_tran_id, account_id = account_id,ref_inv_tran_id = 0,ref_inv_tran_type = "Sale CRV", voucher_id = voucher_id, detail_remarks = detail_remarks )
                         tran2.save()
                         header_id = VoucherHeader.objects.get(voucher_no = get_last_tran_id)
-                        jv_detail1 = VoucherDetail(account_id = cash_account, debit = 0.00, credit = -abs(amount), header_id = header_id, invoice_id = 0)
+                        jv_detail1 = VoucherDetail(account_id = cash_account, debit = abs(amount), credit = 0.00, header_id = header_id, invoice_id = 0)
                         jv_detail1.save()
-                        jv_detail2 = VoucherDetail(account_id = account_id,  debit = amount, credit = 0.00,header_id = header_id, invoice_id = 0)
+                        jv_detail2 = VoucherDetail(account_id = account_id,  debit = 0.00, credit = -abs(amount),header_id = header_id, invoice_id = 0)
                         jv_detail2.save()
                     else:
                         invoice_no = SaleHeader.objects.get(sale_no=value["invoice_no"])
