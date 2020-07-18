@@ -2384,51 +2384,72 @@ def account_ledger(request, from_date, to_date,pk):
     detail_remarks = ''
     balance = 0
 
-    cursor.execute('''select sum(Debit) as Debit,sum(Credit) as Credit from
-                    (select '' as refrence_id,'Opening' as tran_type,'' as refrence_date,'' as ref_inv_tran_id,
-                    '' as ref_inv_tran_type,'Opening Balance' as remarks,id,'' as detail_remarks,'' as voucher_id_id,
-                    Case When opening_balance > 0 then opening_balance else 0 End as Debit,
-                    Case When opening_balance < 0 then opening_balance else 0 End as Credit
-                    from transaction_chartofaccount Where id = %s
-                    Union All
-                    Select * From (
-                    Select TT.refrence_id,TT.tran_type,TT.refrence_date,TT.ref_inv_tran_id,TT.ref_inv_tran_type,
-                    TT.remarks,TT.account_id_id,TT.detail_remarks,TT.voucher_id_id,
-                    Case When TT.amount > 0 then TT.amount else 0 End as Debit,
-                    Case When TT.amount < 0 then TT.amount else 0 End as Credit
-                    from transaction_transactions TT inner join transaction_saleheader SH on TT.refrence_id=SH.id
-                    Where
-                    DATE(TT.date) < %s and TT.is_partialy = 0 and SH.payment_method = 'Credit'
-                    Order by TT.date asc) As tblLedger
-                    Where account_id_id = %s
-                    union all
-                    Select refrence_id,tran_type,refrence_date,'merge' as ref_inv_tran_id,ref_inv_tran_type,
-                    remarks,account_id_id, group_concat(detail_remarks),voucher_id_id,
-                    Case When amount > 0 then sum(amount) else 0 End as Debit,
-                    Case When amount < 0 then sum(amount) else 0 End as Credit
-                    from transaction_transactions
-                    Where
-                    DATE(date) < %s 
-                    and is_partialy = 1 and account_id_id = %s
-                    group by refrence_id,tran_type,refrence_date,ref_inv_tran_type,
-                    remarks,account_id_id
-                    )
-                    tbl order by refrence_date''',[pk,from_date,pk,from_date,pk])
+    cursor.execute('''select tran_type,refrence_id,date,remarks,ref_inv_tran_id,ref_inv_tran_type,Debit as Debit,Credit as Credit, detail_remarks from
+                (select '' as refrence_id,'Opening' as tran_type,'' as date,'' as ref_inv_tran_id,
+                '' as ref_inv_tran_type,'Opening Balance' as remarks,id,'' as detail_remarks,
+                Case When opening_balance > 0 then opening_balance else 0 End as Debit,
+                Case When opening_balance < 0 then opening_balance else 0 End as Credit
+                from transaction_chartofaccount Where id = %s
+                Union All
+                Select * From (
+                Select refrence_id,tran_type,date,ref_inv_tran_id,ref_inv_tran_type,
+                remarks,account_id_id,detail_remarks,
+                Case When amount > 0 then amount else 0 End as Debit,
+                Case When amount < 0 then amount else 0 End as Credit
+                from transaction_transactions
+                Where
+                DATE(date) < %s and is_partialy = 0
+                Order by date asc) As tblLedger
+                Where account_id_id = %s
+                union all
+                Select refrence_id,tran_type,date,'merge' as ref_inv_tran_id,ref_inv_tran_type,
+                remarks,account_id_id,'Partialy Receiving' as detail_remarks,
+                Case When amount > 0 then sum(amount) else 0 End as Debit,
+                Case When amount < 0 then sum(amount) else 0 End as Credit
+                from transaction_transactions
+                Where
+                DATE(date) < %s
+                and is_partialy = 1 and account_id_id = %s
+                group by refrence_id,tran_type,date,ref_inv_tran_type,
+                remarks,account_id_id
+                )
+                tbl order by date''',[pk,from_date,pk,from_date,pk])
     prev_balance = cursor.fetchall()
-    
-    if prev_balance[0][0] >= 0 or prev_balance[0][1] <= 0:
-        balance = balance + float(prev_balance[0][0]) + float(prev_balance[0][1])
-        total_balance_of_ledger = total_balance_of_ledger + float(prev_balance[0][0]) + float(prev_balance[0][1])
+    for v in prev_balance:
+        if v[0] == "Purchase Invoice" and PurchaseHeader.objects.get(id=v[1]).payment_method == "Cash":
+            if v[6] >= 0:
+                debit_amount = debit_amount + v[6]
+                credit_amount = credit_amount - v[6]
+            if v[7] <= 0:
+                credit_amount = credit_amount + v[7]        
+                debit_amount = debit_amount + abs(v[7])
+            continue
+
+        if v[0] == "Sale Invoice" and SaleHeader.objects.get(id=v[1]).payment_method == "Cash":
+            if v[6] >= 0:
+                debit_amount = debit_amount + v[6]
+                credit_amount = credit_amount - v[6]
+            if v[7] <= 0:
+                credit_amount = credit_amount + v[7]        
+                debit_amount = debit_amount + abs(v[7])
+            continue
+
+        if v[6] >= 0:
+            debit_amount = debit_amount + v[6]
+        if v[7] <= 0:
+            credit_amount = credit_amount + v[7]
+
+    if debit_amount >= 0 or credit_amount <= 0:
+        balance = balance + float(debit_amount) + float(credit_amount)
+        total_balance_of_ledger = total_balance_of_ledger + float(debit_amount) + float(credit_amount)
         detail_remarks = 'Opening Balance'
-        debit_amount = debit_amount + prev_balance[0][0]
-        credit_amount = credit_amount + prev_balance[0][1]
     
     info = {
     "date": '',
     "voucher_no": '',
     "tran_type": "Opening",
-    "debit":prev_balance[0][0],
-    "credit":prev_balance[0][1],
+    "debit":debit_amount,
+    "credit":credit_amount,
     "balance": balance,
     "detail_remarks":detail_remarks,
     }
@@ -2622,6 +2643,18 @@ def account_ledger(request, from_date, to_date,pk):
             else:
                 amount_value = abs(value[6])
                 detail_remarks = f'Purchase invoice on Credit.[{client_purchase_no.footer_description}]'
+        elif value[0] == 'Purchase Invoice' and value[6] > 0:
+            # balance = balance + float(value[6]) + float(value[7])
+            # total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
+            purchase_id = Q(id = value[1])
+            client_purchase_no = PurchaseHeader.objects.filter(purchase_id).first()
+            if client_purchase_no.payment_method == 'Cash':
+                amount_value = abs(value[6])
+                detail_remarks = f'Purchase invoice on Cash.[{client_purchase_no.footer_description}]'
+            else:
+                amount_value = abs(value[6])
+                detail_remarks = f'Purchase invoice on Credit.[{client_purchase_no.footer_description}]'
+
         elif value[0] == 'Opening Balance' and value[7] < 0:
             balance = balance + float(value[6]) + float(value[7])
             total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + float(value[7])
@@ -2639,18 +2672,74 @@ def account_ledger(request, from_date, to_date,pk):
         else:
             balance = balance + float(value[6]) + 0
             total_balance_of_ledger = total_balance_of_ledger + float(value[6]) + 0
-        info = {
-        "date": value[2],
-        "voucher_no": value[3],
-        "tran_type": value[0],
-        "debit":value[6],
-        "credit":value[7],
-        "balance": balance,
-        "detail_remarks":detail_remarks,
-        }
-        ledger_list.append(info)
+
+        if value[0] == "Purchase Invoice" and PurchaseHeader.objects.get(id=value[1]).payment_method == "Cash":
+            if value[6] > 0:
+                deb_amount =  value[6]
+                cred_amount = -value[6]
+            if value[7] < 0:
+                cred_amount = value[7]        
+                deb_amount =  abs(value[7])
+            
+            info = {
+            "date": value[2],
+            "voucher_no": value[3],
+            "tran_type": value[0],
+            "debit":deb_amount,
+            "credit":cred_amount,
+            "balance": balance + deb_amount + cred_amount,
+            "detail_remarks":detail_remarks,
+            }
+            ledger_list.append(info)
+
+        elif value[0] == "Sale Invoice" and SaleHeader.objects.get(id=value[1]).payment_method == "Cash":
+            if value[6] > 0:
+                deb_amount = value[6]
+                cred_amount = -value[6]
+            if value[7] < 0:
+                cred_amount = value[7]        
+                deb_amount = abs(value[7])
+            info = {
+            "date": value[2],
+            "voucher_no": value[3],
+            "tran_type": value[0],
+            "debit":deb_amount,
+            "credit":cred_amount,
+            "balance": balance + deb_amount + cred_amount,
+            "detail_remarks":detail_remarks,
+            }
+            ledger_list.append(info)
+        else:
+            info = {
+            "date": value[2],
+            "voucher_no": value[3],
+            "tran_type": value[0],
+            "debit":value[6],
+            "credit":value[7],
+            "balance": balance,
+            "detail_remarks":detail_remarks,
+            }
+            ledger_list.append(info)
     if row:
         for v in row:
+            if v[0] == "Purchase Invoice" and PurchaseHeader.objects.get(id=v[1]).payment_method == "Cash":
+                if v[6] >= 0:
+                    debit_amount = debit_amount + v[6]
+                    credit_amount = credit_amount - v[6]
+                if v[7] <= 0:
+                    credit_amount = credit_amount + v[7]        
+                    debit_amount = debit_amount + abs(v[7])
+                continue
+
+            if v[0] == "Sale Invoice" and SaleHeader.objects.get(id=v[1]).payment_method == "Cash":
+                if v[6] >= 0:
+                    debit_amount = debit_amount + v[6]
+                    credit_amount = credit_amount - v[6]
+                if v[7] <= 0:
+                    credit_amount = credit_amount + v[7]        
+                    debit_amount = debit_amount + abs(v[7])
+                continue
+
             if v[6] >= 0:
                 debit_amount = debit_amount + v[6]
             if v[7] <= 0:
@@ -2660,7 +2749,7 @@ def account_ledger(request, from_date, to_date,pk):
     id = account_id.id
     to_date = datetime.datetime.strptime(to_date,'%Y-%m-%d').strftime('%d-%m-%Y')
     from_date = datetime.datetime.strptime(from_date,'%Y-%m-%d').strftime('%d-%m-%Y')
-
+    total_balance_of_ledger = debit_amount + credit_amount
     pdf = render_to_pdf('transaction/account_ledger_pdf.html', {'ledger_list':ledger_list,'company_info':company_info,'image':image,'row':row, 'debit_amount':debit_amount, 'credit_amount': credit_amount, 'account_title':account_title, 'from_date':from_date,'to_date':to_date,'id':id,'total_balance_of_ledger':total_balance_of_ledger})
     if pdf:
         response = HttpResponse(pdf, content_type='application/pdf')
