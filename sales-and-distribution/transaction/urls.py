@@ -44,7 +44,7 @@ urlpatterns = [
     path('bank_payment_voucher/new', views.new_bank_payment_voucher, name='new-bank-payment'),
     path('bank_payment_voucher/edit/<pk>', views.edit_bank_payment_voucher, name='edit-bank-payment'),
     path('bank_receiving_voucher/edit/<pk>', views.edit_bank_receiving_voucher, name='edit-bank-receiving'),
-    path('trial_balance/pdf/<from_date>/<to_date>', views.trial_balance, name = 'trial-balance'),
+    path('trial_balance/pdf/<from_date>/<to_date>/<pk>', views.trial_balance, name = 'trial-balance'),
     path('account_ledger/pdf/<pk>/<from_date>/<to_date>', views.account_ledger, name='account-ledger'),
     path('account_ledger/credit_days/pdf/', views.account_ledger_with_credit_days, name='account-ledger-credit-days'),
     path('receivable_ledger/pdf/<pk>', views.receivable_ledger, name='receivable-ledger'),
@@ -76,6 +76,8 @@ urlpatterns = [
     path('job_order/delete/<pk>', views.delete_job_order, name='delete-job-order'),
 
     path('test', views.new_test, name='new-test'),
+    path('backup/db/', views.back_up_db, name = 'back-up-db'),
+    path('backup/done/', views.back_up_done, name = 'back-up-done'),
 
 
 

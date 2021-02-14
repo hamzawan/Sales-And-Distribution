@@ -1,0 +1,5 @@
+.vscode/
+env/
+db.sqlite3
+local.sqlite3
+remote.sqlite3
